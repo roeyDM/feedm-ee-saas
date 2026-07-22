@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { Navbar } from "@/components/navbar";
+
 export default function Home() {
   const [handle, setHandle] = useState("");
   const router = useRouter();
@@ -33,36 +35,7 @@ export default function Home() {
       <div className="absolute top-[20%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#fde68a]/35 blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[-5%] left-[20%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px] pointer-events-none" />
 
-      {/* Header / Navbar */}
-      <header className="sticky top-0 z-40 w-full border-b border-zinc-200/60 bg-white/70 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 shadow-md shadow-emerald-500/20">
-              <Film className="h-5 w-5 text-white stroke-[2.5]" />
-            </div>
-            <span className="text-xl font-black text-zinc-950 tracking-tight">
-              FeedM<span className="text-emerald-600">.ee</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/pricing" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-emerald-600 transition mr-1">
-              Pricing
-            </Link>
-            <Link href="/alexrivers" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-zinc-950 transition mr-2">
-              View Creator Demo
-            </Link>
-            <Link href="/login" className="text-xs font-bold text-zinc-700 hover:text-emerald-600 transition px-2 py-1">
-              Sign In
-            </Link>
-            <Link href="/signup">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs rounded-xl shadow-md transition duration-300">
-                Get Started <ArrowRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative mx-auto max-w-5xl px-6 pt-16 pb-12 text-center lg:pt-28 lg:pb-20">

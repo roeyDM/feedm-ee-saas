@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { Navbar } from "@/components/navbar";
+
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(true);
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -46,36 +48,7 @@ export default function PricingPage() {
       <div className="pointer-events-none absolute top-[20%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#fde68a]/35 blur-[130px]" />
       <div className="pointer-events-none absolute bottom-[-5%] left-[20%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px]" />
 
-      {/* Header / Navbar */}
-      <header className="sticky top-0 z-40 w-full border-b border-zinc-200/60 bg-white/75 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 shadow-md shadow-emerald-500/20">
-              <Film className="h-5 w-5 text-white stroke-[2.5]" />
-            </div>
-            <span className="text-xl font-black text-zinc-950 tracking-tight">
-              FeedM<span className="text-emerald-600">.ee</span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-zinc-950 transition">
-              Home
-            </Link>
-            <Link href="/alexrivers" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-zinc-950 transition">
-              Creator Demo
-            </Link>
-            <Link href="/login" className="text-xs font-bold text-zinc-700 hover:text-emerald-600 transition px-2 py-1">
-              Sign In
-            </Link>
-            <Link href="/signup">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs rounded-xl shadow-md transition">
-                Get Started Free <ArrowRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Header */}
       <section className="relative mx-auto max-w-4xl px-6 pt-16 pb-8 text-center lg:pt-20">

@@ -6,6 +6,8 @@ import { Film, Eye, ExternalLink, Save, Loader2, Zap, Sparkles } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { PlanType } from "@/lib/supabase";
 
+import { Logo } from "@/components/logo";
+
 interface DashboardHeaderProps {
   username: string;
   planType?: PlanType;
@@ -21,17 +23,7 @@ export function DashboardHeader({ username, planType = "free", onSave, isSaving 
         {/* Brand Logo & Plan Badge */}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 shadow-md shadow-emerald-500/20 group-hover:scale-105 transition duration-300">
-              <Film className="h-5 w-5 text-white stroke-[2.5]" />
-            </div>
-            <div>
-              <span className="text-lg font-black text-zinc-950 tracking-tight">
-                FeedM<span className="text-emerald-600">.ee</span>
-              </span>
-              <span className="block text-[10px] font-extrabold text-zinc-400 leading-none">
-                Creator Studio
-              </span>
-            </div>
+            <Logo />
           </Link>
 
           {/* Plan Badge */}

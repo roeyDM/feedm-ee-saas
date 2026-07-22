@@ -121,10 +121,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html, body, *, button, input, textarea, select {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif !important;
+  }
+  
   body {
     @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
   }
 }
