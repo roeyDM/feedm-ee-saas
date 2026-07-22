@@ -3,8 +3,19 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import { Film, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { supabase, checkUsernameAvailability } from "@/lib/supabase";
+import {
+  Film,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  ArrowRight,
+} from "lucide-react";
 
 function SignupFormContent() {
   const router = useRouter();
@@ -19,11 +30,33 @@ function SignupFormContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Availability checking state
+  const [checkingHandle, setCheckingHandle] = useState(false);
+  const [handleStatus, setHandleStatus] = useState<{ available: boolean; reason?: string } | null>(null);
+
   useEffect(() => {
     if (handleParam) {
       setUsername(handleParam.toLowerCase().replace(/[^a-z0-9_]/g, ""));
     }
   }, [handleParam]);
+
+  // Debounced real-time handle check
+  useEffect(() => {
+    if (!username || username.length < 3) {
+      setHandleStatus(null);
+      setCheckingHandle(false);
+      return;
+    }
+
+    setCheckingHandle(true);
+    const timer = setTimeout(async () => {
+      const result = await checkUsernameAvailability(username);
+      setHandleStatus(result);
+      setCheckingHandle(false);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [username]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +69,8 @@ function SignupFormContent() {
       return;
     }
 
-    if (!/^[a-z0-9_]+$/.test(username)) {
-      setError("Username can only contain lowercase letters, numbers, and underscores.");
+    if (handleStatus && !handleStatus.available) {
+      setError(handleStatus.reason || "This handle is not available.");
       setLoading(false);
       return;
     }
@@ -70,7 +103,6 @@ function SignupFormContent() {
     if (data.session) {
       router.push("/dashboard");
     } else {
-      // Email confirmation pending
       setSuccess(true);
     }
 
@@ -128,7 +160,7 @@ function SignupFormContent() {
           )}
 
           <form onSubmit={handleSignup} className="space-y-4">
-            {/* Username */}
+            {/* Username with Real-time Check */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-700">Your Creator Handle</label>
               <div className="relative">
@@ -140,14 +172,43 @@ function SignupFormContent() {
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
                   placeholder="yourname"
                   maxLength={30}
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-8 pr-4 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-8 pr-9 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 ${
+                    handleStatus
+                      ? handleStatus.available
+                        ? "border-emerald-500 focus:ring-emerald-500/30"
+                        : "border-rose-500 focus:ring-rose-500/30"
+                      : "border-zinc-200 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  }`}
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {checkingHandle ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                  ) : handleStatus ? (
+                    handleStatus.available ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-rose-600" />
+                    )
+                  ) : null}
+                </div>
               </div>
-              {username && (
-                <p className="text-[11px] font-semibold text-emerald-600">
-                  feedm.ee/{username}
-                </p>
-              )}
+
+              {/* Status Message */}
+              {checkingHandle ? (
+                <p className="text-[11px] font-semibold text-zinc-400">Checking availability...</p>
+              ) : handleStatus ? (
+                handleStatus.available ? (
+                  <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                    ✓ feedm.ee/{username} is available!
+                  </p>
+                ) : (
+                  <p className="text-[11px] font-bold text-rose-600">
+                    ✕ {handleStatus.reason || "Handle unavailable"}
+                  </p>
+                )
+              ) : username ? (
+                <p className="text-[11px] font-semibold text-zinc-400">feedm.ee/{username}</p>
+              ) : null}
             </div>
 
             {/* Email */}
@@ -192,8 +253,8 @@ function SignupFormContent() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-60"
+              disabled={loading || (handleStatus ? !handleStatus.available : false)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

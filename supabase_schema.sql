@@ -11,12 +11,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   bio TEXT,
   avatar_url TEXT,
   custom_hex_color TEXT DEFAULT '#bad1cb',
+  plan_type TEXT DEFAULT 'free', -- 'free' | 'pro' | 'business'
   social_links JSONB DEFAULT '[]'::jsonb,
   custom_links JSONB DEFAULT '[]'::jsonb,
   reels JSONB DEFAULT '[]'::jsonb,
   lead_form JSONB DEFAULT '{}'::jsonb,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+-- Ensure plan_type column exists if table was created previously
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'free';
 
 -- 2. Create Index on Username for Fast Dynamic Route Queries
 CREATE INDEX IF NOT EXISTS profiles_username_idx ON public.profiles(username);

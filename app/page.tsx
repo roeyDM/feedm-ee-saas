@@ -46,10 +46,13 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link href="/pricing" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-emerald-600 transition mr-1">
+              Pricing
+            </Link>
             <Link href="/alexrivers" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-zinc-950 transition mr-2">
               View Creator Demo
             </Link>
-            <Link href="/login" className="text-xs font-bold text-zinc-700 hover:text-emerald-600 transition px-3 py-2">
+            <Link href="/login" className="text-xs font-bold text-zinc-700 hover:text-emerald-600 transition px-2 py-1">
               Sign In
             </Link>
             <Link href="/signup">
@@ -168,7 +171,11 @@ export default function Home() {
             </div>
             <span className="font-extrabold text-zinc-950">FeedM.ee</span>
           </div>
-          <p>© {new Date().getFullYear()} FeedM.ee. All rights reserved.</p>
+          <div className="flex items-center gap-4 text-xs font-semibold">
+            <Link href="/pricing" className="hover:text-zinc-950">Pricing</Link>
+            <span>•</span>
+            <span>© {new Date().getFullYear()} FeedM.ee. All rights reserved.</span>
+          </div>
         </div>
       </footer>
 

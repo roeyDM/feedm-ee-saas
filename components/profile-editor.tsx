@@ -1,13 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CustomLink, LeadFormSettings, SocialLink } from "./mobile-preview";
-import { User, Camera, Palette, Link as LinkIcon, Plus, Trash2, Tag, Send, Sparkles } from "lucide-react";
+import {
+  User,
+  Palette,
+  Link as LinkIcon,
+  Plus,
+  Trash2,
+  Tag,
+  Send,
+  Lock,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PlanType, checkUsernameAvailability } from "@/lib/supabase";
 
 interface ProfileEditorProps {
   name: string;
@@ -26,6 +41,7 @@ interface ProfileEditorProps {
   setCustomLinks: (links: CustomLink[]) => void;
   leadForm: LeadFormSettings;
   setLeadForm: (form: LeadFormSettings) => void;
+  planType?: PlanType;
 }
 
 const PRESET_PALETTES = [
@@ -53,11 +69,34 @@ export function ProfileEditor({
   setCustomLinks,
   leadForm,
   setLeadForm,
+  planType = "free",
 }: ProfileEditorProps) {
   // New link form local state
   const [newTitle, setNewTitle] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [newBadge, setNewBadge] = useState("");
+
+  // Handle availability checking state
+  const [checkingHandle, setCheckingHandle] = useState(false);
+  const [handleStatus, setHandleStatus] = useState<{ available: boolean; reason?: string } | null>(null);
+
+  // Debounced real-time handle availability check
+  useEffect(() => {
+    if (!username || username.length < 3) {
+      setHandleStatus(null);
+      setCheckingHandle(false);
+      return;
+    }
+
+    setCheckingHandle(true);
+    const timer = setTimeout(async () => {
+      const result = await checkUsernameAvailability(username, username);
+      setHandleStatus(result);
+      setCheckingHandle(false);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [username]);
 
   const handleAddLink = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,44 +119,13 @@ export function ProfileEditor({
     setCustomLinks(customLinks.filter((l) => l.id !== id));
   };
 
-  const handleSocialChange = (platform: "instagram" | "youtube" | "twitter" | "tiktok" | "facebook", val: string) => {
-    const updated = [...socialLinks];
-    const index = updated.findIndex((l) => l.platform === platform);
-
-    if (val.trim() === "") {
-      if (index !== -1) {
-        updated.splice(index, 1);
-        setSocialLinks(updated);
-      }
-    } else {
-      const url = val.startsWith("http") ? val : `https://${platform}.com/${val}`;
-      if (index !== -1) {
-        updated[index].url = url;
-      } else {
-        updated.push({ platform, url });
-      }
-      setSocialLinks(updated);
-    }
-  };
-
-  const getSocialValue = (platform: "instagram" | "youtube" | "twitter" | "tiktok" | "facebook"): string => {
-    const link = socialLinks.find((l) => l.platform === platform);
-    if (!link) return "";
-    try {
-      const parts = link.url.split("/");
-      return parts[parts.length - 1] || "";
-    } catch {
-      return link.url;
-    }
-  };
-
   return (
     <div className="flex flex-col gap-6">
       {/* 1. Theme & Custom Hex Picker */}
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-            <Palette className="h-4.5 w-4.5 text-emerald-600" /> Theme & Custom Hex Color
+            <Palette className="h-4.5 w-4.5 text-emerald-600" /> Theme &amp; Custom Hex Color
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
             Select a vibrant preset or enter any exact Hex code (e.g. #bad1cb)
@@ -178,6 +186,7 @@ export function ProfileEditor({
         </CardHeader>
         <CardContent className="space-y-3.5">
           <div className="grid grid-cols-2 gap-3">
+            {/* Display Name */}
             <div className="space-y-1">
               <Label className="text-xs font-bold text-zinc-700">Name</Label>
               <Input
@@ -187,14 +196,65 @@ export function ProfileEditor({
                 className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
               />
             </div>
+
+            {/* Handle (@username) with Live Availability & Plan Lock */}
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-zinc-700">Handle (@username)</Label>
-              <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
-                placeholder="alexrivers"
-                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-              />
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-zinc-700">Handle (@username)</Label>
+                {planType === "free" && (
+                  <span className="text-[10px] font-bold text-amber-600 flex items-center gap-0.5">
+                    <Lock className="h-3 w-3" /> Pro Feature
+                  </span>
+                )}
+              </div>
+
+              {planType === "free" ? (
+                <div className="relative">
+                  <Input
+                    disabled
+                    value={username}
+                    className="bg-zinc-100 border-zinc-200 text-xs text-zinc-500 font-medium cursor-not-allowed pr-20"
+                  />
+                  <Link href="/pricing" className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <span className="rounded-lg bg-amber-500 px-2 py-1 text-[10px] font-black text-zinc-950 hover:bg-amber-400 transition flex items-center gap-1 shadow-sm">
+                      <Zap className="h-3 w-3 fill-current" /> Upgrade
+                    </span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                    placeholder="alexrivers"
+                    className={`bg-zinc-50 text-xs text-zinc-900 pr-8 ${
+                      handleStatus
+                        ? handleStatus.available
+                          ? "border-emerald-500 focus:ring-emerald-500/30"
+                          : "border-rose-500 focus:ring-rose-500/30"
+                        : "border-zinc-200"
+                    }`}
+                  />
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                    {checkingHandle ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-400" />
+                    ) : handleStatus ? (
+                      handleStatus.available ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                      )
+                    ) : null}
+                  </div>
+                </div>
+              )}
+
+              {/* Status indicator text */}
+              {planType !== "free" && handleStatus && (
+                <p className={`text-[10px] font-bold mt-1 ${handleStatus.available ? "text-emerald-600" : "text-rose-600"}`}>
+                  {handleStatus.available ? `✓ feedm.ee/${username} is available!` : `✕ ${handleStatus.reason}`}
+                </p>
+              )}
             </div>
           </div>
 

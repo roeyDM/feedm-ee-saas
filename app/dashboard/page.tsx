@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { ProfileEditor } from "@/components/profile-editor";
 import { FeedItemEditor } from "@/components/feed-item-editor";
@@ -13,10 +14,13 @@ import {
 } from "@/components/mobile-preview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
-import { User, Film, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { supabase, PlanType } from "@/lib/supabase";
+import { User, Film, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight } from "lucide-react";
 
 export default function DashboardPage() {
+  // Plan Tier State (default 'free', can be upgraded)
+  const [planType, setPlanType] = useState<PlanType>("free");
+
   // Creator Profile State
   const [name, setName] = useState("Alex Rivers");
   const [username, setUsername] = useState("alexrivers");
@@ -116,6 +120,7 @@ export default function DashboardPage() {
           if (data.bio) setBio(data.bio);
           if (data.avatar_url) setAvatarUrl(data.avatar_url);
           if (data.custom_hex_color) setCustomHexColor(data.custom_hex_color);
+          if (data.plan_type) setPlanType(data.plan_type as PlanType);
           if (data.social_links) setSocialLinks(data.social_links);
           if (data.custom_links) setCustomLinks(data.custom_links);
           if (data.reels) setReels(data.reels);
@@ -141,6 +146,7 @@ export default function DashboardPage() {
         bio,
         avatar_url: avatarUrl,
         custom_hex_color: customHexColor,
+        plan_type: planType,
         social_links: socialLinks,
         custom_links: customLinks,
         reels: reels,
@@ -170,7 +176,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50/80 flex flex-col font-sans text-zinc-900">
-      <DashboardHeader username={username} onSave={handleSave} isSaving={isSaving} />
+      <DashboardHeader username={username} planType={planType} onSave={handleSave} isSaving={isSaving} />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 md:px-6">
         {/* Status Notification Toast Banner */}
@@ -196,6 +202,40 @@ export default function DashboardPage() {
             >
               Dismiss
             </button>
+          </div>
+        )}
+
+        {/* Plan Upgrade Banner (if Free) */}
+        {planType === "free" && (
+          <div className="mb-6 rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-emerald-500/10 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-zinc-950 shadow-md">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-xs font-black text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                  Free Tier Mode <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Limited Access</span>
+                </h2>
+                <p className="text-xs font-semibold text-zinc-600 mt-0.5">
+                  Page 1 (Bio &amp; Links) is active. Upgrade to Pro ($7/mo) to unlock Video Reels (Pages 2–4), Lead Form (Page 5), and your Custom Handle.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setPlanType("pro")}
+                className="text-[11px] font-extrabold text-zinc-600 hover:text-zinc-950 underline px-2 py-1"
+              >
+                Simulate Pro Mode
+              </button>
+              <Link href="/pricing">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-9 px-4 rounded-xl shadow-md gap-1">
+                  <Zap className="h-3.5 w-3.5 fill-current" /> Upgrade to Pro ($7/mo) <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
 
@@ -228,14 +268,17 @@ export default function DashboardPage() {
                   value="profile"
                   className="rounded-xl text-xs font-bold text-zinc-600 data-[state=active]:bg-zinc-950 data-[state=active]:text-white transition-all flex items-center justify-center gap-2"
                 >
-                  <User className="h-4 w-4" /> Theme, Bio & Links
+                  <User className="h-4 w-4" /> Page 1: Bio &amp; Links
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="reels"
-                  className="rounded-xl text-xs font-bold text-zinc-600 data-[state=active]:bg-zinc-950 data-[state=active]:text-white transition-all flex items-center justify-center gap-2"
+                  className="rounded-xl text-xs font-bold text-zinc-600 data-[state=active]:bg-zinc-950 data-[state=active]:text-white transition-all flex items-center justify-center gap-2 relative"
                 >
-                  <Film className="h-4 w-4" /> Video Reels (3 Max)
+                  <Film className="h-4 w-4" /> Video Reels (Pages 2–4)
+                  {planType === "free" && (
+                    <Lock className="h-3.5 w-3.5 text-amber-500 ml-1" />
+                  )}
                 </TabsTrigger>
               </TabsList>
 
@@ -257,11 +300,42 @@ export default function DashboardPage() {
                   setCustomLinks={setCustomLinks}
                   leadForm={leadForm}
                   setLeadForm={setLeadForm}
+                  planType={planType}
                 />
               </TabsContent>
 
-              <TabsContent value="reels" className="focus-visible:outline-none">
-                <FeedItemEditor reels={reels} setReels={setReels} />
+              <TabsContent value="reels" className="focus-visible:outline-none relative">
+                {/* Feature Gating Overlay for Free Tier */}
+                {planType === "free" ? (
+                  <div className="relative rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm overflow-hidden">
+                    {/* Blurred Background Preview */}
+                    <div className="filter blur-md opacity-30 pointer-events-none select-none">
+                      <FeedItemEditor reels={reels} setReels={setReels} />
+                    </div>
+
+                    {/* Lock Overlay */}
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-white/70 backdrop-blur-md">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-emerald-500 text-zinc-950 shadow-xl shadow-amber-500/20 mb-4">
+                        <Lock className="h-7 w-7 stroke-[2.5]" />
+                      </div>
+
+                      <h2 className="text-xl font-black text-zinc-950 tracking-tight">
+                        Video Reels &amp; Lead Form Locked
+                      </h2>
+                      <p className="text-xs font-semibold text-zinc-600 max-w-sm mt-2 mb-6 leading-relaxed">
+                        The Free Tier includes Page 1 (Bio &amp; Custom Links). Upgrade to Pro ($7/mo) to unlock up to 3 snap video reels, Supabase file uploads, and Page 5 contact lead forms!
+                      </p>
+
+                      <Link href="/pricing">
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-11 px-8 rounded-xl shadow-lg shadow-emerald-600/25 gap-2">
+                          <Zap className="h-4 w-4 fill-current text-amber-300" /> Upgrade to Pro ($7/mo) <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <FeedItemEditor reels={reels} setReels={setReels} />
+                )}
               </TabsContent>
             </Tabs>
           </div>
