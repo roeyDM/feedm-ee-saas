@@ -1,0 +1,45 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Ensure dynamic routes are handled server-side by Netlify
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/:username"
+  to = "/:username"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/login"
+  to = "/login"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/signup"
+  to = "/signup"
+  status = 200
+  force = true
+
+# Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
