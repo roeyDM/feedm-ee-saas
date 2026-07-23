@@ -28,6 +28,7 @@ export default function PricingPage() {
   const [agencyName, setAgencyName] = useState("");
   const [agencyEmail, setAgencyEmail] = useState("");
   const [agencyMsg, setAgencyMsg] = useState("");
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +40,50 @@ export default function PricingPage() {
       setAgencyEmail("");
       setAgencyMsg("");
     }, 2500);
+  };
+
+  const handleCheckout = async (planType: "pro" | "business") => {
+    try {
+      setIsCheckoutLoading(true);
+      
+      let priceId = null;
+      if (planType === "pro") {
+        if (isAnnual) {
+          priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID || "price_1TwKGW2L1rzwEqqyFFtRO1Fx";
+        } else {
+          priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID || "price_1TwKFh2L1rzwEqqyPqw9rIgu";
+        }
+      }
+
+      if (!priceId) {
+        console.error("Price ID is missing for this plan configuration.");
+        alert("Configuration error: Price ID is missing. Please contact support.");
+        setIsCheckoutLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          planType,
+          isAnnual,
+          priceId
+        }),
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error(data.error);
+        alert(data.error || "Failed to start checkout process.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCheckoutLoading(false);
+    }
   };
 
   return (
@@ -213,11 +258,15 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8">
-              <Link href="/signup?plan=pro">
-                <Button className="w-full h-11 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25">
-                  Upgrade to Pro <Zap className="h-4 w-4 ml-1.5 fill-current" />
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => handleCheckout("pro")}
+                disabled={isCheckoutLoading}
+                className="w-full h-11 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25"
+              >
+                {isCheckoutLoading ? "Loading..." : (
+                  <>Upgrade to Pro <Zap className="h-4 w-4 ml-1.5 fill-current" /></>
+                )}
+              </Button>
             </div>
           </div>
 
