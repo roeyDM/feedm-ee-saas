@@ -23,6 +23,8 @@ export interface CustomLink {
   url: string;
   badgeText?: string;
   badgeColor?: string;
+  isActive?: boolean;
+  thumbnailUrl?: string;
 }
 
 export interface VideoReel {
@@ -31,13 +33,14 @@ export interface VideoReel {
   thumbnailUrl?: string;
   caption: string;
   likes: number;
-  showWhatsapp?: boolean;
-  showCall?: boolean;
 }
 
 export interface SocialLink {
-  platform: "instagram" | "youtube" | "twitter" | "tiktok" | "facebook";
+  id: string;
+  platform: "instagram" | "youtube" | "twitter" | "tiktok" | "facebook" | "whatsapp" | "linkedin" | "spotify";
   url: string;
+  label?: string;
+  isActive?: boolean;
 }
 
 export interface LeadFormSettings {
@@ -45,6 +48,8 @@ export interface LeadFormSettings {
   subtitle: string;
   routeType: "email" | "whatsapp";
   target: string;
+  showWhatsappButton?: boolean;
+  showCallButton?: boolean;
 }
 
 interface MobilePreviewProps {
@@ -85,6 +90,7 @@ export function MobilePreview({
   const [formName, setFormName] = useState("");
   const [formContact, setFormContact] = useState("");
   const [formMsg, setFormMsg] = useState("");
+  const [showCopyToast, setShowCopyToast] = useState(false);
 
   // Initialize like counts
   useEffect(() => {
@@ -106,12 +112,12 @@ export function MobilePreview({
     });
   };
 
-  const handleShare = async (title: string) => {
+  const handleShare = async (title: string = "") => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: `${profileName} on FeedM.ee`,
-          text: title,
+          text: title || "Check out this profile!",
           url: window.location.href,
         });
       } catch (e) {
@@ -119,64 +125,72 @@ export function MobilePreview({
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
+      setShowCopyToast(true);
+      setTimeout(() => setShowCopyToast(false), 2500);
     }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName || !formContact) return;
+    
+    // In a real app, this would send an email or save to DB
+    console.log("Form submitted via email", { formName, formContact, formMsg });
     setFormSubmitted(true);
-
-    if (leadForm.routeType === "whatsapp" && leadForm.target) {
-      const msg = encodeURIComponent(
-        `היי ${profileName}, פנייה חדשה מאת ${formName} (${formContact}): ${formMsg}`
-      );
-      const cleanPhone = leadForm.target.replace(/[^0-9]/g, "");
-      setTimeout(() => {
-        window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
-      }, 800);
-    }
   };
 
   // Helper for rendering social icons
   const renderSocialIcon = (link: SocialLink) => {
+    if (link.isActive === false) return null;
+
     const iconClass =
-      "flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-zinc-700 shadow-sm border border-zinc-200/80 transition-all duration-200 hover:scale-110 hover:bg-white hover:text-black";
+      "flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-zinc-700 shadow-sm border border-zinc-200/80 transition-all duration-200 hover:scale-110 hover:bg-white hover:text-black shrink-0";
+      
+    let iconElement = null;
+    
     switch (link.platform) {
       case "instagram":
-        return (
-          <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-          </a>
-        );
+        iconElement = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>;
+        break;
       case "youtube":
-        return (
-          <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
-          </a>
-        );
+        iconElement = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>;
+        break;
       case "twitter":
-        return (
-          <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          </a>
-        );
+        iconElement = <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
+        break;
       case "tiktok":
-        return (
-          <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.52-4.06-1.39v7.76c-.05 2.42-1.34 4.78-3.56 5.82-2.23 1.08-5.07.96-7.17-.32-2.22-1.33-3.41-3.99-2.92-6.55.39-2.22 2.14-4.09 4.36-4.53 1.21-.24 2.48-.06 3.56.55v4.2c-.88-.41-1.92-.48-2.78-.05-.98.47-1.57 1.57-1.45 2.66.1 1.07.94 1.99 2 2.08 1.15.11 2.25-.66 2.46-1.79.05-.28.06-.57.06-.85V.02z"/></svg>
-          </a>
-        );
+        iconElement = <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.52-4.06-1.39v7.76c-.05 2.42-1.34 4.78-3.56 5.82-2.23 1.08-5.07.96-7.17-.32-2.22-1.33-3.41-3.99-2.92-6.55.39-2.22 2.14-4.09 4.36-4.53 1.21-.24 2.48-.06 3.56.55v4.2c-.88-.41-1.92-.48-2.78-.05-.98.47-1.57 1.57-1.45 2.66.1 1.07.94 1.99 2 2.08 1.15.11 2.25-.66 2.46-1.79.05-.28.06-.57.06-.85V.02z"/></svg>;
+        break;
       case "facebook":
-        return (
-          <a key={link.platform} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          </a>
-        );
+        iconElement = <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>;
+        break;
+      case "whatsapp":
+        iconElement = <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>;
+        break;
+      case "linkedin":
+        iconElement = <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>;
+        break;
+      case "spotify":
+        iconElement = <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.45 17.294c-.212.348-.675.458-1.023.245-2.805-1.713-6.33-2.1-10.485-1.15-.403.093-.807-.156-.9-.558-.093-.404.156-.807.558-.9 4.545-1.042 8.442-.602 11.606 1.34.348.213.458.675.245 1.023zm1.464-3.267c-.268.435-.852.576-1.287.31-3.21-1.974-8.15-2.573-11.96-1.41-.486.147-1.002-.128-1.15-.615-.146-.486.128-1.002.615-1.15 4.364-1.332 9.805-.672 13.473 1.578.436.267.577.852.31 1.287zm.123-3.415c-3.856-2.287-10.21-2.5-13.9-1.385-.572.173-1.173-.153-1.347-.725-.173-.57.153-1.17.725-1.343 4.296-1.298 11.31-1.05 15.76 1.59.516.305.687.973.382 1.487-.305.515-.973.687-1.488.383z"/></svg>;
+        break;
       default:
         return null;
     }
+
+    if (link.label) {
+      return (
+        <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}>
+          {iconElement}
+          <span className="text-[10px] font-bold">{link.label}</span>
+        </a>
+      );
+    }
+
+    return (
+      <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
+        {iconElement}
+      </a>
+    );
   };
 
   // Dynamic Hex color styles derivation
@@ -191,6 +205,16 @@ export function MobilePreview({
       style={mainContainerStyle}
       className="relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
+      {/* Copy Toast Notification */}
+      {showCopyToast && (
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-zinc-900/95 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-zinc-700 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            Copied to clipboard!
+          </div>
+        </div>
+      )}
+
       {/* ------------------------------------------------------------- */}
       {/* PAGE 1: THE BIO / LINKTREE VIEW */}
       {/* ------------------------------------------------------------- */}
@@ -201,8 +225,17 @@ export function MobilePreview({
 
         {/* Top Header section */}
         <div className="relative z-10 flex flex-col items-center text-center pt-6">
+          {/* Profile Share Button */}
+          <button
+            onClick={() => handleShare()}
+            className="absolute top-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 shadow-sm transition-transform hover:scale-110 hover:bg-white/30 text-zinc-800"
+            aria-label="Share Profile"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+
           {/* Avatar with dynamic colored border */}
-          <div className="relative mb-3">
+          <div className="relative mb-3 mt-4">
             <div className="h-24 w-24 rounded-full p-1 bg-white shadow-xl">
               <img
                 src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop"}
@@ -224,7 +257,9 @@ export function MobilePreview({
 
         {/* Middle Section: Custom Links (Linktree style) */}
         <div className="relative z-10 my-4 flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-0.5">
-          {customLinks.map((link) => (
+          {customLinks
+            .filter((link) => link.isActive !== false)
+            .map((link) => (
             <a
               key={link.id}
               href={link.url}
@@ -232,20 +267,35 @@ export function MobilePreview({
               rel="noreferrer"
               className="group relative flex items-center justify-between rounded-2xl bg-white/85 p-3.5 shadow-md shadow-black/5 backdrop-blur-md border border-white/60 transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:shadow-lg"
             >
-              <div className="flex flex-col min-w-0 pr-2">
-                <span className="text-sm font-bold text-zinc-900 truncate group-hover:text-black">
-                  {link.title}
-                </span>
-                {link.badgeText && (
-                  <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 w-fit">
-                    <Tag className="h-3 w-3 text-emerald-600" />
-                    <span>{link.badgeText}</span>
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                {link.thumbnailUrl && (
+                  <div className="flex-shrink-0 h-10 w-10 overflow-hidden rounded-lg border border-zinc-200">
+                    <img src={link.thumbnailUrl} alt={link.title} className="h-full w-full object-cover" />
                   </div>
                 )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-bold text-zinc-900 truncate group-hover:text-black">
+                    {link.title}
+                  </span>
+                  {link.badgeText && (
+                    <div className="mt-1 inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 w-fit">
+                      <Tag className="h-3 w-3 text-emerald-600" />
+                      <span>{link.badgeText}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-700 transition duration-300 group-hover:bg-zinc-900 group-hover:text-white">
-                <ExternalLink className="h-4 w-4" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-400 transition-colors group-hover:bg-zinc-200 group-hover:text-zinc-900">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  className="h-4 w-4"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
               </div>
             </a>
           ))}
@@ -338,8 +388,8 @@ export function MobilePreview({
               <span className="text-[10px] font-bold text-white drop-shadow-md">Share</span>
             </div>
 
-            {/* WhatsApp Direct Action Button (If enabled) */}
-            {reel.showWhatsapp && (
+            {/* WhatsApp Direct Action Button (If enabled globally) */}
+            {leadForm.showWhatsappButton && (
               <a
                 href={
                   leadForm.target
@@ -350,12 +400,14 @@ export function MobilePreview({
                 rel="noreferrer"
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white border border-emerald-400 shadow-lg shadow-emerald-500/30 transition hover:scale-110"
               >
-                <MessageCircle className="h-6 w-6 fill-current" />
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
               </a>
             )}
 
-            {/* Call Direct Action Button (If enabled) */}
-            {reel.showCall && (
+            {/* Call Direct Action Button (If enabled globally) */}
+            {leadForm.showCallButton && (
               <a
                 href={
                   leadForm.target ? `tel:${leadForm.target.replace(/[^0-9]/g, "")}` : "#"

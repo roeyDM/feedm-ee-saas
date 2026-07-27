@@ -103,8 +103,6 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
   // Form state
   const [videoUrl, setVideoUrl] = useState("");
   const [caption, setCaption] = useState("");
-  const [showWhatsapp, setShowWhatsapp] = useState(true);
-  const [showCall, setShowCall] = useState(false);
 
   // Upload state
   const [uploadMode, setUploadMode] = useState<"url" | "file">("file");
@@ -237,8 +235,6 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
       videoUrl: finalUrl,
       caption,
       likes: Math.floor(Math.random() * 300) + 100,
-      showWhatsapp,
-      showCall,
     };
 
     setReels([...reels, newReel]);
@@ -255,12 +251,8 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
     setReels(reels.filter((r) => r.id !== id));
   };
 
-  const toggleReelWhatsapp = (id: string) => {
-    setReels(reels.map((r) => (r.id === id ? { ...r, showWhatsapp: !r.showWhatsapp } : r)));
-  };
-
-  const toggleReelCall = (id: string) => {
-    setReels(reels.map((r) => (r.id === id ? { ...r, showCall: !r.showCall } : r)));
+  const handleUpdateCaption = (id: string, newCaption: string) => {
+    setReels(reels.map((r) => (r.id === id ? { ...r, caption: newCaption } : r)));
   };
 
   return (
@@ -417,28 +409,6 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
               />
             </div>
 
-            {/* Action Toggles */}
-            <div className="flex items-center gap-5">
-              <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showWhatsapp}
-                  onChange={(e) => setShowWhatsapp(e.target.checked)}
-                  className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp Button
-              </label>
-              <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showCall}
-                  onChange={(e) => setShowCall(e.target.checked)}
-                  className="rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500"
-                />
-                <Phone className="h-4 w-4 text-cyan-600" /> Call Button
-              </label>
-            </div>
-
             {/* Quick Presets (only in URL mode) */}
             {uploadMode === "url" && (
               <div>
@@ -507,16 +477,20 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
             </div>
           ) : (
             reels.map((reel, idx) => (
-              <div key={reel.id} className="p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-zinc-100 font-black text-xs text-zinc-700">
+              <div key={reel.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0 w-full">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-zinc-100 font-black text-xs text-zinc-700 mt-1">
                     #{idx + 1}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-zinc-900 truncate max-w-[200px]">
-                      {reel.caption}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1 text-[10px] font-medium text-zinc-500">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <textarea
+                      rows={2}
+                      value={reel.caption}
+                      onChange={(e) => handleUpdateCaption(reel.id, e.target.value)}
+                      className="w-full text-xs font-bold text-zinc-900 rounded-md border border-transparent hover:border-zinc-200 focus:border-zinc-300 focus:ring-2 focus:ring-emerald-500/30 p-1 resize-none bg-transparent hover:bg-zinc-50 focus:bg-white transition"
+                      placeholder="Edit caption..."
+                    />
+                    <div className="flex items-center gap-3 mt-1 text-[10px] font-medium text-zinc-500 px-1">
                       <span className="flex items-center gap-1">
                         <Heart className="h-3 w-3 text-rose-500 fill-current" /> {reel.likes} Likes
                       </span>
@@ -529,36 +503,12 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleReelWhatsapp(reel.id)}
-                    className={cn(
-                      "h-7 px-2 rounded-lg text-[10px] font-bold border transition flex items-center gap-1",
-                      reel.showWhatsapp
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                        : "bg-zinc-50 text-zinc-400 border-zinc-200"
-                    )}
-                  >
-                    <MessageCircle className="h-3 w-3" /> WA
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => toggleReelCall(reel.id)}
-                    className={cn(
-                      "h-7 px-2 rounded-lg text-[10px] font-bold border transition flex items-center gap-1",
-                      reel.showCall
-                        ? "bg-cyan-50 text-cyan-700 border-cyan-300"
-                        : "bg-zinc-50 text-zinc-400 border-zinc-200"
-                    )}
-                  >
-                    <Phone className="h-3 w-3" /> Call
-                  </button>
+                <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:shrink-0 justify-end">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(reel.id)}
-                    className="h-7 w-7 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
+                    className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

@@ -47,7 +47,11 @@ export default function UserProfilePage({ params }: PageProps) {
               data.avatar_url ||
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
             customHexColor: data.custom_hex_color || "#bad1cb",
-            socialLinks: data.social_links || [],
+            socialLinks: (data.social_links || []).map((l: any) => ({
+              ...l,
+              id: l.id || crypto.randomUUID(),
+              isActive: l.isActive !== false
+            })),
             customLinks: data.custom_links || [],
             reels: data.reels || [],
             leadForm: data.lead_form || {
@@ -75,10 +79,10 @@ export default function UserProfilePage({ params }: PageProps) {
     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
     customHexColor: "#bad1cb",
     socialLinks: [
-      { platform: "instagram", url: `https://instagram.com/${handleKey}` },
-      { platform: "tiktok", url: `https://tiktok.com/@${handleKey}` },
-      { platform: "youtube", url: `https://youtube.com/${handleKey}` },
-    ],
+      { id: "s1", platform: "instagram", url: `https://instagram.com/${handleKey}`, isActive: true },
+      { id: "s2", platform: "tiktok", url: `https://tiktok.com/@${handleKey}`, isActive: true },
+      { id: "s3", platform: "youtube", url: `https://youtube.com/${handleKey}`, isActive: true },
+    ] as SocialLink[],
     customLinks: [
       {
         id: "1",

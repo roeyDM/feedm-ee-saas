@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { ProfileEditor } from "@/components/profile-editor";
 import { FeedItemEditor } from "@/components/feed-item-editor";
+import { DesignEditor } from "@/components/design-editor";
 import {
   MobilePreview,
   SocialLink,
@@ -12,12 +14,58 @@ import {
   VideoReel,
   LeadFormSettings,
 } from "@/components/mobile-preview";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+function StripeCheckoutStatus({
+  username,
+  setPlanType,
+  setSaveStatus,
+  setStatusMsg,
+}: {
+  username: string;
+  setPlanType: (plan: PlanType) => void;
+  setSaveStatus: (status: "idle" | "success" | "error") => void;
+  setStatusMsg: (msg: string) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    const plan = searchParams.get("plan");
+
+    if (checkout === "success" && plan && username) {
+      // 1. Immediately unlock Pro locally
+      setPlanType(plan as PlanType);
+      
+      // 2. Alert the user
+      setSaveStatus("success");
+      setStatusMsg(`🎉 Pro Features Unlocked! Welcome to the ${plan} plan.`);
+      setTimeout(() => setSaveStatus("idle"), 5000);
+
+      // 3. Update Supabase asynchronously
+      const updatePlan = async () => {
+        try {
+          await supabase
+            .from("profiles")
+            .update({ plan_type: plan, updated_at: new Date().toISOString() })
+            .eq("username", username.toLowerCase());
+        } catch (err) {
+          console.error("Failed to sync plan status to Supabase", err);
+        }
+      };
+      
+      updatePlan();
+    }
+  }, [searchParams, username, setPlanType, setSaveStatus, setStatusMsg]);
+
+  return null;
+}
 
 export default function DashboardPage() {
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
 
@@ -34,9 +82,9 @@ export default function DashboardPage() {
 
   // Social Links
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
-    { platform: "instagram", url: "https://instagram.com/alexrivers" },
-    { platform: "tiktok", url: "https://tiktok.com/@alexrivers" },
-    { platform: "youtube", url: "https://youtube.com/alexrivers" },
+    { id: "1", platform: "instagram", url: "https://instagram.com/alexrivers", isActive: true },
+    { id: "2", platform: "tiktok", url: "https://tiktok.com/@alexrivers", isActive: true },
+    { id: "3", platform: "youtube", url: "https://youtube.com/alexrivers", isActive: true },
   ]);
 
   // Linktree Custom Links (Page 1)
@@ -68,8 +116,6 @@ export default function DashboardPage() {
         "https://assets.mixkit.co/videos/preview/mixkit-mysterious-pale-looking-woman-with-neon-make-up-42322-large.mp4",
       caption: "Chasing neon lights in the city 🌆✨ Which frame is your favorite?",
       likes: 284,
-      showWhatsapp: true,
-      showCall: false,
     },
     {
       id: "r2",
@@ -77,8 +123,6 @@ export default function DashboardPage() {
         "https://assets.mixkit.co/videos/preview/mixkit-girl-taking-selfie-in-front-of-neon-sign-42326-large.mp4",
       caption: "Sunset waves on the coast 🌊🌅 Turn sound on!",
       likes: 195,
-      showWhatsapp: true,
-      showCall: true,
     },
     {
       id: "r3",
@@ -86,8 +130,6 @@ export default function DashboardPage() {
         "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-leaves-in-autumn-48906-large.mp4",
       caption: "Golden autumn tree loop 🍂💛 Cozy vibes forever.",
       likes: 312,
-      showWhatsapp: false,
-      showCall: true,
     },
   ]);
 
@@ -95,8 +137,10 @@ export default function DashboardPage() {
   const [leadForm, setLeadForm] = useState<LeadFormSettings>({
     title: "רוצים להיות חלק? / לפניות עסקיות",
     subtitle: "השאירו פרטים ונחזור אליכם בהקדם",
-    routeType: "whatsapp",
+    routeType: "email",
     target: "1234567890",
+    showWhatsappButton: true,
+    showCallButton: false,
   });
 
   // Supabase Persistence State
@@ -121,7 +165,13 @@ export default function DashboardPage() {
           if (data.avatar_url) setAvatarUrl(data.avatar_url);
           if (data.custom_hex_color) setCustomHexColor(data.custom_hex_color);
           if (data.plan_type) setPlanType(data.plan_type as PlanType);
-          if (data.social_links) setSocialLinks(data.social_links);
+          if (data.social_links) {
+            setSocialLinks(data.social_links.map((l: any) => ({
+              ...l,
+              id: l.id || crypto.randomUUID(),
+              isActive: l.isActive !== false
+            })));
+          }
           if (data.custom_links) setCustomLinks(data.custom_links);
           if (data.reels) setReels(data.reels);
           if (data.lead_form) setLeadForm(data.lead_form);
@@ -174,115 +224,205 @@ export default function DashboardPage() {
     }
   };
 
+  const handleShareProfile = async () => {
+    const profileUrl = `${window.location.origin}/${username}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${name} on FeedM.ee`,
+          url: profileUrl,
+        });
+      } catch (e) {
+        console.log("Share cancelled", e);
+      }
+    } else {
+      navigator.clipboard.writeText(profileUrl);
+      setSaveStatus("success");
+      setStatusMsg("Profile link copied to clipboard!");
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50/80 flex flex-col font-sans text-zinc-900">
       <DashboardHeader username={username} planType={planType} onSave={handleSave} isSaving={isSaving} />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 md:px-6">
-        {/* Status Notification Toast Banner */}
-        {saveStatus !== "idle" && (
-          <div
-            className={`mb-6 flex items-center justify-between rounded-2xl p-4 text-xs font-bold shadow-md transition-all ${
-              saveStatus === "success"
-                ? "bg-emerald-600 text-white"
-                : "bg-rose-600 text-white"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              {saveStatus === "success" ? (
-                <CheckCircle2 className="h-5 w-5" />
-              ) : (
-                <AlertCircle className="h-5 w-5" />
-              )}
-              <span>{statusMsg}</span>
-            </div>
-            <button
-              onClick={() => setSaveStatus("idle")}
-              className="text-white/80 hover:text-white underline text-[11px]"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
+      <Suspense fallback={null}>
+        <StripeCheckoutStatus 
+          username={username}
+          setPlanType={setPlanType}
+          setSaveStatus={setSaveStatus}
+          setStatusMsg={setStatusMsg}
+        />
+      </Suspense>
 
-        {/* Plan Upgrade Banner (if Free) */}
-        {planType === "free" && (
-          <div className="mb-6 rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-emerald-500/10 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+      <main className="flex-1 w-full px-4 py-6 md:px-8 flex flex-col lg:flex-row gap-8 items-start">
+        
+        {/* LEFT SIDEBAR */}
+        <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6">
+          {/* User Profile Card */}
+          <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-zinc-950 shadow-md">
-                <Lock className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-xs font-black text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-                  Free Tier Mode <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Limited Access</span>
-                </h2>
-                <p className="text-xs font-semibold text-zinc-600 mt-0.5">
-                  Page 1 (Bio &amp; Links) is active. Upgrade to Pro ($7/mo) to unlock Video Reels (Pages 2–4), Lead Form (Page 5), and your Custom Handle.
-                </p>
+              <img
+                src={avatarUrl}
+                alt={name}
+                className="w-10 h-10 rounded-full object-cover border border-zinc-200"
+              />
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-bold text-zinc-900 truncate">{name}</span>
+                <span className="text-xs text-zinc-500 truncate">@{username}</span>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setPlanType("pro")}
-                className="text-[11px] font-extrabold text-zinc-600 hover:text-zinc-950 underline px-2 py-1"
+            <div className="flex gap-2">
+              <button 
+                onClick={handleShareProfile}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs py-2 rounded-xl border border-emerald-200 transition-colors"
               >
-                Simulate Pro Mode
+                <Share2 className="h-3.5 w-3.5" /> Share
               </button>
-              <Link href="/pricing">
-                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-9 px-4 rounded-xl shadow-md gap-1">
-                  <Zap className="h-3.5 w-3.5 fill-current" /> Upgrade to Pro ($7/mo) <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
+              <button className="flex-1 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 font-bold text-xs py-2 rounded-xl border border-zinc-200 transition-colors">
+                Support
+              </button>
             </div>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left panel: Controls & Editors */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-black text-zinc-950 tracking-tight flex items-center gap-2">
-                  Creator Studio <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
-                </h1>
-                <p className="text-xs font-semibold text-zinc-500 mt-0.5">
-                  Connected to Supabase. Edit settings and click Save Changes to persist.
-                </p>
-              </div>
-
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 gap-1.5 shadow-sm"
+          {/* Navigation Links */}
+          <div className="flex flex-col gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2">Feed Selector</label>
+              <select
+                className="w-full bg-white border border-zinc-200 text-zinc-900 text-sm font-bold rounded-xl px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               >
-                <Save className="h-3.5 w-3.5" /> Save Profile
-              </Button>
+                <option value="default">My Feed</option>
+              </select>
             </div>
 
-            {/* Editor Tabs */}
-            <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="grid grid-cols-2 bg-white border border-zinc-200 p-1 rounded-2xl h-12 shadow-sm mb-6">
-                <TabsTrigger
-                  value="profile"
-                  className="rounded-xl text-xs font-bold text-zinc-600 data-[state=active]:bg-zinc-950 data-[state=active]:text-white transition-all flex items-center justify-center gap-2"
-                >
-                  <User className="h-4 w-4" /> Page 1: Bio &amp; Links
-                </TabsTrigger>
+            <div className="flex flex-col gap-1.5 mt-2">
+              <button
+                onClick={() => setActiveTab("bio")}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-left",
+                  activeTab === "bio"
+                    ? "bg-zinc-950 text-white shadow-md"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                )}
+              >
+                <User className="h-4.5 w-4.5 shrink-0" /> Bio &amp; Links
+              </button>
 
-                <TabsTrigger
-                  value="reels"
-                  className="rounded-xl text-xs font-bold text-zinc-600 data-[state=active]:bg-zinc-950 data-[state=active]:text-white transition-all flex items-center justify-center gap-2 relative"
-                >
-                  <Film className="h-4 w-4" /> Video Reels (Pages 2–4)
-                  {planType === "free" && (
-                    <Lock className="h-3.5 w-3.5 text-amber-500 ml-1" />
-                  )}
-                </TabsTrigger>
-              </TabsList>
+              <button
+                onClick={() => setActiveTab("reels")}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-left relative",
+                  activeTab === "reels"
+                    ? "bg-zinc-950 text-white shadow-md"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                )}
+              >
+                <Film className="h-4.5 w-4.5 shrink-0" /> Videos &amp; Reels
+                {planType === "free" && <Lock className={cn("h-4 w-4 ml-auto", activeTab === "reels" ? "text-amber-400" : "text-amber-500")} />}
+              </button>
 
-              <TabsContent value="profile" className="focus-visible:outline-none">
+              <button
+                onClick={() => setActiveTab("design")}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-left",
+                  activeTab === "design"
+                    ? "bg-zinc-950 text-white shadow-md"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                )}
+              >
+                <Palette className="h-4.5 w-4.5 shrink-0" /> Design &amp; Themes
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* CENTER WORKSPACE */}
+        <div className="flex-1 min-w-0 flex flex-col gap-6 w-full">
+          {/* Status Notification Toast Banner */}
+          {saveStatus !== "idle" && (
+            <div
+              className={`flex items-center justify-between rounded-2xl p-4 text-xs font-bold shadow-md transition-all ${
+                saveStatus === "success"
+                  ? "bg-emerald-600 text-white"
+                  : "bg-rose-600 text-white"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {saveStatus === "success" ? (
+                  <CheckCircle2 className="h-5 w-5" />
+                ) : (
+                  <AlertCircle className="h-5 w-5" />
+                )}
+                <span>{statusMsg}</span>
+              </div>
+              <button
+                onClick={() => setSaveStatus("idle")}
+                className="text-white/80 hover:text-white underline text-[11px]"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {/* Plan Upgrade Banner (if Free) */}
+          {planType === "free" && (
+            <div className="rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-emerald-500/10 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-zinc-950 shadow-md">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xs font-black text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                    Free Tier Mode <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Limited Access</span>
+                  </h2>
+                  <p className="text-xs font-semibold text-zinc-600 mt-0.5">
+                    Page 1 (Bio &amp; Links) is active. Upgrade to Pro ($7/mo) to unlock Video Reels (Pages 2–4), Lead Form (Page 5), and your Custom Handle.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setPlanType("pro")}
+                  className="text-[11px] font-extrabold text-zinc-600 hover:text-zinc-950 underline px-2 py-1"
+                >
+                  Simulate Pro Mode
+                </button>
+                <Link href="/pricing">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-9 px-4 rounded-xl shadow-md gap-1">
+                    <Zap className="h-3.5 w-3.5 fill-current" /> Upgrade to Pro ($7/mo) <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+            <div>
+              <h1 className="text-2xl font-black text-zinc-950 tracking-tight flex items-center gap-2">
+                Creator Studio <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
+              </h1>
+              <p className="text-xs font-semibold text-zinc-500 mt-0.5">
+                Connected to Supabase. Edit settings and click Save Changes to persist.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 px-5 gap-1.5 shadow-sm rounded-xl"
+            >
+              <Save className="h-4 w-4" /> Save Profile
+            </Button>
+          </div>
+
+          {/* Active Form Panel */}
+          <div className="relative max-w-3xl mx-auto w-full">
+            {activeTab === "bio" && (
+              <div className="animate-in fade-in zoom-in-95 duration-200">
                 <ProfileEditor
                   name={name}
                   setName={setName}
@@ -302,10 +442,11 @@ export default function DashboardPage() {
                   setLeadForm={setLeadForm}
                   planType={planType}
                 />
-              </TabsContent>
+              </div>
+            )}
 
-              <TabsContent value="reels" className="focus-visible:outline-none relative">
-                {/* Feature Gating Overlay for Free Tier */}
+            {activeTab === "reels" && (
+              <div className="animate-in fade-in zoom-in-95 duration-200">
                 {planType === "free" ? (
                   <div className="relative rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm overflow-hidden">
                     {/* Blurred Background Preview */}
@@ -320,10 +461,10 @@ export default function DashboardPage() {
                       </div>
 
                       <h2 className="text-xl font-black text-zinc-950 tracking-tight">
-                        Video Reels &amp; Lead Form Locked
+                        Video Reels Locked
                       </h2>
                       <p className="text-xs font-semibold text-zinc-600 max-w-sm mt-2 mb-6 leading-relaxed">
-                        The Free Tier includes Page 1 (Bio &amp; Custom Links). Upgrade to Pro ($7/mo) to unlock up to 3 snap video reels, Supabase file uploads, and Page 5 contact lead forms!
+                        The Free Tier includes Page 1 (Bio &amp; Custom Links). Upgrade to Pro ($7/mo) to unlock up to 3 snap video reels and Supabase file uploads!
                       </p>
 
                       <Link href="/pricing">
@@ -336,33 +477,41 @@ export default function DashboardPage() {
                 ) : (
                   <FeedItemEditor reels={reels} setReels={setReels} />
                 )}
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
+
+            {activeTab === "design" && (
+              <div className="animate-in fade-in zoom-in-95 duration-200">
+                <DesignEditor 
+                  customHexColor={customHexColor}
+                  setCustomHexColor={setCustomHexColor}
+                />
+              </div>
+            )}
           </div>
-
-          {/* Right panel: Sticky Live iPhone Preview */}
-          <div className="lg:col-span-5 lg:sticky lg:top-24 flex flex-col items-center">
-            <div className="mb-3 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-zinc-200/80 shadow-sm px-3.5 py-1.5 text-xs font-bold text-zinc-700">
-                <Smartphone className="h-4 w-4 text-emerald-600" /> Live 5-Page Snap Preview
-              </span>
-            </div>
-
-            <MobilePreview
-              profileName={name}
-              username={username}
-              bio={bio}
-              avatarUrl={avatarUrl}
-              customHexColor={customHexColor}
-              socialLinks={socialLinks}
-              customLinks={customLinks}
-              reels={reels}
-              leadForm={leadForm}
-              isDemoMode={true}
-            />
-          </div>
-
         </div>
+
+        {/* RIGHT PANEL: MOBILE PREVIEW */}
+        <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3">
+          <div className="text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-zinc-200/80 shadow-sm px-3.5 py-1.5 text-xs font-bold text-zinc-700">
+              <Smartphone className="h-4 w-4 text-emerald-600" /> Live 5-Page Snap Preview
+            </span>
+          </div>
+
+          <MobilePreview
+            profileName={name}
+            username={username}
+            bio={bio}
+            avatarUrl={avatarUrl}
+            customHexColor={customHexColor}
+            socialLinks={socialLinks}
+            customLinks={customLinks}
+            reels={reels}
+            leadForm={leadForm}
+            isDemoMode={true}
+          />
+        </aside>
       </main>
     </div>
   );
