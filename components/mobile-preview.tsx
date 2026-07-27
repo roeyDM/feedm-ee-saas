@@ -13,7 +13,8 @@ import {
   Tag,
   Send,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,12 @@ export interface VideoReel {
   thumbnailUrl?: string;
   caption: string;
   likes: number;
+  promoEnabled?: boolean;
+  promoTitle?: string;
+  promoCode?: string;
+  promoUrl?: string;
+  promoDelaySeconds?: number;
+  promoCta?: string;
 }
 
 export interface SocialLink {
@@ -63,6 +70,48 @@ interface MobilePreviewProps {
   reels: VideoReel[];
   leadForm: LeadFormSettings;
   isDemoMode?: boolean;
+}
+
+function PromoOverlay({ reel }: { reel: VideoReel }) {
+  const [show, setShow] = useState(false);
+  
+  useEffect(() => {
+    if (!reel.promoEnabled) {
+      setShow(false);
+      return;
+    }
+    const delay = (reel.promoDelaySeconds ?? 3) * 1000;
+    const timer = setTimeout(() => setShow(true), delay);
+    return () => clearTimeout(timer);
+  }, [reel]);
+
+  if (!show || !reel.promoEnabled) return null;
+
+  return (
+    <div className="absolute bottom-28 left-4 right-16 z-30 pointer-events-none">
+      <div className="bg-black/60 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-lg flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-500">
+        <button onClick={() => setShow(false)} className="absolute top-2 right-2 text-white/60 hover:text-white pointer-events-auto transition">
+          <X className="h-3 w-3" />
+        </button>
+        <div className="pr-5">
+          <h4 className="text-[11px] font-bold text-white leading-tight">{reel.promoTitle || "Special Offer!"}</h4>
+          {reel.promoCode && (
+             <div className="mt-1.5 inline-block bg-white/20 text-white text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/30">
+               Code: {reel.promoCode}
+             </div>
+          )}
+        </div>
+        <a 
+          href={reel.promoUrl || "#"} 
+          target="_blank" 
+          rel="noreferrer" 
+          className="mt-1 w-full flex items-center justify-center gap-1 bg-white text-black hover:bg-zinc-200 text-[10px] font-extrabold py-2 rounded-lg pointer-events-auto transition shadow-sm"
+        >
+           {reel.promoCta || "Get Deal 🚀"}
+        </a>
+      </div>
+    </div>
+  );
 }
 
 export function MobilePreview({
@@ -353,7 +402,7 @@ export function MobilePreview({
           </div>
 
           {/* Right Side Interaction Buttons Column */}
-          <div className="absolute right-4 bottom-16 z-20 flex flex-col items-center gap-5">
+          <div className="absolute right-4 bottom-[220px] z-20 flex flex-col items-center gap-5">
             {/* Like Button & Counter */}
             <div className="flex flex-col items-center gap-1">
               <button
@@ -419,27 +468,30 @@ export function MobilePreview({
             )}
           </div>
 
-          {/* Bottom Left Video Overlay Footer */}
-          <div className="absolute bottom-6 left-4 right-20 z-20 flex flex-col gap-2">
-            {/* Creator Handle badge */}
-            <div className="flex items-center gap-2">
-              <img
-                src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
-                alt=""
-                className="h-8 w-8 rounded-full object-cover border border-white/40 shadow-sm"
-              />
-              <span className="text-xs font-black text-white drop-shadow-md">
-                @{username || "username"}
-              </span>
+            {/* Bottom Left Video Overlay Footer */}
+            <div className="absolute bottom-6 left-4 right-16 z-20 flex flex-col gap-2">
+              {/* Creator Handle badge */}
+              <div className="flex items-center gap-2">
+                <img
+                  src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
+                  alt=""
+                  className="h-8 w-8 rounded-full object-cover border border-white/40 shadow-sm"
+                />
+                <span className="text-xs font-black text-white drop-shadow-md">
+                  @{username || "username"}
+                </span>
+              </div>
+
+              {/* Video Caption */}
+              <p className="text-xs font-medium text-white/95 line-clamp-3 leading-relaxed drop-shadow-md pr-2">
+                {reel.caption}
+              </p>
             </div>
 
-            {/* Video Caption */}
-            <p className="text-xs font-medium text-white/95 line-clamp-3 leading-relaxed drop-shadow-md">
-              {reel.caption}
-            </p>
-          </div>
+            {/* Promo Banner Overlay */}
+            <PromoOverlay reel={reel} />
 
-          {/* Bottom Gradient overlay */}
+            {/* Bottom Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 pointer-events-none" />
         </div>
       ))}

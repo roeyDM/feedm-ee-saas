@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { VideoReel } from "./mobile-preview";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,9 @@ import {
   AlertCircle,
   X,
   Link2,
+  Zap,
+  ArrowRight,
+  GripVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -26,6 +30,7 @@ import { supabase } from "@/lib/supabase";
 interface FeedItemEditorProps {
   reels: VideoReel[];
   setReels: (reels: VideoReel[]) => void;
+  planType?: string;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -99,7 +104,7 @@ function ProgressBar({ percent }: { percent: number }) {
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
-export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
+export function FeedItemEditor({ reels, setReels, planType = "pro" }: FeedItemEditorProps) {
   // Form state
   const [videoUrl, setVideoUrl] = useState("");
   const [caption, setCaption] = useState("");
@@ -111,6 +116,9 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upgrade Modal State
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const showToast = (type: ToastType, message: string) => {
     setToast({ type, message });
@@ -255,8 +263,52 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
     setReels(reels.map((r) => (r.id === id ? { ...r, caption: newCaption } : r)));
   };
 
+  const handleUpdateReel = (id: string, updates: Partial<VideoReel>) => {
+    // Check if user is trying to enable promo but is on free plan
+    if (updates.promoEnabled && planType === "free") {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setReels(reels.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+  };
+
+  const onDragEndReels = (result: DropResult) => {
+    if (!result.destination) return;
+    const items = Array.from(reels);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setReels(items);
+  };
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Promo Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setShowUpgradeModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-full p-2 transition"
+            >
+              <Trash2 className="h-4 w-4" /> {/* Fallback icon, preferably X */}
+            </button>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-emerald-500 text-white shadow-xl shadow-amber-500/20 mb-5">
+              <Zap className="h-8 w-8 stroke-[2.5]" />
+            </div>
+            <h3 className="text-xl font-black text-zinc-900 tracking-tight">Unlock Shoppable Reels</h3>
+            <p className="text-sm font-semibold text-zinc-600 mt-2 mb-6 leading-relaxed">
+              Convert your viewers into customers! Upgrade to PRO to add targeted promos, coupon codes, and deal links directly inside your video reels.
+            </p>
+            <a 
+              href="/pricing"
+              className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm h-12 rounded-xl shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02]"
+            >
+              Upgrade to PRO ($7/mo) <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Toast Notification Banner */}
       {toast && (
         <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
@@ -468,7 +520,7 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="divide-y divide-zinc-100 p-0">
+        <CardContent className="flex flex-col gap-4 p-4">
           {reels.length === 0 ? (
             <div className="p-8 text-center text-zinc-400 flex flex-col items-center justify-center">
               <Sparkles className="h-6 w-6 text-zinc-300 mb-2" />
@@ -476,45 +528,155 @@ export function FeedItemEditor({ reels, setReels }: FeedItemEditorProps) {
               <p className="text-[11px] text-zinc-400 mt-0.5">Upload a file or paste a URL above.</p>
             </div>
           ) : (
-            reels.map((reel, idx) => (
-              <div key={reel.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0 w-full">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-zinc-100 font-black text-xs text-zinc-700 mt-1">
-                    #{idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0 pr-2">
-                    <textarea
-                      rows={2}
-                      value={reel.caption}
-                      onChange={(e) => handleUpdateCaption(reel.id, e.target.value)}
-                      className="w-full text-xs font-bold text-zinc-900 rounded-md border border-transparent hover:border-zinc-200 focus:border-zinc-300 focus:ring-2 focus:ring-emerald-500/30 p-1 resize-none bg-transparent hover:bg-zinc-50 focus:bg-white transition"
-                      placeholder="Edit caption..."
-                    />
-                    <div className="flex items-center gap-3 mt-1 text-[10px] font-medium text-zinc-500 px-1">
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-3 w-3 text-rose-500 fill-current" /> {reel.likes} Likes
-                      </span>
-                      {reel.videoUrl.includes("supabase") && (
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">
-                          Supabase ↑
+            <DragDropContext onDragEnd={onDragEndReels}>
+              <Droppable droppableId="active-reels">
+                {(provided) => (
+                  <div 
+                    className="flex flex-col gap-4"
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                  >
+                    {reels.map((reel, index) => (
+                      <Draggable key={reel.id} draggableId={reel.id} index={index}>
+                        {(provided) => (
+                          <div 
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="p-4 flex flex-col gap-3 bg-white rounded-xl border border-zinc-200 shadow-sm"
+                          >
+                            {/* Top Row: Info & Actions */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-start gap-3 min-w-0 w-full">
+                                <div 
+                                  {...provided.dragHandleProps}
+                                  className="flex-shrink-0 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 mt-2"
+                                >
+                                  <GripVertical className="h-5 w-5" />
+                                </div>
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-zinc-100 font-black text-xs text-zinc-700 mt-1">
+                      #{index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0 pr-2">
+                      <textarea
+                        rows={2}
+                        value={reel.caption}
+                        onChange={(e) => handleUpdateCaption(reel.id, e.target.value)}
+                        className="w-full text-xs font-bold text-zinc-900 rounded-md border border-transparent hover:border-zinc-200 focus:border-zinc-300 focus:ring-2 focus:ring-emerald-500/30 p-1 resize-none bg-transparent hover:bg-zinc-50 focus:bg-white transition"
+                        placeholder="Edit caption..."
+                      />
+                      <div className="flex items-center gap-3 mt-1 text-[10px] font-medium text-zinc-500 px-1">
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-3 w-3 text-rose-500 fill-current" /> {reel.likes} Likes
                         </span>
-                      )}
+                        {reel.videoUrl.includes("supabase") && (
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">
+                            Supabase ↑
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:shrink-0 justify-end">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(reel.id)}
-                    className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:shrink-0 justify-end">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(reel.id)}
+                      className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Promo Settings Toggle */}
+                <div className="w-full pt-2 border-t border-zinc-100 flex flex-col gap-2">
+                  <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={!!reel.promoEnabled}
+                      onChange={(e) => handleUpdateReel(reel.id, { promoEnabled: e.target.checked })}
+                      className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    Enable Video Promo / Deal
+                  </label>
+                  
+                  {reel.promoEnabled && (
+                    <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-200 mt-1 grid gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-zinc-500">Call-to-Action (CTA)</Label>
+                          <select
+                            value={reel.promoCta || "Get Deal 🚀"}
+                            onChange={(e) => handleUpdateReel(reel.id, { promoCta: e.target.value })}
+                            className="w-full rounded-md border border-zinc-200 bg-white p-1.5 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 h-8"
+                          >
+                            <option value="Get Deal 🚀">Get Deal 🚀</option>
+                            <option value="Shop Now 🛍️">Shop Now 🛍️</option>
+                            <option value="Open Link 🔗">Open Link 🔗</option>
+                            <option value="Book Now 📅">Book Now 📅</option>
+                            <option value="Visit Website 🌐">Visit Website 🌐</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-zinc-500">Promo Title</Label>
+                          <Input
+                            value={reel.promoTitle || ""}
+                            onChange={(e) => handleUpdateReel(reel.id, { promoTitle: e.target.value })}
+                            placeholder="e.g. 15% discount on Ninja Ice Cream"
+                            className="bg-white border-zinc-200 text-xs text-zinc-900 h-8"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-zinc-500">Coupon Code (Optional)</Label>
+                          <Input
+                            value={reel.promoCode || ""}
+                            onChange={(e) => handleUpdateReel(reel.id, { promoCode: e.target.value })}
+                            placeholder="e.g. NINJA15"
+                            className="bg-white border-zinc-200 text-xs text-zinc-900 h-8"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-zinc-500">Target URL</Label>
+                          <Input
+                            value={reel.promoUrl || ""}
+                            onChange={(e) => handleUpdateReel(reel.id, { promoUrl: e.target.value })}
+                            placeholder="https://example.com/product"
+                            className="bg-white border-zinc-200 text-xs text-zinc-900 h-8"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold text-zinc-500">Display Delay</Label>
+                          <select
+                            value={reel.promoDelaySeconds ?? 3}
+                            onChange={(e) => handleUpdateReel(reel.id, { promoDelaySeconds: parseInt(e.target.value) })}
+                            className="w-full rounded-md border border-zinc-200 bg-white p-1.5 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 h-8"
+                          >
+                            <option value={0}>0s (Immediate)</option>
+                            <option value={3}>3s</option>
+                            <option value={5}>5s</option>
+                            <option value={8}>8s</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))
+            )}
+            </Draggable>
+          ))}
+          {provided.placeholder}
+          </div>
+          )}
+          </Droppable>
+          </DragDropContext>
           )}
         </CardContent>
       </Card>

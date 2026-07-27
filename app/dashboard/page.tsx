@@ -447,36 +447,7 @@ export default function DashboardPage() {
 
             {activeTab === "reels" && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                {planType === "free" ? (
-                  <div className="relative rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm overflow-hidden">
-                    {/* Blurred Background Preview */}
-                    <div className="filter blur-md opacity-30 pointer-events-none select-none">
-                      <FeedItemEditor reels={reels} setReels={setReels} />
-                    </div>
-
-                    {/* Lock Overlay */}
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-white/70 backdrop-blur-md">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-emerald-500 text-zinc-950 shadow-xl shadow-amber-500/20 mb-4">
-                        <Lock className="h-7 w-7 stroke-[2.5]" />
-                      </div>
-
-                      <h2 className="text-xl font-black text-zinc-950 tracking-tight">
-                        Video Reels Locked
-                      </h2>
-                      <p className="text-xs font-semibold text-zinc-600 max-w-sm mt-2 mb-6 leading-relaxed">
-                        The Free Tier includes Page 1 (Bio &amp; Custom Links). Upgrade to Pro ($7/mo) to unlock up to 3 snap video reels and Supabase file uploads!
-                      </p>
-
-                      <Link href="/pricing">
-                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-11 px-8 rounded-xl shadow-lg shadow-emerald-600/25 gap-2">
-                          <Zap className="h-4 w-4 fill-current text-amber-300" /> Upgrade to Pro ($7/mo) <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <FeedItemEditor reels={reels} setReels={setReels} />
-                )}
+                <FeedItemEditor reels={reels} setReels={setReels} planType={planType} />
               </div>
             )}
 

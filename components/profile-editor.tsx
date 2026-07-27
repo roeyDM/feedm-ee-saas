@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,8 @@ import {
   Save,
   MessageCircle, // For WhatsApp
   Music, // For Spotify
-  Share2
+  Share2,
+  GripVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlanType, checkUsernameAvailability, supabase } from "@/lib/supabase";
@@ -187,6 +189,14 @@ export function ProfileEditor({
     );
     setEditingLinkId(null);
     setEditFormData({});
+  };
+
+  const onDragEndLinks = (result: DropResult) => {
+    if (!result.destination) return;
+    const items = Array.from(customLinks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setCustomLinks(items);
   };
 
   const handleAddSocialLink = (platform: SocialLink["platform"]) => {
@@ -552,10 +562,23 @@ export function ProfileEditor({
           </form>
 
           {/* Links list */}
-          <div className="space-y-2">
-            {customLinks.map((link) => (
-              <div key={link.id} className="p-3 rounded-xl bg-zinc-50 border border-zinc-200">
-                {editingLinkId === link.id ? (
+          <DragDropContext onDragEnd={onDragEndLinks}>
+            <Droppable droppableId="custom-links">
+              {(provided) => (
+                <div 
+                  className="space-y-2" 
+                  {...provided.droppableProps} 
+                  ref={provided.innerRef}
+                >
+                  {customLinks.map((link, index) => (
+                    <Draggable key={link.id} draggableId={link.id} index={index}>
+                      {(provided) => (
+                        <div 
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="p-3 rounded-xl bg-zinc-50 border border-zinc-200"
+                        >
+                          {editingLinkId === link.id ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
@@ -620,6 +643,12 @@ export function ProfileEditor({
                 ) : (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0 pr-2">
+                      <div 
+                        {...provided.dragHandleProps} 
+                        className="flex-shrink-0 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 p-1"
+                      >
+                        <GripVertical className="h-5 w-5" />
+                      </div>
                       {link.thumbnailUrl && (
                         <div className="flex-shrink-0 h-8 w-8 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100">
                           <img src={link.thumbnailUrl} alt={link.title} className="h-full w-full object-cover" />
@@ -646,20 +675,21 @@ export function ProfileEditor({
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteLink(link.id)}
-                        className="h-7 w-7 text-zinc-400 hover:text-rose-600 hover:bg-rose-50"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleDeleteLink(link.id)} className="h-8 w-8 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+            )}
+          </Draggable>
+        ))}
+        {provided.placeholder}
+      </div>
+    )}
+  </Droppable>
+</DragDropContext>
         </CardContent>
       </Card>
 
