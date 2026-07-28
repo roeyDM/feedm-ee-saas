@@ -55,8 +55,8 @@ export default function UserProfilePage({ params }: PageProps) {
             customLinks: data.custom_links || [],
             reels: data.reels || [],
             leadForm: data.lead_form || {
-              title: "רוצים להיות חלק? / לפניות עסקיות",
-              subtitle: "השאירו פרטים ונחזור אליכם בהקדם",
+              title: "Get in Touch",
+              subtitle: "Leave your details below and we'll get back to you shortly.",
               routeType: "whatsapp",
               target: "1234567890",
             },
@@ -127,8 +127,8 @@ export default function UserProfilePage({ params }: PageProps) {
       },
     ],
     leadForm: {
-      title: "רוצים להיות חלק? / לפניות עסקיות",
-      subtitle: "השאירו פרטים ונחזור אליכם בהקדם",
+      title: "Get in Touch",
+      subtitle: "Leave your details below and we'll get back to you shortly.",
       routeType: "whatsapp",
       target: "1234567890",
     },

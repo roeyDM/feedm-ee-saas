@@ -135,10 +135,10 @@ export default function DashboardPage() {
 
   // Lead Form Settings (Page 5)
   const [leadForm, setLeadForm] = useState<LeadFormSettings>({
-    title: "רוצים להיות חלק? / לפניות עסקיות",
-    subtitle: "השאירו פרטים ונחזור אליכם בהקדם",
+    title: "Get in Touch",
+    subtitle: "Leave your details below and we'll get back to you shortly.",
     routeType: "email",
-    target: "1234567890",
+    target: "contact@alexrivers.com",
     showWhatsappButton: true,
     showCallButton: false,
   });
