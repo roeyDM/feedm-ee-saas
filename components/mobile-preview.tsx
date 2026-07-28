@@ -75,7 +75,21 @@ export interface AppearanceSettings {
   bgImageUrl?: string;
   buttonShape: "sharp" | "rounded" | "pill" | "outline";
   fontFamily: "Inter" | "Outfit" | "Montserrat" | "Urbanist";
-  textColor?: string;
+  
+  avatarBorderEnabled?: boolean;
+  avatarBorderColor?: string;
+  avatarBorderWidth?: number;
+
+  headlineColor?: string;
+  bioColor?: string;
+
+  cardBgColor?: string;
+  cardTextColor?: string;
+  cardBorderColor?: string;
+
+  socialIconBgColor?: string;
+  socialLogoMode?: "brand" | "flat";
+  socialFlatColor?: string;
 }
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
@@ -87,7 +101,21 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   bgImageUrl: "",
   buttonShape: "rounded",
   fontFamily: "Inter",
-  textColor: "#18181b",
+
+  avatarBorderEnabled: true,
+  avatarBorderColor: "#ffffff",
+  avatarBorderWidth: 4,
+
+  headlineColor: "#09090b",
+  bioColor: "#27272a",
+
+  cardBgColor: "rgba(255, 255, 255, 0.85)",
+  cardTextColor: "#09090b",
+  cardBorderColor: "rgba(255, 255, 255, 0.6)",
+
+  socialIconBgColor: "rgba(255, 255, 255, 0.8)",
+  socialLogoMode: "brand",
+  socialFlatColor: "#18181b",
 };
 
 export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFormSettings {
@@ -259,9 +287,6 @@ export function MobilePreview({
   // Helper for rendering social icons
   const renderSocialIcon = (link: SocialLink) => {
     if (link.isActive === false) return null;
-
-    const iconClass =
-      "flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-zinc-700 shadow-sm border border-zinc-200/80 transition-all duration-200 hover:scale-110 hover:bg-white hover:text-black shrink-0";
       
     let iconElement = null;
     
@@ -294,17 +319,29 @@ export function MobilePreview({
         return null;
     }
 
+    const isFlat = activeAppearance.socialLogoMode === "flat";
+    const customIconBg = activeAppearance.socialIconBgColor || "rgba(255, 255, 255, 0.8)";
+    const customFlatColor = activeAppearance.socialFlatColor || "#18181b";
+
+    const iconClass =
+      "flex h-9 w-9 items-center justify-center rounded-full shadow-sm border border-white/40 transition-all duration-200 hover:scale-110 shrink-0";
+
+    const iconStyle: React.CSSProperties = {
+      backgroundColor: customIconBg,
+      color: isFlat ? customFlatColor : undefined,
+    };
+
     if (link.label) {
       return (
-        <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}>
+        <a key={link.id} href={link.url} target="_blank" rel="noreferrer" style={iconStyle} className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}>
           {iconElement}
-          <span className="text-[10px] font-bold">{link.label}</span>
+          <span className="text-[10px] font-bold" style={{ color: isFlat ? customFlatColor : undefined }}>{link.label}</span>
         </a>
       );
     }
 
     return (
-      <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className={iconClass}>
+      <a key={link.id} href={link.url} target="_blank" rel="noreferrer" style={iconStyle} className={iconClass}>
         {iconElement}
       </a>
     );
@@ -384,9 +421,15 @@ export function MobilePreview({
             <Share2 className="h-4 w-4" />
           </button>
 
-          {/* Avatar with dynamic colored border */}
+          {/* Avatar with dynamic colored border & width */}
           <div className="relative mb-3 mt-4">
-            <div className="h-24 w-24 rounded-full p-1 bg-white shadow-xl">
+            <div 
+              className="h-24 w-24 rounded-full p-1 shadow-xl overflow-hidden"
+              style={{
+                backgroundColor: activeAppearance.avatarBorderEnabled ? (activeAppearance.avatarBorderColor || "#ffffff") : "transparent",
+                padding: activeAppearance.avatarBorderEnabled ? `${activeAppearance.avatarBorderWidth || 4}px` : "0px",
+              }}
+            >
               <img
                 src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop"}
                 alt={profileName}
@@ -396,11 +439,24 @@ export function MobilePreview({
           </div>
 
           {/* Name & Handle */}
-          <h1 className="text-2xl font-black tracking-tight text-zinc-900">{profileName || "Creator Name"}</h1>
-          <p className="text-xs font-bold text-zinc-700/80 tracking-wide mt-0.5">@{username || "username"}</p>
+          <h1 
+            style={{ color: activeAppearance.headlineColor || "#09090b" }}
+            className="text-2xl font-black tracking-tight"
+          >
+            {profileName || "Creator Name"}
+          </h1>
+          <p 
+            style={{ color: activeAppearance.bioColor || "#27272a" }}
+            className="text-xs font-bold opacity-80 tracking-wide mt-0.5"
+          >
+            @{username || "username"}
+          </p>
 
           {/* Tagline / Bio */}
-          <p className="mt-2 text-xs font-medium text-zinc-800 leading-relaxed max-w-[260px]">
+          <p 
+            style={{ color: activeAppearance.bioColor || "#27272a" }}
+            className="mt-2 text-xs font-medium leading-relaxed max-w-[260px]"
+          >
             {bio || "Welcome to my video bio page! Tap links below or scroll down for videos."}
           </p>
         </div>
@@ -415,19 +471,27 @@ export function MobilePreview({
               href={link.url}
               target="_blank"
               rel="noreferrer"
+              style={{
+                backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.85)",
+                color: activeAppearance.cardTextColor || "#09090b",
+                borderColor: activeAppearance.cardBorderColor || "rgba(255, 255, 255, 0.6)",
+              }}
               className={cn(
-                "group relative flex items-center justify-between p-3.5 shadow-black/5 backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:shadow-lg",
+                "group relative flex items-center justify-between p-3.5 shadow-black/5 backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
                 getButtonShapeClass()
               )}
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 {link.thumbnailUrl && (
-                  <div className="flex-shrink-0 h-10 w-10 overflow-hidden rounded-lg border border-zinc-200">
+                  <div className="flex-shrink-0 h-10 w-10 overflow-hidden rounded-lg border border-zinc-200/40">
                     <img src={link.thumbnailUrl} alt={link.title} className="h-full w-full object-cover" />
                   </div>
                 )}
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold text-zinc-900 truncate group-hover:text-black">
+                  <span 
+                    style={{ color: activeAppearance.cardTextColor || "#09090b" }}
+                    className="text-sm font-bold truncate"
+                  >
                     {link.title}
                   </span>
                   {link.badgeText && (

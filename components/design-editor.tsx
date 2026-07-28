@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,12 @@ import {
   ImageIcon, 
   Paintbrush, 
   Type, 
-  Square, 
-  Circle, 
   Layers,
-  Check
+  Check,
+  User,
+  Link as LinkIcon,
+  Share2,
+  Sliders
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppearanceSettings, DEFAULT_APPEARANCE } from "./mobile-preview";
@@ -50,13 +52,23 @@ export const THEME_PRESETS: {
       bgImageUrl: "",
       buttonShape: "rounded",
       fontFamily: "Inter",
-      textColor: "#18181b",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#ffffff",
+      avatarBorderWidth: 4,
+      headlineColor: "#09090b",
+      bioColor: "#27272a",
+      cardBgColor: "rgba(255, 255, 255, 0.85)",
+      cardTextColor: "#09090b",
+      cardBorderColor: "rgba(255, 255, 255, 0.6)",
+      socialIconBgColor: "rgba(255, 255, 255, 0.8)",
+      socialLogoMode: "brand",
+      socialFlatColor: "#18181b",
     },
   },
   {
     id: "dark-luxury",
     name: "Dark Luxury",
-    description: "Deep obsidian theme with sharp cards",
+    description: "Deep obsidian theme with crisp white typography",
     bgPreviewStyle: { backgroundColor: "#121212" },
     settings: {
       bgType: "solid",
@@ -67,7 +79,17 @@ export const THEME_PRESETS: {
       bgImageUrl: "",
       buttonShape: "sharp",
       fontFamily: "Montserrat",
-      textColor: "#f4f4f5",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#3f3f46",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFFFFF",
+      bioColor: "#E4E4E7",
+      cardBgColor: "#1E1E1E",
+      cardTextColor: "#FFFFFF",
+      cardBorderColor: "#3F3F46",
+      socialIconBgColor: "#27272A",
+      socialLogoMode: "brand",
+      socialFlatColor: "#FFFFFF",
     },
   },
   {
@@ -84,13 +106,23 @@ export const THEME_PRESETS: {
       bgImageUrl: "",
       buttonShape: "rounded",
       fontFamily: "Outfit",
-      textColor: "#09090b",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#ffffff",
+      avatarBorderWidth: 4,
+      headlineColor: "#09090b",
+      bioColor: "#27272a",
+      cardBgColor: "rgba(255, 255, 255, 0.85)",
+      cardTextColor: "#09090b",
+      cardBorderColor: "rgba(255, 255, 255, 0.6)",
+      socialIconBgColor: "rgba(255, 255, 255, 0.85)",
+      socialLogoMode: "brand",
+      socialFlatColor: "#18181b",
     },
   },
   {
     id: "neon-vibe",
     name: "Neon Vibe",
-    description: "Dark electric indigo with sleek pills",
+    description: "Dark electric indigo with bright neon contrast",
     bgPreviewStyle: { background: "linear-gradient(135deg, #0f172a, #3b0764)" },
     settings: {
       bgType: "gradient",
@@ -101,7 +133,17 @@ export const THEME_PRESETS: {
       bgImageUrl: "",
       buttonShape: "pill",
       fontFamily: "Urbanist",
-      textColor: "#f4f4f5",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#a855f7",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFFFFF",
+      bioColor: "#E2E8F0",
+      cardBgColor: "rgba(255, 255, 255, 0.12)",
+      cardTextColor: "#FFFFFF",
+      cardBorderColor: "rgba(255, 255, 255, 0.2)",
+      socialIconBgColor: "rgba(255, 255, 255, 0.15)",
+      socialLogoMode: "brand",
+      socialFlatColor: "#a855f7",
     },
   },
   {
@@ -118,13 +160,23 @@ export const THEME_PRESETS: {
       bgImageUrl: "",
       buttonShape: "pill",
       fontFamily: "Inter",
-      textColor: "#ffffff",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#ffffff",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFFFFF",
+      bioColor: "#F0F9FF",
+      cardBgColor: "rgba(255, 255, 255, 0.9)",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "rgba(255, 255, 255, 0.8)",
+      socialIconBgColor: "rgba(255, 255, 255, 0.9)",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0284c7",
     },
   },
   {
     id: "glassmorphic",
     name: "Glassmorphic",
-    description: "Frosted purple with outline cards",
+    description: "Frosted purple with translucent outline cards",
     bgPreviewStyle: { background: "linear-gradient(135deg, #a855f7, #ec4899)" },
     settings: {
       bgType: "gradient",
@@ -135,7 +187,17 @@ export const THEME_PRESETS: {
       bgImageUrl: "",
       buttonShape: "outline",
       fontFamily: "Outfit",
-      textColor: "#ffffff",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "rgba(255,255,255,0.8)",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFFFFF",
+      bioColor: "#FAF5FF",
+      cardBgColor: "rgba(255, 255, 255, 0.15)",
+      cardTextColor: "#FFFFFF",
+      cardBorderColor: "rgba(255, 255, 255, 0.3)",
+      socialIconBgColor: "rgba(255, 255, 255, 0.2)",
+      socialLogoMode: "brand",
+      socialFlatColor: "#FFFFFF",
     },
   },
 ];
@@ -215,10 +277,10 @@ export function DesignEditor({
         <CardHeader className="flex flex-row items-center justify-between py-4">
           <div>
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-              <Palette className="h-4.5 w-4.5 text-emerald-600" /> Appearance & Theme Studio
+              <Palette className="h-4.5 w-4.5 text-emerald-600" /> Appearance &amp; Theme Studio
             </CardTitle>
             <CardDescription className="text-xs text-zinc-500 mt-0.5">
-              Customize presets, dynamic backgrounds, button shapes, and typography
+              Presets, background styles, avatar borders, typography, and card colors
             </CardDescription>
           </div>
 
@@ -261,7 +323,7 @@ export function DesignEditor({
             <Sparkles className="h-4 w-4 text-emerald-600" /> 1. Theme Presets (Quick Apply)
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
-            Select a curated theme preset to instantly transform your background, button styling, and fonts.
+            Select a curated theme preset to instantly transform background, typography, and contrast.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -318,11 +380,10 @@ export function DesignEditor({
             <Paintbrush className="h-4 w-4 text-emerald-600" /> 2. Background Customization
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
-            Choose between a solid color, custom multi-tone gradient, or background image texture.
+            Choose between a solid color, multi-tone gradient, or background image texture.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Segmented Control */}
           <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1 border border-zinc-200">
             <button
               type="button"
@@ -362,7 +423,6 @@ export function DesignEditor({
             </button>
           </div>
 
-          {/* SOLID COLOR CONTROLS */}
           {currentApp.bgType === "solid" && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-2">
               <Label className="text-xs font-bold text-zinc-700">Solid Hex Color</Label>
@@ -383,7 +443,6 @@ export function DesignEditor({
             </div>
           )}
 
-          {/* GRADIENT CONTROLS */}
           {currentApp.bgType === "gradient" && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -445,7 +504,6 @@ export function DesignEditor({
             </div>
           )}
 
-          {/* IMAGE / PATTERN CONTROLS */}
           {currentApp.bgType === "image" && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3">
               <div className="space-y-1">
@@ -459,7 +517,7 @@ export function DesignEditor({
               </div>
 
               <div className="space-y-1.5 pt-1">
-                <Label className="text-xs font-bold text-zinc-700">Preset Textures & Backgrounds</Label>
+                <Label className="text-xs font-bold text-zinc-700">Preset Textures &amp; Backgrounds</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {PRESET_PATTERNS.map((pattern) => (
                     <button
@@ -489,18 +547,166 @@ export function DesignEditor({
         </CardContent>
       </Card>
 
-      {/* TIER 3: BUTTON STYLES & TYPOGRAPHY */}
+      {/* REFINEMENT 2: PROFILE AVATAR BORDER CONTROL */}
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
-            <Type className="h-4 w-4 text-emerald-600" /> 3. Button Shapes & Typography
+            <User className="h-4 w-4 text-emerald-600" /> Avatar Image Border
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
-            Customize the corner curvature of your link cards and font pairings.
+            Configure the profile image border ring style and thickness.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5">
-          {/* Button Shape Options */}
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
+            <span className="text-xs font-bold text-zinc-800">Enable Border Ring</span>
+            <input
+              type="checkbox"
+              checked={currentApp.avatarBorderEnabled !== false}
+              onChange={(e) => updateAppearance({ avatarBorderEnabled: e.target.checked })}
+              className="h-4 w-4 accent-emerald-600 cursor-pointer"
+            />
+          </div>
+
+          {currentApp.avatarBorderEnabled !== false && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold text-zinc-700">Border Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={currentApp.avatarBorderColor || "#ffffff"}
+                    onChange={(e) => updateAppearance({ avatarBorderColor: e.target.value })}
+                    className="h-8 w-8 rounded-lg cursor-pointer border border-zinc-300 p-0.5 bg-white shrink-0"
+                  />
+                  <Input
+                    value={currentApp.avatarBorderColor || "#ffffff"}
+                    onChange={(e) => updateAppearance({ avatarBorderColor: e.target.value })}
+                    className="font-mono text-xs uppercase bg-white border-zinc-200 text-zinc-900 h-8"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold text-zinc-700">Border Thickness</Label>
+                <div className="flex items-center gap-1.5">
+                  {[2, 4, 6].map((w) => (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => updateAppearance({ avatarBorderWidth: w })}
+                      className={cn(
+                        "flex-1 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer",
+                        (currentApp.avatarBorderWidth || 4) === w
+                          ? "bg-zinc-900 text-white border-zinc-900"
+                          : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                      )}
+                    >
+                      {w}px
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* REFINEMENT 3: TYPOGRAPHY & SEPARATE TEXT COLORS */}
+      <Card className="bg-white border-zinc-200/80 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
+            <Type className="h-4 w-4 text-emerald-600" /> Typography &amp; Text Colors
+          </CardTitle>
+          <CardDescription className="text-xs text-zinc-500">
+            Select Google font family and customize separate Headline and Bio text colors.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-bold text-zinc-700">Font Pairings</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { name: "Inter", family: "'Inter', sans-serif" },
+                { name: "Outfit", family: "'Outfit', sans-serif" },
+                { name: "Montserrat", family: "'Montserrat', sans-serif" },
+                { name: "Urbanist", family: "'Urbanist', sans-serif" },
+              ].map((font) => {
+                const isSelected = currentApp.fontFamily === font.name;
+
+                return (
+                  <button
+                    key={font.name}
+                    type="button"
+                    onClick={() => updateAppearance({ fontFamily: font.name as any })}
+                    className={cn(
+                      "flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer bg-white shadow-xs hover:border-zinc-300",
+                      isSelected
+                        ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/20"
+                        : "border-zinc-200"
+                    )}
+                  >
+                    <span style={{ fontFamily: font.family }} className="text-base font-black text-zinc-900 mb-0.5">
+                      Aa
+                    </span>
+                    <span className="text-xs font-semibold text-zinc-700 truncate w-full">
+                      {font.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Headline Color (Name / Titles)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={currentApp.headlineColor || "#09090b"}
+                  onChange={(e) => updateAppearance({ headlineColor: e.target.value })}
+                  className="h-8 w-8 rounded-lg cursor-pointer border border-zinc-300 p-0.5 bg-white shrink-0"
+                />
+                <Input
+                  value={currentApp.headlineColor || "#09090b"}
+                  onChange={(e) => updateAppearance({ headlineColor: e.target.value })}
+                  className="font-mono text-xs uppercase bg-white border-zinc-200 text-zinc-900 h-8"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Bio / Description Color</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={currentApp.bioColor || "#27272a"}
+                  onChange={(e) => updateAppearance({ bioColor: e.target.value })}
+                  className="h-8 w-8 rounded-lg cursor-pointer border border-zinc-300 p-0.5 bg-white shrink-0"
+                />
+                <Input
+                  value={currentApp.bioColor || "#27272a"}
+                  onChange={(e) => updateAppearance({ bioColor: e.target.value })}
+                  className="font-mono text-xs uppercase bg-white border-zinc-200 text-zinc-900 h-8"
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* REFINEMENT 5: CUSTOM LINK STYLES & BUTTON SHAPE */}
+      <Card className="bg-white border-zinc-200/80 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
+            <LinkIcon className="h-4 w-4 text-emerald-600" /> Custom Link Card Styles
+          </CardTitle>
+          <CardDescription className="text-xs text-zinc-500">
+            Configure card shapes, background colors, text colors, and border strokes.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-bold text-zinc-700">Button Card Shape</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -539,41 +745,111 @@ export function DesignEditor({
             </div>
           </div>
 
-          {/* Typography Selector */}
-          <div className="space-y-2 pt-2 border-t border-zinc-100">
-            <Label className="text-xs font-bold text-zinc-700">Font Pairings</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {[
-                { name: "Inter", label: "Inter (Clean)", family: "sans-serif" },
-                { name: "Outfit", label: "Outfit (Trendy)", family: "'Outfit', sans-serif" },
-                { name: "Montserrat", label: "Montserrat (Bold)", family: "'Montserrat', sans-serif" },
-                { name: "Urbanist", label: "Urbanist (Sleek)", family: "'Urbanist', sans-serif" },
-              ].map((font) => {
-                const isSelected = currentApp.fontFamily === font.name;
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Card Background</Label>
+              <Input
+                value={currentApp.cardBgColor || "rgba(255, 255, 255, 0.85)"}
+                onChange={(e) => updateAppearance({ cardBgColor: e.target.value })}
+                placeholder="#ffffff or rgba(...)"
+                className="text-xs bg-white border-zinc-200 text-zinc-900 h-8"
+              />
+            </div>
 
-                return (
-                  <button
-                    key={font.name}
-                    type="button"
-                    onClick={() => updateAppearance({ fontFamily: font.name as any })}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer bg-white shadow-xs hover:border-zinc-300",
-                      isSelected
-                        ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/20"
-                        : "border-zinc-200"
-                    )}
-                  >
-                    <span style={{ fontFamily: font.family }} className="text-base font-black text-zinc-900 mb-0.5">
-                      Aa
-                    </span>
-                    <span className="text-xs font-semibold text-zinc-700 truncate w-full">
-                      {font.name}
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Link Text Color</Label>
+              <Input
+                value={currentApp.cardTextColor || "#09090b"}
+                onChange={(e) => updateAppearance({ cardTextColor: e.target.value })}
+                placeholder="#09090b"
+                className="text-xs bg-white border-zinc-200 text-zinc-900 h-8"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Card Border Color</Label>
+              <Input
+                value={currentApp.cardBorderColor || "rgba(255, 255, 255, 0.6)"}
+                onChange={(e) => updateAppearance({ cardBorderColor: e.target.value })}
+                placeholder="rgba(255, 255, 255, 0.6)"
+                className="text-xs bg-white border-zinc-200 text-zinc-900 h-8"
+              />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* REFINEMENT 6: SOCIAL BUTTONS STYLES & LOGO MODE */}
+      <Card className="bg-white border-zinc-200/80 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
+            <Share2 className="h-4 w-4 text-emerald-600" /> Social Icons Customization
+          </CardTitle>
+          <CardDescription className="text-xs text-zinc-500">
+            Customize social icon background pill colors and switch between original brand logos or flat single-color.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Icon Background Pill Color</Label>
+              <Input
+                value={currentApp.socialIconBgColor || "rgba(255, 255, 255, 0.8)"}
+                onChange={(e) => updateAppearance({ socialIconBgColor: e.target.value })}
+                placeholder="rgba(255, 255, 255, 0.8)"
+                className="text-xs bg-white border-zinc-200 text-zinc-900 h-8"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Logo Color Mode</Label>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => updateAppearance({ socialLogoMode: "brand" })}
+                  className={cn(
+                    "flex-1 py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer",
+                    currentApp.socialLogoMode !== "flat"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                  )}
+                >
+                  Original Brand
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateAppearance({ socialLogoMode: "flat" })}
+                  className={cn(
+                    "flex-1 py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer",
+                    currentApp.socialLogoMode === "flat"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-100"
+                  )}
+                >
+                  Flat Monochrome
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {currentApp.socialLogoMode === "flat" && (
+            <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Flat Monochrome Logo Color</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={currentApp.socialFlatColor || "#18181b"}
+                  onChange={(e) => updateAppearance({ socialFlatColor: e.target.value })}
+                  className="h-8 w-8 rounded-lg cursor-pointer border border-zinc-300 p-0.5 bg-white shrink-0"
+                />
+                <Input
+                  value={currentApp.socialFlatColor || "#18181b"}
+                  onChange={(e) => updateAppearance({ socialFlatColor: e.target.value })}
+                  className="font-mono text-xs uppercase bg-white border-zinc-200 text-zinc-900 h-8"
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
