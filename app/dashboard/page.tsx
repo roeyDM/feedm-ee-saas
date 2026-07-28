@@ -13,6 +13,7 @@ import {
   CustomLink,
   VideoReel,
   LeadFormSettings,
+  sanitizeLeadForm,
 } from "@/components/mobile-preview";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
@@ -174,7 +175,7 @@ export default function DashboardPage() {
           }
           if (data.custom_links) setCustomLinks(data.custom_links);
           if (data.reels) setReels(data.reels);
-          if (data.lead_form) setLeadForm(data.lead_form);
+          if (data.lead_form) setLeadForm(sanitizeLeadForm(data.lead_form));
         }
       } catch (err) {
         console.log("No existing profile found or fetch error:", err);

@@ -7,6 +7,7 @@ import {
   CustomLink,
   VideoReel,
   LeadFormSettings,
+  sanitizeLeadForm,
 } from "@/components/mobile-preview";
 import { supabase } from "@/lib/supabase";
 
@@ -54,12 +55,7 @@ export default function UserProfilePage({ params }: PageProps) {
             })),
             customLinks: data.custom_links || [],
             reels: data.reels || [],
-            leadForm: data.lead_form || {
-              title: "Get in Touch",
-              subtitle: "Leave your details below and we'll get back to you shortly.",
-              routeType: "whatsapp",
-              target: "1234567890",
-            },
+            leadForm: sanitizeLeadForm(data.lead_form),
           });
         }
       } catch (err) {
@@ -126,12 +122,7 @@ export default function UserProfilePage({ params }: PageProps) {
         showCall: true,
       },
     ],
-    leadForm: {
-      title: "Get in Touch",
-      subtitle: "Leave your details below and we'll get back to you shortly.",
-      routeType: "whatsapp",
-      target: "1234567890",
-    },
+    leadForm: sanitizeLeadForm(null),
   };
 
   return (

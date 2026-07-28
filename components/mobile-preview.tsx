@@ -66,6 +66,37 @@ export interface LeadFormSettings {
   is_email_required?: boolean;
 }
 
+export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFormSettings {
+  const DEFAULT_TITLE = "Get in Touch";
+  const DEFAULT_SUBTITLE = "Leave your details below and we'll get back to you shortly.";
+
+  const rawTitle = lf?.title?.trim() || "";
+  const rawSubtitle = lf?.subtitle?.trim() || "";
+
+  const isOldHebrewTitle =
+    !rawTitle ||
+    rawTitle.includes("רוצים להיות חלק") ||
+    rawTitle.includes("לפניות עסקיות");
+
+  const isOldHebrewSubtitle =
+    !rawSubtitle ||
+    rawSubtitle.includes("השאירו פרטים") ||
+    rawSubtitle.includes("נחזור אליכם");
+
+  return {
+    title: isOldHebrewTitle ? DEFAULT_TITLE : rawTitle,
+    subtitle: isOldHebrewSubtitle ? DEFAULT_SUBTITLE : rawSubtitle,
+    routeType: lf?.routeType || "email",
+    target: lf?.target || "",
+    is_phone_required: lf?.is_phone_required,
+    is_email_required: lf?.is_email_required,
+    phoneCountryCode: lf?.phoneCountryCode || "972",
+    phoneTarget: lf?.phoneTarget || "",
+    showWhatsappButton: lf?.showWhatsappButton,
+    showCallButton: lf?.showCallButton,
+  };
+}
+
 interface MobilePreviewProps {
   profileName: string;
   username: string;
@@ -138,6 +169,7 @@ export function MobilePreview({
   },
   isDemoMode = false,
 }: MobilePreviewProps) {
+  const cleanLeadForm = sanitizeLeadForm(leadForm);
   // Video playback state
   const [isMuted, setIsMuted] = useState(true);
   const [likedReels, setLikedReels] = useState<Record<string, boolean>>({});
@@ -520,11 +552,11 @@ export function MobilePreview({
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 shadow-md text-zinc-900">
             <Sparkles className="h-6 w-6 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-black text-zinc-900 tracking-tight">
-            {leadForm.title || "Get in Touch"}
+          <h2 className="text-xl font-black text-zinc-900 tracking-tight text-center">
+            {cleanLeadForm.title}
           </h2>
-          <p className="mt-1 text-xs font-medium text-zinc-700">
-            {leadForm.subtitle || "Leave your details below and we'll get back to you shortly."}
+          <p className="mt-1 text-xs font-medium text-zinc-700 text-center">
+            {cleanLeadForm.subtitle}
           </p>
         </div>
 
