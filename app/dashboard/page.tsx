@@ -153,10 +153,27 @@ export default function DashboardPage() {
     is_email_required: true,
   });
 
-  // Supabase Persistence State
+  // Supabase Persistence & Dirty State Tracking
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+
+  // Serialize current state for dirty checking
+  const getCurrentStateJSON = () => {
+    return JSON.stringify({
+      name,
+      bio,
+      avatarUrl,
+      customHexColor,
+      planType,
+      socialLinks,
+      customLinks,
+      reels,
+      leadForm,
+      appearance,
+    });
+  };
 
   // Auto-fetch profile from Supabase on handle change or mount
   useEffect(() => {
@@ -186,13 +203,63 @@ export default function DashboardPage() {
           if (data.reels) setReels(data.reels);
           if (data.lead_form) setLeadForm(sanitizeLeadForm(data.lead_form));
           if (data.appearance) setAppearance(data.appearance);
+
+          // Store initial saved snapshot
+          setSavedSnapshot(JSON.stringify({
+            name: data.name || name,
+            bio: data.bio || bio,
+            avatarUrl: data.avatar_url || avatarUrl,
+            customHexColor: data.custom_hex_color || customHexColor,
+            planType: data.plan_type || planType,
+            socialLinks: data.social_links ? data.social_links.map((l: any) => ({ ...l, id: l.id || crypto.randomUUID(), isActive: l.isActive !== false })) : socialLinks,
+            customLinks: data.custom_links || customLinks,
+            reels: data.reels || reels,
+            leadForm: sanitizeLeadForm(data.lead_form) || leadForm,
+            appearance: data.appearance || appearance,
+          }));
+        } else {
+          setSavedSnapshot(getCurrentStateJSON());
         }
       } catch (err) {
         console.log("No existing profile found or fetch error:", err);
+        setSavedSnapshot(getCurrentStateJSON());
       }
     }
     fetchProfile();
   }, [username]);
+
+  // Dirty State calculation & Browser Navigation Protection
+  const isDirty = savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  const handleDiscardChanges = () => {
+    if (!savedSnapshot) return;
+    try {
+      const parsed = JSON.parse(savedSnapshot);
+      if (parsed.name !== undefined) setName(parsed.name);
+      if (parsed.bio !== undefined) setBio(parsed.bio);
+      if (parsed.avatarUrl !== undefined) setAvatarUrl(parsed.avatarUrl);
+      if (parsed.customHexColor !== undefined) setCustomHexColor(parsed.customHexColor);
+      if (parsed.planType !== undefined) setPlanType(parsed.planType);
+      if (parsed.socialLinks !== undefined) setSocialLinks(parsed.socialLinks);
+      if (parsed.customLinks !== undefined) setCustomLinks(parsed.customLinks);
+      if (parsed.reels !== undefined) setReels(parsed.reels);
+      if (parsed.leadForm !== undefined) setLeadForm(parsed.leadForm);
+      if (parsed.appearance !== undefined) setAppearance(parsed.appearance);
+    } catch (err) {
+      console.error("Failed to discard changes", err);
+    }
+  };
 
   // Save changes to Supabase
   const handleSave = async () => {
@@ -226,6 +293,7 @@ export default function DashboardPage() {
 
       setSaveStatus("success");
       setStatusMsg("Profile saved successfully to Supabase!");
+      setSavedSnapshot(getCurrentStateJSON());
       setTimeout(() => setSaveStatus("idle"), 4000);
     } catch (err: any) {
       console.error("Save error:", err);
@@ -505,6 +573,34 @@ export default function DashboardPage() {
           />
         </aside>
       </main>
+
+      {/* Floating Unsaved Changes Reminder Toast Bar */}
+      {isDirty && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
+          <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
+            <span>Hey there! You made some magic ✨ Don't forget to save your changes!</span>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                type="button"
+                onClick={handleDiscardChanges}
+                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 h-8 px-3 text-xs font-semibold cursor-pointer"
+              >
+                Discard
+              </Button>
+              <Button
+                size="sm"
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-8 px-4 text-xs shadow-md cursor-pointer"
+              >
+                Save Now 🚀
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

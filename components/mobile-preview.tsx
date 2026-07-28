@@ -94,28 +94,28 @@ export interface AppearanceSettings {
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
   bgType: "solid",
-  bgColor: "#bad1cb",
-  bgGradientStart: "#fbcfe8",
-  bgGradientEnd: "#e0f2fe",
+  bgColor: "#BAD1CB",
+  bgGradientStart: "#FBCFE8",
+  bgGradientEnd: "#E0F2FE",
   bgGradientAngle: 135,
   bgImageUrl: "",
   buttonShape: "rounded",
   fontFamily: "Inter",
 
   avatarBorderEnabled: true,
-  avatarBorderColor: "#ffffff",
+  avatarBorderColor: "#FFFFFF",
   avatarBorderWidth: 4,
 
-  headlineColor: "#09090b",
-  bioColor: "#27272a",
+  headlineColor: "#09090B",
+  bioColor: "#27272A",
 
-  cardBgColor: "rgba(255, 255, 255, 0.85)",
-  cardTextColor: "#09090b",
-  cardBorderColor: "rgba(255, 255, 255, 0.6)",
+  cardBgColor: "#FFFFFF",
+  cardTextColor: "#09090B",
+  cardBorderColor: "#E4E4E7",
 
-  socialIconBgColor: "rgba(255, 255, 255, 0.8)",
+  socialIconBgColor: "#FFFFFF",
   socialLogoMode: "brand",
-  socialFlatColor: "#18181b",
+  socialFlatColor: "#18181B",
 };
 
 export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFormSettings {
@@ -319,23 +319,36 @@ export function MobilePreview({
         return null;
     }
 
+    const BRAND_COLORS: Record<string, string> = {
+      instagram: "#E1306C",
+      tiktok: "#000000",
+      youtube: "#FF0000",
+      twitter: "#000000",
+      facebook: "#1877F2",
+      whatsapp: "#25D366",
+      linkedin: "#0A66C2",
+      spotify: "#1DB954",
+    };
+
     const isFlat = activeAppearance.socialLogoMode === "flat";
-    const customIconBg = activeAppearance.socialIconBgColor || "rgba(255, 255, 255, 0.8)";
-    const customFlatColor = activeAppearance.socialFlatColor || "#18181b";
+    const customIconBg = activeAppearance.socialIconBgColor || "#FFFFFF";
+    const customIconColor = isFlat
+      ? (activeAppearance.socialFlatColor || "#18181b")
+      : (BRAND_COLORS[link.platform] || "#18181b");
 
     const iconClass =
       "flex h-9 w-9 items-center justify-center rounded-full shadow-sm border border-white/40 transition-all duration-200 hover:scale-110 shrink-0";
 
     const iconStyle: React.CSSProperties = {
       backgroundColor: customIconBg,
-      color: isFlat ? customFlatColor : undefined,
+      color: customIconColor,
     };
 
     if (link.label) {
       return (
         <a key={link.id} href={link.url} target="_blank" rel="noreferrer" style={iconStyle} className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}>
           {iconElement}
-          <span className="text-[10px] font-bold" style={{ color: isFlat ? customFlatColor : undefined }}>{link.label}</span>
+          <span className="text-[10px] font-bold" style={{ color: customIconColor }}>{link.label}</span>
         </a>
       );
     }
