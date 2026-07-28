@@ -32,6 +32,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PlanType, checkUsernameAvailability, supabase } from "@/lib/supabase";
 
+import { CountrySelector } from "./country-selector";
+
 interface ProfileEditorProps {
   name: string;
   setName: (name: string) => void;
@@ -709,7 +711,17 @@ export function ProfileEditor({
             <Input
               value={leadForm.title}
               onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
-              placeholder="רוצים להיות חלק? / לפניות עסקיות"
+              placeholder="Get in Touch"
+              className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs font-bold text-zinc-700">Form Subtitle / Description</Label>
+            <Input
+              value={leadForm.subtitle}
+              onChange={(e) => setLeadForm({ ...leadForm, subtitle: e.target.value })}
+              placeholder="Leave your details below and we'll get back to you shortly."
               className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
             />
           </div>
@@ -726,13 +738,42 @@ export function ProfileEditor({
 
           <div className="space-y-1">
             <Label className="text-xs font-bold text-zinc-700">Target Phone (For WhatsApp & Call Buttons)</Label>
-            <Input
-              value={leadForm.target} // Note: Depending on backend setup, this might conflict with email. To avoid modifying schema heavily right now, we can use target for both, or we should use leadForm.target as email, and add leadForm.phoneTarget. But leadForm currently only has 'target'.
-              onChange={(e) => setLeadForm({ ...leadForm, target: e.target.value })}
-              placeholder="+1234567890 (Used for Phone/WA globally)"
-              className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-            />
-            <p className="text-[10px] text-zinc-500">If using both email and phone, you may separate with a comma or choose one based on primary contact.</p>
+            <div className="flex gap-2">
+              <CountrySelector 
+                value={leadForm.phoneCountryCode || "972"} 
+                onChange={(val) => setLeadForm({ ...leadForm, phoneCountryCode: val })} 
+              />
+              <Input
+                value={leadForm.phoneTarget || ""}
+                onChange={(e) => setLeadForm({ ...leadForm, phoneTarget: e.target.value })}
+                placeholder="Local number (e.g. 501234567)"
+                className="flex-1 bg-zinc-50 border-zinc-200 text-xs text-zinc-900 h-10"
+              />
+            </div>
+            <p className="text-[10px] text-zinc-500 pt-1">The local number will be automatically sanitized and formatted.</p>
+          </div>
+          <div className="pt-2 border-t border-zinc-100 flex flex-col gap-3">
+            <Label className="text-xs font-bold text-zinc-700 block">Form Field Requirements</Label>
+            
+            <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={!!leadForm.is_phone_required}
+                onChange={(e) => setLeadForm({ ...leadForm, is_phone_required: e.target.checked })}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              Require Phone Number
+            </label>
+
+            <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={!!leadForm.is_email_required}
+                onChange={(e) => setLeadForm({ ...leadForm, is_email_required: e.target.checked })}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              Require Email Address
+            </label>
           </div>
 
           <div className="pt-2 border-t border-zinc-100">

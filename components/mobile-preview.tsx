@@ -16,6 +16,9 @@ import {
   Sparkles,
   X
 } from "lucide-react";
+
+import { CookieModal } from "./cookie-modal";
+import { ReportModal } from "./report-modal";
 import { cn } from "@/lib/utils";
 
 export interface CustomLink {
@@ -55,8 +58,12 @@ export interface LeadFormSettings {
   subtitle: string;
   routeType: "email" | "whatsapp";
   target: string;
+  phoneCountryCode?: string;
+  phoneTarget?: string;
   showWhatsappButton?: boolean;
   showCallButton?: boolean;
+  is_phone_required?: boolean;
+  is_email_required?: boolean;
 }
 
 interface MobilePreviewProps {
@@ -124,8 +131,8 @@ export function MobilePreview({
   customLinks = [],
   reels = [],
   leadForm = {
-    title: "רוצים להיות חלק? / לפניות עסקיות",
-    subtitle: "השאירו פרטים ונחזור אליכם בהקדם",
+    title: "Get in Touch",
+    subtitle: "Leave your details below and we'll get back to you shortly.",
     routeType: "whatsapp",
     target: "1234567890",
   },
@@ -137,9 +144,11 @@ export function MobilePreview({
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formName, setFormName] = useState("");
-  const [formContact, setFormContact] = useState("");
-  const [formMsg, setFormMsg] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [formEmail, setFormEmail] = useState("");
   const [showCopyToast, setShowCopyToast] = useState(false);
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Initialize like counts
   useEffect(() => {
@@ -181,10 +190,11 @@ export function MobilePreview({
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName || !formContact) return;
+    if (!formName) return;
+    if (leadForm.is_phone_required && !formPhone) return;
+    if (leadForm.is_email_required && !formEmail) return;
     
-    // In a real app, this would send an email or save to DB
-    console.log("Form submitted via email", { formName, formContact, formMsg });
+    console.log("Form submitted via email", { formName, formPhone, formEmail });
     setFormSubmitted(true);
   };
 
@@ -441,8 +451,8 @@ export function MobilePreview({
             {leadForm.showWhatsappButton && (
               <a
                 href={
-                  leadForm.target
-                    ? `https://wa.me/${leadForm.target.replace(/[^0-9]/g, "")}`
+                  leadForm.phoneTarget
+                    ? `https://wa.me/${(leadForm.phoneCountryCode || "972").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}`
                     : "#"
                 }
                 target="_blank"
@@ -459,7 +469,9 @@ export function MobilePreview({
             {leadForm.showCallButton && (
               <a
                 href={
-                  leadForm.target ? `tel:${leadForm.target.replace(/[^0-9]/g, "")}` : "#"
+                  leadForm.phoneTarget 
+                    ? `tel:+${(leadForm.phoneCountryCode || "972").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}` 
+                    : "#"
                 }
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-white border border-cyan-400 shadow-lg shadow-cyan-500/30 transition hover:scale-110"
               >
@@ -509,10 +521,10 @@ export function MobilePreview({
             <Sparkles className="h-6 w-6 text-emerald-600" />
           </div>
           <h2 className="text-xl font-black text-zinc-900 tracking-tight">
-            {leadForm.title || "רוצים להיות חלק? / לפניות עסקיות"}
+            {leadForm.title || "Get in Touch"}
           </h2>
           <p className="mt-1 text-xs font-medium text-zinc-700">
-            {leadForm.subtitle || "השאירו פרטים ונחזור אליכם בהקדם"}
+            {leadForm.subtitle || "Leave your details below and we'll get back to you shortly."}
           </p>
         </div>
 
@@ -521,24 +533,24 @@ export function MobilePreview({
           {formSubmitted ? (
             <div className="flex flex-col items-center py-6 text-center">
               <CheckCircle2 className="h-12 w-12 text-emerald-600 mb-2 animate-bounce" />
-              <h3 className="text-base font-bold text-zinc-900">תודה רבה! הפנייה נשלחה</h3>
-              <p className="text-xs text-zinc-600 mt-1">נחזור אליך בהקדם האפשרי.</p>
+              <h3 className="text-base font-bold text-zinc-900">Thank you!</h3>
+              <p className="text-xs text-zinc-600 mt-1">We will get back to you shortly.</p>
               <button
                 type="button"
                 onClick={() => setFormSubmitted(false)}
                 className="mt-4 text-xs font-bold text-zinc-800 underline"
               >
-                שלח פנייה נוספת
+                Send another message
               </button>
             </div>
           ) : (
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-zinc-700 mb-1">שם מלא</label>
+                <label className="block text-[11px] font-bold text-zinc-700 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="ישראל ישראלי"
+                  placeholder="John Doe"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
@@ -546,25 +558,30 @@ export function MobilePreview({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-700 mb-1">אימייל / טלפון</label>
+                <label className="block text-[11px] font-bold text-zinc-700 mb-1">
+                  Phone Number {!leadForm.is_phone_required && "(Optional)"}
+                </label>
                 <input
-                  type="text"
-                  required
-                  placeholder="050-0000000 / email@domain.com"
-                  value={formContact}
-                  onChange={(e) => setFormContact(e.target.value)}
+                  type="tel"
+                  required={leadForm.is_phone_required}
+                  placeholder="+1 (555) 000-0000"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-700 mb-1">הודעה / פרטי פנייה</label>
-                <textarea
-                  rows={2}
-                  placeholder="רשמו כאן במה מדובר..."
-                  value={formMsg}
-                  onChange={(e) => setFormMsg(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none"
+                <label className="block text-[11px] font-bold text-zinc-700 mb-1">
+                  Email Address {!leadForm.is_email_required && "(Optional)"}
+                </label>
+                <input
+                  type="email"
+                  required={leadForm.is_email_required}
+                  placeholder="john@example.com"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                 />
               </div>
 
@@ -572,7 +589,7 @@ export function MobilePreview({
                 type="submit"
                 className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-black"
               >
-                <Send className="h-3.5 w-3.5" /> שלח פנייה
+                <Send className="h-3.5 w-3.5" /> Submit
               </button>
             </form>
           )}
@@ -587,14 +604,37 @@ export function MobilePreview({
           )}
 
           <a
-            href="#"
+            href="https://feedm.ee"
+            target="_blank"
+            rel="noreferrer"
             className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-zinc-600 hover:text-zinc-900 transition"
           >
             <span>Powered by</span>
             <span className="font-extrabold text-zinc-950">FeedM.ee</span>
           </a>
+
+          <div className="flex items-center gap-3 text-[9px] font-medium text-zinc-500">
+            <button onClick={() => setIsCookieModalOpen(true)} className="hover:text-zinc-800 transition">
+              Manage Cookies
+            </button>
+            <span>&bull;</span>
+            <a href="/privacy" target="_blank" className="hover:text-zinc-800 transition">
+              Privacy Policy
+            </a>
+            <span>&bull;</span>
+            <button onClick={() => setIsReportModalOpen(true)} className="hover:text-zinc-800 transition">
+              Report Profile
+            </button>
+          </div>
         </div>
       </div>
+
+      <CookieModal open={isCookieModalOpen} onOpenChange={setIsCookieModalOpen} />
+      <ReportModal 
+        open={isReportModalOpen} 
+        onOpenChange={setIsReportModalOpen} 
+        reportedProfileUrl={`https://feedm.ee/${username}`} 
+      />
     </div>
   );
 
