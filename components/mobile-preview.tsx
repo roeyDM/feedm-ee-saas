@@ -90,7 +90,7 @@ export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFor
     target: lf?.target || "",
     is_phone_required: lf?.is_phone_required,
     is_email_required: lf?.is_email_required,
-    phoneCountryCode: lf?.phoneCountryCode || "972",
+    phoneCountryCode: lf?.phoneCountryCode || "1",
     phoneTarget: lf?.phoneTarget || "",
     showWhatsappButton: lf?.showWhatsappButton,
     showCallButton: lf?.showCallButton,
@@ -484,7 +484,7 @@ export function MobilePreview({
               <a
                 href={
                   leadForm.phoneTarget
-                    ? `https://wa.me/${(leadForm.phoneCountryCode || "972").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}`
+                    ? `https://wa.me/${(leadForm.phoneCountryCode || "1").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}`
                     : "#"
                 }
                 target="_blank"
@@ -502,7 +502,7 @@ export function MobilePreview({
               <a
                 href={
                   leadForm.phoneTarget 
-                    ? `tel:+${(leadForm.phoneCountryCode || "972").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}` 
+                    ? `tel:+${(leadForm.phoneCountryCode || "1").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}` 
                     : "#"
                 }
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-white border border-cyan-400 shadow-lg shadow-cyan-500/30 transition hover:scale-110"

@@ -796,112 +796,112 @@ export function ProfileEditor({
             <Send className="h-4.5 w-4.5 text-emerald-600" /> Lead Form Settings (Page 5)
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
-            Configure contact form headline and submission routing
+            Configure contact form text content, field requirements, and submission routing
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-xs font-bold text-zinc-700">Form Title</Label>
-            <Input
-              value={leadForm.title}
-              onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
-              placeholder="Get in Touch"
-              className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-bold text-zinc-700">Form Subtitle / Description</Label>
-            <Input
-              value={leadForm.subtitle}
-              onChange={(e) => setLeadForm({ ...leadForm, subtitle: e.target.value })}
-              placeholder="Leave your details below and we'll get back to you shortly."
-              className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-bold text-zinc-700">Target Email (For Form Submissions)</Label>
-            <Input
-              value={leadForm.target}
-              onChange={(e) => setLeadForm({ ...leadForm, target: e.target.value })}
-              placeholder="mail@domain.com"
-              className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs font-bold text-zinc-700">Target Phone (For WhatsApp & Call Buttons)</Label>
-            <div className="flex gap-2">
-              <CountrySelector 
-                value={leadForm.phoneCountryCode || "972"} 
-                onChange={(val) => setLeadForm({ ...leadForm, phoneCountryCode: val })} 
-              />
+        <CardContent className="space-y-5">
+          {/* Section 1: Form Content & Fields */}
+          <div className="space-y-3.5">
+            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
+              Section 1: Form Content & Fields
+            </h4>
+            
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Form Title</Label>
               <Input
-                value={leadForm.phoneTarget || ""}
-                onChange={(e) => setLeadForm({ ...leadForm, phoneTarget: e.target.value })}
-                placeholder="Local number (e.g. 501234567)"
-                className="flex-1 bg-zinc-50 border-zinc-200 text-xs text-zinc-900 h-10"
+                value={leadForm.title}
+                onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
+                placeholder="Get in Touch"
+                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
               />
             </div>
-            <p className="text-[10px] text-zinc-500 pt-1">The local number will be automatically sanitized and formatted.</p>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Form Subtitle / Description</Label>
+              <Input
+                value={leadForm.subtitle}
+                onChange={(e) => setLeadForm({ ...leadForm, subtitle: e.target.value })}
+                placeholder="Leave your details below and we'll get back to you shortly."
+                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+              />
+            </div>
+
+            <div className="pt-2 space-y-3">
+              <Label className="text-xs font-bold text-zinc-700 block">Form Field Requirements</Label>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                <span className="text-xs font-bold text-zinc-800">Full Name</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  Always Required
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                <div>
+                  <span className="text-xs font-bold text-zinc-800 block">Phone Field</span>
+                  <span className="text-[10px] text-zinc-500">Collect visitor phone number</span>
+                </div>
+                <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={!!leadForm.is_phone_required}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      if (!checked && !leadForm.is_email_required) {
+                        return; // At least one contact field must remain enabled
+                      }
+                      setLeadForm({ ...leadForm, is_phone_required: checked });
+                    }}
+                    className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  {leadForm.is_phone_required ? "Required" : "Optional"}
+                </label>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                <div>
+                  <span className="text-xs font-bold text-zinc-800 block">Email Address Field</span>
+                  <span className="text-[10px] text-zinc-500">Collect visitor email address</span>
+                </div>
+                <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={!!leadForm.is_email_required}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      if (!checked && !leadForm.is_phone_required) {
+                        return; // At least one contact field must remain enabled
+                      }
+                      setLeadForm({ ...leadForm, is_email_required: checked });
+                    }}
+                    className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  {leadForm.is_email_required ? "Required" : "Optional"}
+                </label>
+              </div>
+
+              <p className="text-[10px] text-zinc-500 italic">
+                * Note: At least one contact field (Phone or Email) must be enabled so the form remains actionable.
+              </p>
+            </div>
           </div>
-          <div className="pt-2 border-t border-zinc-100 flex flex-col gap-3">
-            <Label className="text-xs font-bold text-zinc-700 block">Form Field Requirements</Label>
+
+          {/* Section 2: Submission Routing */}
+          <div className="space-y-3.5 pt-3 border-t border-zinc-100">
+            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
+              Section 2: Submission Routing
+            </h4>
             
-            <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={!!leadForm.is_phone_required}
-                onChange={(e) => setLeadForm({ ...leadForm, is_phone_required: e.target.checked })}
-                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Target Email (For Form Submissions) *</Label>
+              <Input
+                value={leadForm.target || ""}
+                onChange={(e) => setLeadForm({ ...leadForm, target: e.target.value })}
+                placeholder="mail@domain.com"
+                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+                required
               />
-              Require Phone Number
-            </label>
-
-            <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={!!leadForm.is_email_required}
-                onChange={(e) => setLeadForm({ ...leadForm, is_email_required: e.target.checked })}
-                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              Require Email Address
-            </label>
-          </div>
-
-          <div className="pt-2 border-t border-zinc-100">
-            <Label className="text-xs font-bold text-zinc-700 block mb-2">Global Action Buttons (Shown on all Reels)</Label>
-            <div className="flex items-center gap-5 mt-1">
-              <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={leadForm.showWhatsappButton || false}
-                  onChange={(e) => setLeadForm({ ...leadForm, showWhatsappButton: e.target.checked })}
-                  className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <div className="flex items-center gap-1">
-                  <span className="h-4 w-4 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                    WA
-                  </span>
-                  WhatsApp
-                </div>
-              </label>
-              
-              <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={leadForm.showCallButton || false}
-                  onChange={(e) => setLeadForm({ ...leadForm, showCallButton: e.target.checked })}
-                  className="rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500"
-                />
-                <div className="flex items-center gap-1">
-                  <span className="h-4 w-4 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-600">
-                    Call
-                  </span>
-                  Phone Call
-                </div>
-              </label>
+              <p className="text-[10px] text-zinc-500">Form entries will be routed to this destination email address.</p>
             </div>
           </div>
         </CardContent>

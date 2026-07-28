@@ -2,7 +2,8 @@
 
 import React, { useState, useRef } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { VideoReel } from "./mobile-preview";
+import { VideoReel, LeadFormSettings } from "./mobile-preview";
+import { CountrySelector } from "@/components/country-selector";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ interface FeedItemEditorProps {
   reels: VideoReel[];
   setReels: (reels: VideoReel[]) => void;
   planType?: string;
+  leadForm?: LeadFormSettings;
+  setLeadForm?: (form: LeadFormSettings) => void;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -104,7 +107,7 @@ function ProgressBar({ percent }: { percent: number }) {
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
-export function FeedItemEditor({ reels, setReels, planType = "pro" }: FeedItemEditorProps) {
+export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, setLeadForm }: FeedItemEditorProps) {
   // Form state
   const [videoUrl, setVideoUrl] = useState("");
   const [caption, setCaption] = useState("");
@@ -680,6 +683,73 @@ export function FeedItemEditor({ reels, setReels, planType = "pro" }: FeedItemEd
           )}
         </CardContent>
       </Card>
+
+      {/* Reel Action Buttons & Contact Phone */}
+      {leadForm && setLeadForm && (
+        <Card className="bg-white border-zinc-200/80 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
+              <MessageCircle className="h-4.5 w-4.5 text-emerald-600" /> Reel Action Buttons & Contact Phone
+            </CardTitle>
+            <CardDescription className="text-xs text-zinc-500">
+              Configure the floating WhatsApp and Call action buttons displayed on your video reels
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Target Phone (For WhatsApp & Call Buttons)</Label>
+              <div className="flex gap-2">
+                <CountrySelector 
+                  value={leadForm.phoneCountryCode || "1"} 
+                  onChange={(val) => setLeadForm({ ...leadForm, phoneCountryCode: val })} 
+                />
+                <Input
+                  value={leadForm.phoneTarget || ""}
+                  onChange={(e) => setLeadForm({ ...leadForm, phoneTarget: e.target.value })}
+                  placeholder="Local phone number (e.g. 5551234567)"
+                  className="flex-1 bg-zinc-50 border-zinc-200 text-xs text-zinc-900 h-10"
+                />
+              </div>
+              <p className="text-[10px] text-zinc-500 pt-0.5">The phone number is formatted automatically for WhatsApp API & Direct Calls.</p>
+            </div>
+
+            <div className="pt-2 border-t border-zinc-100">
+              <Label className="text-xs font-bold text-zinc-700 block mb-2">Reel Action Overlay Buttons</Label>
+              <div className="flex items-center gap-6 mt-1">
+                <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={leadForm.showWhatsappButton || false}
+                    onChange={(e) => setLeadForm({ ...leadForm, showWhatsappButton: e.target.checked })}
+                    className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-[10px]">
+                      WA
+                    </span>
+                    WhatsApp Button
+                  </div>
+                </label>
+                
+                <label className="flex items-center gap-2 text-xs font-bold text-zinc-700 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={leadForm.showCallButton || false}
+                    onChange={(e) => setLeadForm({ ...leadForm, showCallButton: e.target.checked })}
+                    className="rounded border-zinc-300 text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-5 w-5 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-bold text-[10px]">
+                      Call
+                    </span>
+                    Phone Call Button
+                  </div>
+                </label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -139,9 +139,13 @@ export default function DashboardPage() {
     title: "Get in Touch",
     subtitle: "Leave your details below and we'll get back to you shortly.",
     routeType: "email",
-    target: "contact@alexrivers.com",
+    target: "",
+    phoneCountryCode: "1",
+    phoneTarget: "",
     showWhatsappButton: true,
     showCallButton: false,
+    is_phone_required: false,
+    is_email_required: true,
   });
 
   // Supabase Persistence State
@@ -448,7 +452,13 @@ export default function DashboardPage() {
 
             {activeTab === "reels" && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <FeedItemEditor reels={reels} setReels={setReels} planType={planType} />
+                <FeedItemEditor 
+                  reels={reels} 
+                  setReels={setReels} 
+                  planType={planType} 
+                  leadForm={leadForm}
+                  setLeadForm={setLeadForm}
+                />
               </div>
             )}
 

@@ -16,7 +16,7 @@ export function CountrySelector({ value, onChange }: CountrySelectorProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedCountry = COUNTRIES.find((c) => c.code === value) || COUNTRIES.find(c => c.cca2 === "IL") || COUNTRIES[0];
+  const selectedCountry = COUNTRIES.find((c) => c.code === value) || COUNTRIES.find(c => c.cca2 === "US") || COUNTRIES[0];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
