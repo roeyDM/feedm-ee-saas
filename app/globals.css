@@ -130,3 +130,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* User Profile Dynamic Font Override */
+.profile-theme-container,
+.profile-theme-container * {
+  font-family: var(--user-font-family, inherit) !important;
+}

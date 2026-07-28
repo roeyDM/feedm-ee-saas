@@ -392,6 +392,7 @@ export function MobilePreview({
 
   let mainContainerStyle: React.CSSProperties = {
     fontFamily: `'${activeAppearance.fontFamily}', sans-serif`,
+    ["--user-font-family" as any]: `'${activeAppearance.fontFamily}', sans-serif`,
   };
 
   if (activeAppearance.bgType === "gradient") {
@@ -422,7 +423,7 @@ export function MobilePreview({
   const previewContent = (
     <div
       style={mainContainerStyle}
-      className="relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white"
+      className="profile-theme-container relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
       {/* Copy Toast Notification */}
       {showCopyToast && (
