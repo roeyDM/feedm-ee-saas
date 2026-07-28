@@ -241,15 +241,92 @@ export function ProfileEditor({
     setEditSocialFormData({});
   };
 
-  const platformIcons: Record<SocialLink["platform"], React.ReactNode> = {
-    instagram: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>,
-    tiktok: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.52-4.06-1.39v7.76c-.05 2.42-1.34 4.78-3.56 5.82-2.23 1.08-5.07.96-7.17-.32-2.22-1.33-3.41-3.99-2.92-6.55.39-2.22 2.14-4.09 4.36-4.53 1.21-.24 2.48-.06 3.56.55v4.2c-.88-.41-1.92-.48-2.78-.05-.98.47-1.57 1.57-1.45 2.66.1 1.07.94 1.99 2 2.08 1.15.11 2.25-.66 2.46-1.79.05-.28.06-.57.06-.85V.02z"/></svg>,
-    twitter: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>,
-    facebook: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>,
-    youtube: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>,
-    whatsapp: <MessageCircle className="h-5 w-5" />,
-    linkedin: <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
-    spotify: <Music className="h-5 w-5" />
+  const PLATFORM_INFO: Record<
+    SocialLink["platform"],
+    { name: string; icon: React.ReactNode }
+  > = {
+    instagram: {
+      name: "Instagram",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <defs>
+            <linearGradient id="ig-gradient-builder" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f09433" />
+              <stop offset="25%" stopColor="#e6683c" />
+              <stop offset="50%" stopColor="#dc2743" />
+              <stop offset="75%" stopColor="#cc2366" />
+              <stop offset="100%" stopColor="#bc1888" />
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-gradient-builder)" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" fill="none" stroke="#ffffff" strokeWidth="1.8" />
+          <circle cx="17.5" cy="6.5" r="1.2" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    tiktok: {
+      name: "TikTok",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <rect width="24" height="24" rx="5" fill="#010101" />
+          <path d="M16.6 8.2a4.4 4.4 0 0 1-2.9-1.2 4.6 4.6 0 0 1-1.2-2.7h-2.3v10.8a2.5 2.5 0 1 1-2.5-2.5c.3 0 .6.1.9.2V10.4a4.8 4.8 0 0 0-.9-.1 4.8 4.8 0 1 0 4.8 4.8V9.7a6.8 6.8 0 0 0 4.1 1.3V8.7a4.6 4.6 0 0 1-2-.5z" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    twitter: {
+      name: "X (Twitter)",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <rect width="24" height="24" rx="5" fill="#000000" />
+          <path d="M16.99 5h2.42l-5.29 6.05 6.22 8.22h-4.88l-3.82-5-4.37 5H4.85l5.65-6.46L4.5 5h5.01l3.47 4.58L16.99 5zm-.85 12.82h1.34L8.2 6.32H6.76l9.38 11.5z" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    facebook: {
+      name: "Facebook",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <circle cx="12" cy="12" r="12" fill="#1877F2" />
+          <path d="M16 12.073c0-2.21-1.79-4.073-4-4.073v2.5h1.5l.3 2H12v6.5h-2.5v-6.5H8v-2h1.5V9c0-2.21 1.79-4 4-4H16v2.5h-1.5c-.83 0-1.5.67-1.5 1.5v1.073H16z" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    youtube: {
+      name: "YouTube",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <rect width="24" height="24" rx="5" fill="#FF0000" />
+          <polygon points="9.5,16.5 16.5,12 9.5,7.5" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    whatsapp: {
+      name: "WhatsApp",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <circle cx="12" cy="12" r="12" fill="#25D366" />
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    linkedin: {
+      name: "LinkedIn",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <rect width="24" height="24" rx="5" fill="#0A66C2" />
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" fill="#ffffff" />
+        </svg>
+      ),
+    },
+    spotify: {
+      name: "Spotify",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-8 h-8 shrink-0">
+          <circle cx="12" cy="12" r="12" fill="#1DB954" />
+          <path d="M17.45 17.294c-.212.348-.675.458-1.023.245-2.805-1.713-6.33-2.1-10.485-1.15-.403.093-.807-.156-.9-.558-.093-.404.156-.807.558-.9 4.545-1.042 8.442-.602 11.606 1.34.348.213.458.675.245 1.023zm1.464-3.267c-.268.435-.852.576-1.287.31-3.21-1.974-8.15-2.573-11.96-1.41-.486.147-1.002-.128-1.15-.615-.146-.486.128-1.002.615-1.15 4.364-1.332 9.805-.672 13.473 1.578.436.267.577.852.31 1.287zm.123-3.415c-3.856-2.287-10.21-2.5-13.9-1.385-.572.173-1.173-.153-1.347-.725-.173-.57.153-1.17.725-1.343 4.296-1.298 11.31-1.05 15.76 1.59.516.305.687.973.382 1.487-.305.515-.973.687-1.488.383z" fill="#000000" />
+        </svg>
+      ),
+    },
   };
 
   return (
@@ -413,18 +490,35 @@ export function ProfileEditor({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            {(Object.keys(platformIcons) as SocialLink["platform"][]).map((platform) => (
-              <Button
-                key={platform}
-                variant="outline"
-                size="icon"
-                onClick={() => handleAddSocialLink(platform)}
-                className="w-full aspect-square h-auto rounded-xl border-zinc-200 hover:bg-zinc-100 hover:text-black text-zinc-600 bg-white shadow-sm"
-              >
-                {platformIcons[platform]}
-              </Button>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {(Object.keys(PLATFORM_INFO) as SocialLink["platform"][]).map((platform) => {
+              const info = PLATFORM_INFO[platform];
+              const isAdded = socialLinks.some((l) => l.platform === platform);
+
+              return (
+                <button
+                  key={platform}
+                  type="button"
+                  onClick={() => handleAddSocialLink(platform)}
+                  className={cn(
+                    "flex flex-col items-center justify-center p-3.5 rounded-2xl border transition-all duration-200 group relative bg-white shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-pointer",
+                    isAdded
+                      ? "border-emerald-400 ring-2 ring-emerald-500/20 bg-emerald-50/30"
+                      : "border-zinc-200 hover:border-zinc-300"
+                  )}
+                >
+                  <div className="flex items-center justify-center w-10 h-10 mb-2 transition-transform duration-200 group-hover:scale-110 drop-shadow-xs">
+                    {info.icon}
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                    {info.name}
+                  </span>
+                  {isAdded && (
+                    <span className="absolute top-2.5 right-2.5 flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                  )}
+                </button>
+              );
+            })}
           </div>
           
           <div className="space-y-2 mt-4">
@@ -433,10 +527,10 @@ export function ProfileEditor({
                 {editingSocialLinkId === link.id ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center shrink-0">
-                         {platformIcons[link.platform]}
+                      <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center shrink-0 overflow-hidden">
+                        {PLATFORM_INFO[link.platform]?.icon}
                       </div>
-                      <span className="text-xs font-bold capitalize text-zinc-800">{link.platform}</span>
+                      <span className="text-xs font-bold text-zinc-800">{PLATFORM_INFO[link.platform]?.name || link.platform}</span>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px] font-bold text-zinc-500">URL or Username</Label>
@@ -479,12 +573,12 @@ export function ProfileEditor({
                 ) : (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center shrink-0", link.isActive === false ? "bg-zinc-200 text-zinc-400" : "bg-white text-zinc-800 shadow-sm border border-zinc-200")}>
-                        {platformIcons[link.platform]}
+                      <div className={cn("h-9 w-9 shrink-0 flex items-center justify-center")}>
+                        {PLATFORM_INFO[link.platform]?.icon}
                       </div>
                       <div className="min-w-0">
-                        <p className={cn("text-xs font-bold capitalize truncate", link.isActive === false ? "text-zinc-400 line-through" : "text-zinc-900")}>
-                          {link.platform} {link.label && <span className="text-zinc-500 font-normal ml-1">({link.label})</span>}
+                        <p className={cn("text-xs font-bold truncate", link.isActive === false ? "text-zinc-400 line-through" : "text-zinc-900")}>
+                          {PLATFORM_INFO[link.platform]?.name || link.platform} {link.label && <span className="text-zinc-500 font-normal ml-1">({link.label})</span>}
                         </p>
                         <p className="text-[10px] text-zinc-500 truncate">{link.url || "No URL set"}</p>
                       </div>
