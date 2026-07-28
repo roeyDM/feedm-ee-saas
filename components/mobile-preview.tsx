@@ -66,6 +66,30 @@ export interface LeadFormSettings {
   is_email_required?: boolean;
 }
 
+export interface AppearanceSettings {
+  bgType: "solid" | "gradient" | "image";
+  bgColor: string;
+  bgGradientStart: string;
+  bgGradientEnd: string;
+  bgGradientAngle: number;
+  bgImageUrl?: string;
+  buttonShape: "sharp" | "rounded" | "pill" | "outline";
+  fontFamily: "Inter" | "Outfit" | "Montserrat" | "Urbanist";
+  textColor?: string;
+}
+
+export const DEFAULT_APPEARANCE: AppearanceSettings = {
+  bgType: "solid",
+  bgColor: "#bad1cb",
+  bgGradientStart: "#fbcfe8",
+  bgGradientEnd: "#e0f2fe",
+  bgGradientAngle: 135,
+  bgImageUrl: "",
+  buttonShape: "rounded",
+  fontFamily: "Inter",
+  textColor: "#18181b",
+};
+
 export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFormSettings {
   const DEFAULT_TITLE = "Get in Touch";
   const DEFAULT_SUBTITLE = "Leave your details below and we'll get back to you shortly.";
@@ -107,6 +131,7 @@ interface MobilePreviewProps {
   customLinks: CustomLink[];
   reels: VideoReel[];
   leadForm: LeadFormSettings;
+  appearance?: AppearanceSettings;
   isDemoMode?: boolean;
 }
 
@@ -167,6 +192,7 @@ export function MobilePreview({
     routeType: "whatsapp",
     target: "1234567890",
   },
+  appearance,
   isDemoMode = false,
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
@@ -284,11 +310,44 @@ export function MobilePreview({
     );
   };
 
-  // Dynamic Hex color styles derivation
-  const hexColor = customHexColor.startsWith("#") ? customHexColor : `#${customHexColor}`;
+  // Appearance settings derivation
+  const activeAppearance: AppearanceSettings = {
+    ...DEFAULT_APPEARANCE,
+    ...(customHexColor ? { bgColor: customHexColor } : {}),
+    ...appearance,
+  };
 
-  const mainContainerStyle: React.CSSProperties = {
-    backgroundColor: hexColor,
+  const hexColor = activeAppearance.bgColor.startsWith("#")
+    ? activeAppearance.bgColor
+    : `#${activeAppearance.bgColor}`;
+
+  let mainContainerStyle: React.CSSProperties = {
+    fontFamily: `var(--font-${activeAppearance.fontFamily.toLowerCase()}, '${activeAppearance.fontFamily}', sans-serif)`,
+  };
+
+  if (activeAppearance.bgType === "gradient") {
+    mainContainerStyle.background = `linear-gradient(${activeAppearance.bgGradientAngle}deg, ${activeAppearance.bgGradientStart}, ${activeAppearance.bgGradientEnd})`;
+  } else if (activeAppearance.bgType === "image" && activeAppearance.bgImageUrl) {
+    mainContainerStyle.backgroundImage = `url(${activeAppearance.bgImageUrl})`;
+    mainContainerStyle.backgroundSize = "cover";
+    mainContainerStyle.backgroundPosition = "center";
+  } else {
+    mainContainerStyle.backgroundColor = hexColor;
+  }
+
+  // Button Shape styling
+  const getButtonShapeClass = () => {
+    switch (activeAppearance.buttonShape) {
+      case "sharp":
+        return "rounded-none bg-white/90 border border-white/60 shadow-md text-zinc-900";
+      case "pill":
+        return "rounded-full bg-white/90 border border-white/60 shadow-md text-zinc-900 px-5";
+      case "outline":
+        return "rounded-2xl bg-white/10 backdrop-blur-md border-2 border-white/80 text-white shadow-md hover:bg-white/20";
+      case "rounded":
+      default:
+        return "rounded-2xl bg-white/85 border border-white/60 shadow-md text-zinc-900";
+    }
   };
 
   const previewContent = (
@@ -356,7 +415,10 @@ export function MobilePreview({
               href={link.url}
               target="_blank"
               rel="noreferrer"
-              className="group relative flex items-center justify-between rounded-2xl bg-white/85 p-3.5 shadow-md shadow-black/5 backdrop-blur-md border border-white/60 transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:shadow-lg"
+              className={cn(
+                "group relative flex items-center justify-between p-3.5 shadow-black/5 backdrop-blur-md transition-all duration-300 hover:scale-[1.02] hover:bg-white hover:shadow-lg",
+                getButtonShapeClass()
+              )}
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 {link.thumbnailUrl && (

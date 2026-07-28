@@ -29,6 +29,7 @@ export default function UserProfilePage({ params }: PageProps) {
     customLinks: CustomLink[];
     reels: VideoReel[];
     leadForm: LeadFormSettings;
+    appearance?: any;
   } | null>(null);
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function UserProfilePage({ params }: PageProps) {
             customLinks: data.custom_links || [],
             reels: data.reels || [],
             leadForm: sanitizeLeadForm(data.lead_form),
+            appearance: data.appearance,
           });
         }
       } catch (err) {
@@ -123,6 +125,7 @@ export default function UserProfilePage({ params }: PageProps) {
       },
     ],
     leadForm: sanitizeLeadForm(null),
+    appearance: undefined,
   };
 
   return (
@@ -136,6 +139,7 @@ export default function UserProfilePage({ params }: PageProps) {
       customLinks={activeProfile.customLinks}
       reels={activeProfile.reels}
       leadForm={activeProfile.leadForm}
+      appearance={activeProfile.appearance}
       isDemoMode={false}
     />
   );

@@ -14,6 +14,8 @@ import {
   VideoReel,
   LeadFormSettings,
   sanitizeLeadForm,
+  AppearanceSettings,
+  DEFAULT_APPEARANCE,
 } from "@/components/mobile-preview";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
@@ -134,6 +136,9 @@ export default function DashboardPage() {
     },
   ]);
 
+  // Appearance Settings (Page 1 Design)
+  const [appearance, setAppearance] = useState<AppearanceSettings>(DEFAULT_APPEARANCE);
+
   // Lead Form Settings (Page 5)
   const [leadForm, setLeadForm] = useState<LeadFormSettings>({
     title: "Get in Touch",
@@ -180,6 +185,7 @@ export default function DashboardPage() {
           if (data.custom_links) setCustomLinks(data.custom_links);
           if (data.reels) setReels(data.reels);
           if (data.lead_form) setLeadForm(sanitizeLeadForm(data.lead_form));
+          if (data.appearance) setAppearance(data.appearance);
         }
       } catch (err) {
         console.log("No existing profile found or fetch error:", err);
@@ -200,7 +206,8 @@ export default function DashboardPage() {
         name,
         bio,
         avatar_url: avatarUrl,
-        custom_hex_color: customHexColor,
+        custom_hex_color: appearance.bgColor || customHexColor,
+        appearance,
         plan_type: planType,
         social_links: socialLinks,
         custom_links: customLinks,
@@ -467,6 +474,8 @@ export default function DashboardPage() {
                 <DesignEditor 
                   customHexColor={customHexColor}
                   setCustomHexColor={setCustomHexColor}
+                  appearance={appearance}
+                  setAppearance={setAppearance}
                 />
               </div>
             )}
@@ -491,6 +500,7 @@ export default function DashboardPage() {
             customLinks={customLinks}
             reels={reels}
             leadForm={leadForm}
+            appearance={appearance}
             isDemoMode={true}
           />
         </aside>
