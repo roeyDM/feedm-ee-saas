@@ -97,7 +97,7 @@ export const THEME_PRESETS: {
   {
     id: "pastel-dream",
     name: "Pastel Dream",
-    description: "Soft pink to sky blue gradient",
+    description: "Soft pink to sky blue gradient with high contrast dark text",
     bgPreviewStyle: { background: "linear-gradient(135deg, #FBCFE8, #E0F2FE)" },
     settings: {
       bgType: "gradient",
@@ -111,14 +111,14 @@ export const THEME_PRESETS: {
       avatarBorderEnabled: true,
       avatarBorderColor: "#FFFFFF",
       avatarBorderWidth: 4,
-      headlineColor: "#09090B",
-      bioColor: "#27272A",
+      headlineColor: "#0F172A",
+      bioColor: "#1E1B4B",
       cardBgColor: "#FFFFFF",
-      cardTextColor: "#09090B",
-      cardBorderColor: "#E4E4E7",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#F472B6",
       socialIconBgColor: "#FFFFFF",
       socialLogoMode: "brand",
-      socialFlatColor: "#18181B",
+      socialFlatColor: "#0F172A",
     },
   },
   {
@@ -701,12 +701,14 @@ export function DesignEditor({
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-bold text-zinc-700">Font Pairings</Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {[
                 { name: "Inter", family: "'Inter', sans-serif" },
                 { name: "Outfit", family: "'Outfit', sans-serif" },
                 { name: "Montserrat", family: "'Montserrat', sans-serif" },
                 { name: "Urbanist", family: "'Urbanist', sans-serif" },
+                { name: "Playfair Display", family: "'Playfair Display', serif" },
+                { name: "Poppins", family: "'Poppins', sans-serif" },
               ].map((font) => {
                 const isSelected = currentApp.fontFamily === font.name;
 

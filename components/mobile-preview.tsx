@@ -118,6 +118,22 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   socialFlatColor: "#18181B",
 };
 
+export function useGoogleFont(fontFamily?: string) {
+  useEffect(() => {
+    if (!fontFamily) return;
+    const fontSlug = fontFamily.toLowerCase().replace(/\s+/g, "-");
+    const fontId = `google-font-${fontSlug}`;
+    if (!document.getElementById(fontId)) {
+      const link = document.createElement("link");
+      link.id = fontId;
+      link.rel = "stylesheet";
+      const fontUrlParam = fontFamily.replace(/\s+/g, "+");
+      link.href = `https://fonts.googleapis.com/css2?family=${fontUrlParam}:wght@300;400;500;600;700;800;900&display=swap`;
+      document.head.appendChild(link);
+    }
+  }, [fontFamily]);
+}
+
 export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFormSettings {
   const DEFAULT_TITLE = "Get in Touch";
   const DEFAULT_SUBTITLE = "Leave your details below and we'll get back to you shortly.";
@@ -367,12 +383,15 @@ export function MobilePreview({
     ...appearance,
   };
 
+  // Dynamic font loading
+  useGoogleFont(activeAppearance.fontFamily);
+
   const hexColor = activeAppearance.bgColor.startsWith("#")
     ? activeAppearance.bgColor
     : `#${activeAppearance.bgColor}`;
 
   let mainContainerStyle: React.CSSProperties = {
-    fontFamily: `var(--font-${activeAppearance.fontFamily.toLowerCase()}, '${activeAppearance.fontFamily}', sans-serif)`,
+    fontFamily: `'${activeAppearance.fontFamily}', sans-serif`,
   };
 
   if (activeAppearance.bgType === "gradient") {
