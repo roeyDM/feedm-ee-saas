@@ -128,6 +128,10 @@ export default function UserProfilePage({ params }: PageProps) {
     appearance: undefined,
   };
 
+  useEffect(() => {
+    console.log("Simulator Received Font [public page]:", activeProfile.appearance?.fontFamily);
+  }, [activeProfile.appearance?.fontFamily]);
+
   return (
     <MobilePreview
       profileName={activeProfile.name}
@@ -140,6 +144,7 @@ export default function UserProfilePage({ params }: PageProps) {
       reels={activeProfile.reels}
       leadForm={activeProfile.leadForm}
       appearance={activeProfile.appearance}
+      fontFamily={activeProfile.appearance?.fontFamily}
       isDemoMode={false}
     />
   );

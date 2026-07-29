@@ -131,8 +131,8 @@
   }
 }
 
-/* User Profile Dynamic Font Override */
-.profile-theme-container,
-.profile-theme-container * {
-  font-family: var(--user-font-family, inherit) !important;
+/* Force preview dynamic font override */
+[data-theme-font],
+[data-theme-font] * {
+  font-family: var(--selected-profile-font, inherit) !important;
 }

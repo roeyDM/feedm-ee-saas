@@ -46,10 +46,6 @@ export function DashboardHeader({ username, planType = "free", onSave, isSaving 
 
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
-          <Link href="/pricing" className="hidden sm:inline-block text-xs font-bold text-zinc-600 hover:text-emerald-600 transition px-2">
-            Pricing
-          </Link>
-
           <Link href={`/${username}`} target="_blank" className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-zinc-950 transition">
             <span>feedm.ee/{username}</span>
             <ExternalLink className="h-3.5 w-3.5 text-zinc-400" />

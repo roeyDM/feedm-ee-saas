@@ -895,11 +895,11 @@ export function ProfileEditor({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-zinc-700">Target Email (For Form Submissions) *</Label>
               <Input
+                type="email"
                 value={leadForm.target || ""}
                 onChange={(e) => setLeadForm({ ...leadForm, target: e.target.value })}
                 placeholder="mail@domain.com"
-                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-                required
+                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900 font-mono"
               />
               <p className="text-[10px] text-zinc-500">Form entries will be routed to this destination email address.</p>
             </div>

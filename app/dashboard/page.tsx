@@ -569,6 +569,7 @@ export default function DashboardPage() {
             reels={reels}
             leadForm={leadForm}
             appearance={appearance}
+            fontFamily={appearance?.fontFamily}
             isDemoMode={true}
           />
         </aside>

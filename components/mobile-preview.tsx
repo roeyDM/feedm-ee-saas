@@ -74,7 +74,7 @@ export interface AppearanceSettings {
   bgGradientAngle: number;
   bgImageUrl?: string;
   buttonShape: "sharp" | "rounded" | "pill" | "outline";
-  fontFamily: "Inter" | "Outfit" | "Montserrat" | "Urbanist";
+  fontFamily: "Inter" | "Outfit" | "Montserrat" | "Urbanist" | "Playfair Display" | "Poppins" | string;
   
   avatarBorderEnabled?: boolean;
   avatarBorderColor?: string;
@@ -121,14 +121,14 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
 export function useGoogleFont(fontFamily?: string) {
   useEffect(() => {
     if (!fontFamily) return;
-    const fontSlug = fontFamily.toLowerCase().replace(/\s+/g, "-");
-    const fontId = `google-font-${fontSlug}`;
-    if (!document.getElementById(fontId)) {
+    const fontName = fontFamily.trim();
+    if (!fontName) return;
+
+    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@300;400;500;600;700;800;900&display=swap`;
+    if (!document.querySelector(`link[href="${fontUrl}"]`)) {
       const link = document.createElement("link");
-      link.id = fontId;
       link.rel = "stylesheet";
-      const fontUrlParam = fontFamily.replace(/\s+/g, "+");
-      link.href = `https://fonts.googleapis.com/css2?family=${fontUrlParam}:wght@300;400;500;600;700;800;900&display=swap`;
+      link.href = fontUrl;
       document.head.appendChild(link);
     }
   }, [fontFamily]);
@@ -151,11 +151,15 @@ export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFor
     rawSubtitle.includes("השאירו פרטים") ||
     rawSubtitle.includes("נחזור אליכם");
 
+  const rawTarget = lf?.target?.trim() || "";
+  const isInvalidEmailTarget = /^\d+$/.test(rawTarget) || (!rawTarget.includes("@") && rawTarget.length > 0);
+  const cleanTarget = isInvalidEmailTarget ? "" : rawTarget;
+
   return {
     title: isOldHebrewTitle ? DEFAULT_TITLE : rawTitle,
     subtitle: isOldHebrewSubtitle ? DEFAULT_SUBTITLE : rawSubtitle,
     routeType: lf?.routeType || "email",
-    target: lf?.target || "",
+    target: cleanTarget,
     is_phone_required: lf?.is_phone_required,
     is_email_required: lf?.is_email_required,
     phoneCountryCode: lf?.phoneCountryCode || "1",
@@ -176,6 +180,7 @@ interface MobilePreviewProps {
   reels: VideoReel[];
   leadForm: LeadFormSettings;
   appearance?: AppearanceSettings;
+  fontFamily?: string;
   isDemoMode?: boolean;
 }
 
@@ -203,7 +208,7 @@ function PromoOverlay({ reel }: { reel: VideoReel }) {
         <div className="pr-5">
           <h4 className="text-[11px] font-bold text-white leading-tight">{reel.promoTitle || "Special Offer!"}</h4>
           {reel.promoCode && (
-             <div className="mt-1.5 inline-block bg-white/20 text-white text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/30">
+             <div className="mt-1.5 inline-block bg-white/20 text-white text-[9px] px-1.5 py-0.5 rounded border border-white/30">
                Code: {reel.promoCode}
              </div>
           )}
@@ -237,9 +242,20 @@ export function MobilePreview({
     target: "1234567890",
   },
   appearance,
+  fontFamily,
   isDemoMode = false,
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
+
+  // Appearance settings derivation
+  const activeAppearance: AppearanceSettings = {
+    ...DEFAULT_APPEARANCE,
+    ...(customHexColor ? { bgColor: customHexColor } : {}),
+    ...appearance,
+  };
+
+  const activeFont = fontFamily || appearance?.fontFamily || activeAppearance.fontFamily || "Inter";
+
   // Video playback state
   const [isMuted, setIsMuted] = useState(true);
   const [likedReels, setLikedReels] = useState<Record<string, boolean>>({});
@@ -260,6 +276,13 @@ export function MobilePreview({
     });
     setLikeCounts(initialCounts);
   }, [reels]);
+
+  // Logic Test: Log selected font changes
+  useEffect(() => {
+    if (activeFont) {
+      console.log("Simulator Received Font:", activeFont);
+    }
+  }, [activeFont]);
 
   const toggleLike = (reelId: string) => {
     setLikedReels((prev) => {
@@ -376,23 +399,17 @@ export function MobilePreview({
     );
   };
 
-  // Appearance settings derivation
-  const activeAppearance: AppearanceSettings = {
-    ...DEFAULT_APPEARANCE,
-    ...(customHexColor ? { bgColor: customHexColor } : {}),
-    ...appearance,
-  };
-
   // Dynamic font loading
-  useGoogleFont(activeAppearance.fontFamily);
+  useGoogleFont(activeFont);
 
   const hexColor = activeAppearance.bgColor.startsWith("#")
     ? activeAppearance.bgColor
     : `#${activeAppearance.bgColor}`;
 
   let mainContainerStyle: React.CSSProperties = {
-    fontFamily: `'${activeAppearance.fontFamily}', sans-serif`,
-    ["--user-font-family" as any]: `'${activeAppearance.fontFamily}', sans-serif`,
+    fontFamily: `'${activeFont}', sans-serif`,
+    ["--selected-profile-font" as any]: `'${activeFont}', sans-serif`,
+    ["--user-font-family" as any]: `'${activeFont}', sans-serif`,
   };
 
   if (activeAppearance.bgType === "gradient") {
@@ -422,9 +439,26 @@ export function MobilePreview({
 
   const previewContent = (
     <div
-      style={mainContainerStyle}
-      className="profile-theme-container relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
+      style={{ ...mainContainerStyle, fontFamily: `'${activeFont}', sans-serif`, "--active-font": `'${activeFont}'` } as React.CSSProperties}
+      data-theme-font="true"
+      className="simulator-font-root profile-theme-font profile-preview-root profile-theme-container relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
+      {activeFont && (
+        <link
+          key={activeFont}
+          rel="stylesheet"
+          href={`https://fonts.googleapis.com/css2?family=${activeFont.replace(/ /g, '+')}:wght@400;600;700&display=swap`}
+        />
+      )}
+      
+      {/* Dynamic Font Override Style Tag */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .simulator-font-root, .simulator-font-root * {
+            font-family: var(--active-font), sans-serif !important;
+          }
+        `
+      }} />
       {/* Copy Toast Notification */}
       {showCopyToast && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">

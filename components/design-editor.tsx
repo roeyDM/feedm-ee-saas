@@ -20,11 +20,10 @@ import {
   Link as LinkIcon,
   Share2,
   UploadCloud,
-  X,
-  Image as ImageOutline
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AppearanceSettings, DEFAULT_APPEARANCE } from "./mobile-preview";
+import { AppearanceSettings, DEFAULT_APPEARANCE, useGoogleFont } from "./mobile-preview";
 
 interface DesignEditorProps {
   customHexColor: string;
@@ -41,165 +40,327 @@ export const THEME_PRESETS: {
   settings: AppearanceSettings;
 }[] = [
   {
-    id: "classic",
-    name: "Classic Clean",
-    description: "Soft sage green with rounded cards",
-    bgPreviewStyle: { backgroundColor: "#BAD1CB" },
+    id: "emerald-champagne",
+    name: "Emerald & Champagne",
+    description: "Rich emerald green with warm champagne cards",
+    bgPreviewStyle: { backgroundColor: "#0A4E3B" },
     settings: {
       bgType: "solid",
-      bgColor: "#BAD1CB",
-      bgGradientStart: "#BAD1CB",
-      bgGradientEnd: "#BAD1CB",
+      bgColor: "#0A4E3B",
+      bgGradientStart: "#0A4E3B",
+      bgGradientEnd: "#0A4E3B",
       bgGradientAngle: 135,
       bgImageUrl: "",
       buttonShape: "rounded",
       fontFamily: "Inter",
       avatarBorderEnabled: true,
-      avatarBorderColor: "#FFFFFF",
+      avatarBorderColor: "#F2E7CD",
       avatarBorderWidth: 4,
-      headlineColor: "#09090B",
-      bioColor: "#27272A",
-      cardBgColor: "#FFFFFF",
-      cardTextColor: "#09090B",
-      cardBorderColor: "#E4E4E7",
-      socialIconBgColor: "#FFFFFF",
-      socialLogoMode: "brand",
-      socialFlatColor: "#18181B",
-    },
-  },
-  {
-    id: "dark-luxury",
-    name: "Dark Luxury",
-    description: "Deep obsidian theme with crisp white typography",
-    bgPreviewStyle: { backgroundColor: "#121212" },
-    settings: {
-      bgType: "solid",
-      bgColor: "#121212",
-      bgGradientStart: "#121212",
-      bgGradientEnd: "#18181B",
-      bgGradientAngle: 135,
-      bgImageUrl: "",
-      buttonShape: "sharp",
-      fontFamily: "Montserrat",
-      avatarBorderEnabled: true,
-      avatarBorderColor: "#3F3F46",
-      avatarBorderWidth: 4,
-      headlineColor: "#FFFFFF",
-      bioColor: "#E4E4E7",
-      cardBgColor: "#1E1E1E",
-      cardTextColor: "#FFFFFF",
-      cardBorderColor: "#3F3F46",
-      socialIconBgColor: "#27272A",
-      socialLogoMode: "brand",
-      socialFlatColor: "#FFFFFF",
-    },
-  },
-  {
-    id: "pastel-dream",
-    name: "Pastel Dream",
-    description: "Soft pink to sky blue gradient with high contrast dark text",
-    bgPreviewStyle: { background: "linear-gradient(135deg, #FBCFE8, #E0F2FE)" },
-    settings: {
-      bgType: "gradient",
-      bgColor: "#FBCFE8",
-      bgGradientStart: "#FBCFE8",
-      bgGradientEnd: "#E0F2FE",
-      bgGradientAngle: 135,
-      bgImageUrl: "",
-      buttonShape: "rounded",
-      fontFamily: "Outfit",
-      avatarBorderEnabled: true,
-      avatarBorderColor: "#FFFFFF",
-      avatarBorderWidth: 4,
-      headlineColor: "#0F172A",
-      bioColor: "#1E1B4B",
-      cardBgColor: "#FFFFFF",
+      headlineColor: "#F2E7CD",
+      bioColor: "#E2D7BE",
+      cardBgColor: "#F2E7CD",
       cardTextColor: "#0F172A",
-      cardBorderColor: "#F472B6",
-      socialIconBgColor: "#FFFFFF",
+      cardBorderColor: "#F2E7CD",
+      socialIconBgColor: "#F2E7CD",
       socialLogoMode: "brand",
       socialFlatColor: "#0F172A",
     },
   },
   {
-    id: "neon-vibe",
-    name: "Neon Vibe",
-    description: "Dark electric indigo with bright neon contrast",
-    bgPreviewStyle: { background: "linear-gradient(135deg, #0F172A, #3B0764)" },
+    id: "butter-royal-iris",
+    name: "Butter & Royal Iris",
+    description: "Deep royal iris blue with buttery yellow cards",
+    bgPreviewStyle: { backgroundColor: "#2A00A3" },
     settings: {
-      bgType: "gradient",
-      bgColor: "#0F172A",
-      bgGradientStart: "#0F172A",
-      bgGradientEnd: "#3B0764",
+      bgType: "solid",
+      bgColor: "#2A00A3",
+      bgGradientStart: "#2A00A3",
+      bgGradientEnd: "#2A00A3",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "rounded",
+      fontFamily: "Outfit",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#FFF275",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFF275",
+      bioColor: "#FDE68A",
+      cardBgColor: "#FFF275",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#FFF275",
+      socialIconBgColor: "#FFF275",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "cyber-grape-acid-lime",
+    name: "Cyber Grape & Acid Lime",
+    description: "Vibrant purple with electric acid lime cards",
+    bgPreviewStyle: { backgroundColor: "#5A00F4" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#5A00F4",
+      bgGradientStart: "#5A00F4",
+      bgGradientEnd: "#5A00F4",
       bgGradientAngle: 135,
       bgImageUrl: "",
       buttonShape: "pill",
       fontFamily: "Urbanist",
       avatarBorderEnabled: true,
-      avatarBorderColor: "#A855F7",
+      avatarBorderColor: "#D7FF00",
       avatarBorderWidth: 4,
-      headlineColor: "#FFFFFF",
-      bioColor: "#E2E8F0",
-      cardBgColor: "#1E1B4B",
-      cardTextColor: "#FFFFFF",
-      cardBorderColor: "#A855F7",
-      socialIconBgColor: "#312E81",
+      headlineColor: "#D7FF00",
+      bioColor: "#F4FF81",
+      cardBgColor: "#D7FF00",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#D7FF00",
+      socialIconBgColor: "#D7FF00",
       socialLogoMode: "brand",
-      socialFlatColor: "#A855F7",
+      socialFlatColor: "#0F172A",
     },
   },
   {
-    id: "ocean-gradient",
-    name: "Ocean Gradient",
-    description: "Vibrant cyan to deep ocean blue",
-    bgPreviewStyle: { background: "linear-gradient(135deg, #0EA5E9, #2563EB)" },
+    id: "raspberry-pale-sky",
+    name: "Raspberry & Pale Sky",
+    description: "Bold raspberry pink with sky blue cards",
+    bgPreviewStyle: { backgroundColor: "#C21B5B" },
     settings: {
-      bgType: "gradient",
-      bgColor: "#0EA5E9",
-      bgGradientStart: "#0EA5E9",
-      bgGradientEnd: "#2563EB",
+      bgType: "solid",
+      bgColor: "#C21B5B",
+      bgGradientStart: "#C21B5B",
+      bgGradientEnd: "#C21B5B",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "rounded",
+      fontFamily: "Montserrat",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#E0F2FE",
+      avatarBorderWidth: 4,
+      headlineColor: "#E0F2FE",
+      bioColor: "#BAE6FD",
+      cardBgColor: "#E0F2FE",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#E0F2FE",
+      socialIconBgColor: "#E0F2FE",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "deep-graphite-lime",
+    name: "Deep Graphite & Lime Compute",
+    description: "Dark graphite charcoal with neon lime cards",
+    bgPreviewStyle: { backgroundColor: "#1F2329" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#1F2329",
+      bgGradientStart: "#1F2329",
+      bgGradientEnd: "#1F2329",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "sharp",
+      fontFamily: "Inter",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#B0FF2E",
+      avatarBorderWidth: 4,
+      headlineColor: "#B0FF2E",
+      bioColor: "#D4FF70",
+      cardBgColor: "#B0FF2E",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#B0FF2E",
+      socialIconBgColor: "#B0FF2E",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "blueberry-cream-soda",
+    name: "Blueberry & Cream Soda",
+    description: "Deep navy blueberry with cream soda cards",
+    bgPreviewStyle: { backgroundColor: "#243B9B" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#243B9B",
+      bgGradientStart: "#243B9B",
+      bgGradientEnd: "#243B9B",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "rounded",
+      fontFamily: "Poppins",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#FFF0D3",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFF0D3",
+      bioColor: "#FDE68A",
+      cardBgColor: "#FFF0D3",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#FFF0D3",
+      socialIconBgColor: "#FFF0D3",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "cyber-teal-aqua-foam",
+    name: "Cyber Teal & Aqua Foam",
+    description: "Dark cyber teal with aqua foam cards",
+    bgPreviewStyle: { backgroundColor: "#033B3A" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#033B3A",
+      bgGradientStart: "#033B3A",
+      bgGradientEnd: "#033B3A",
       bgGradientAngle: 135,
       bgImageUrl: "",
       buttonShape: "pill",
-      fontFamily: "Inter",
+      fontFamily: "Urbanist",
       avatarBorderEnabled: true,
-      avatarBorderColor: "#FFFFFF",
+      avatarBorderColor: "#A6FFED",
       avatarBorderWidth: 4,
-      headlineColor: "#FFFFFF",
-      bioColor: "#F0F9FF",
-      cardBgColor: "#FFFFFF",
+      headlineColor: "#A6FFED",
+      bioColor: "#C7FFFA",
+      cardBgColor: "#A6FFED",
       cardTextColor: "#0F172A",
-      cardBorderColor: "#E0F2FE",
-      socialIconBgColor: "#FFFFFF",
+      cardBorderColor: "#A6FFED",
+      socialIconBgColor: "#A6FFED",
       socialLogoMode: "brand",
-      socialFlatColor: "#0284C7",
+      socialFlatColor: "#0F172A",
     },
   },
   {
-    id: "glassmorphic",
-    name: "Glassmorphic",
-    description: "Frosted purple with translucent outline cards",
-    bgPreviewStyle: { background: "linear-gradient(135deg, #A855F7, #EC4899)" },
+    id: "neon-lime-violet-ink",
+    name: "Neon Lime & Violet Ink",
+    description: "Deep violet ink with neon lime cards",
+    bgPreviewStyle: { backgroundColor: "#2C1959" },
     settings: {
-      bgType: "gradient",
-      bgColor: "#A855F7",
-      bgGradientStart: "#A855F7",
-      bgGradientEnd: "#EC4899",
+      bgType: "solid",
+      bgColor: "#2C1959",
+      bgGradientStart: "#2C1959",
+      bgGradientEnd: "#2C1959",
       bgGradientAngle: 135,
       bgImageUrl: "",
-      buttonShape: "outline",
+      buttonShape: "rounded",
       fontFamily: "Outfit",
       avatarBorderEnabled: true,
-      avatarBorderColor: "#FFFFFF",
+      avatarBorderColor: "#C3FF3D",
       avatarBorderWidth: 4,
-      headlineColor: "#FFFFFF",
-      bioColor: "#FAF5FF",
-      cardBgColor: "#FFFFFF",
-      cardTextColor: "#FFFFFF",
-      cardBorderColor: "#FFFFFF",
-      socialIconBgColor: "#FFFFFF",
+      headlineColor: "#C3FF3D",
+      bioColor: "#D9FF75",
+      cardBgColor: "#C3FF3D",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#C3FF3D",
+      socialIconBgColor: "#C3FF3D",
       socialLogoMode: "brand",
-      socialFlatColor: "#FFFFFF",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "sky-mint-graphite",
+    name: "Sky Mint & Graphite",
+    description: "Dark graphite with sky mint cards",
+    bgPreviewStyle: { backgroundColor: "#2B2D32" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#2B2D32",
+      bgGradientStart: "#2B2D32",
+      bgGradientEnd: "#2B2D32",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "sharp",
+      fontFamily: "Inter",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#B8F7E4",
+      avatarBorderWidth: 4,
+      headlineColor: "#B8F7E4",
+      bioColor: "#D5F9EE",
+      cardBgColor: "#B8F7E4",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#B8F7E4",
+      socialIconBgColor: "#B8F7E4",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "warm-lime-olive-ink",
+    name: "Warm Lime & Olive Ink",
+    description: "Deep olive ink green with warm lime cards",
+    bgPreviewStyle: { backgroundColor: "#2F3A1D" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#2F3A1D",
+      bgGradientStart: "#2F3A1D",
+      bgGradientEnd: "#2F3A1D",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "rounded",
+      fontFamily: "Montserrat",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#CFF774",
+      avatarBorderWidth: 4,
+      headlineColor: "#CFF774",
+      bioColor: "#E1FB9B",
+      cardBgColor: "#CFF774",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#CFF774",
+      socialIconBgColor: "#CFF774",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "electric-indigo-lilac",
+    name: "Electric Indigo & Soft Lilac",
+    description: "Electric indigo with soft lilac cards",
+    bgPreviewStyle: { backgroundColor: "#5830F5" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#5830F5",
+      bgGradientStart: "#5830F5",
+      bgGradientEnd: "#5830F5",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "pill",
+      fontFamily: "Outfit",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#E6DEFF",
+      avatarBorderWidth: 4,
+      headlineColor: "#E6DEFF",
+      bioColor: "#F3EEFF",
+      cardBgColor: "#E6DEFF",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#E6DEFF",
+      socialIconBgColor: "#E6DEFF",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
+    },
+  },
+  {
+    id: "ultra-violet-apricot",
+    name: "Ultra Violet & Soft Apricot",
+    description: "Deep ultra violet with soft apricot cards",
+    bgPreviewStyle: { backgroundColor: "#6A00F4" },
+    settings: {
+      bgType: "solid",
+      bgColor: "#6A00F4",
+      bgGradientStart: "#6A00F4",
+      bgGradientEnd: "#6A00F4",
+      bgGradientAngle: 135,
+      bgImageUrl: "",
+      buttonShape: "rounded",
+      fontFamily: "Playfair Display",
+      avatarBorderEnabled: true,
+      avatarBorderColor: "#FFD6A5",
+      avatarBorderWidth: 4,
+      headlineColor: "#FFD6A5",
+      bioColor: "#FFE5C4",
+      cardBgColor: "#FFD6A5",
+      cardTextColor: "#0F172A",
+      cardBorderColor: "#FFD6A5",
+      socialIconBgColor: "#FFD6A5",
+      socialLogoMode: "brand",
+      socialFlatColor: "#0F172A",
     },
   },
 ];
@@ -234,6 +395,9 @@ export function DesignEditor({
     ...(customHexColor ? { bgColor: customHexColor } : {}),
     ...appearance,
   };
+
+  // Dynamic Google Font Injection
+  useGoogleFont(currentApp.fontFamily);
 
   const updateAppearance = (newSettings: Partial<AppearanceSettings>) => {
     const updated: AppearanceSettings = {
@@ -359,7 +523,7 @@ export function DesignEditor({
               <Palette className="h-4.5 w-4.5 text-emerald-600" /> Appearance &amp; Theme Studio
             </CardTitle>
             <CardDescription className="text-xs text-zinc-500 mt-0.5">
-              Curated themes, custom background uploads, typography, and card colors
+              12 high-contrast color palette presets, custom backgrounds, fonts, and link styling
             </CardDescription>
           </div>
 
@@ -402,11 +566,11 @@ export function DesignEditor({
             <Sparkles className="h-4 w-4 text-emerald-600" /> 1. Theme Presets (Quick Apply)
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
-            Select a curated theme preset to instantly transform background, typography, and contrast.
+            Select a high-contrast theme preset pair to instantly transform background, cards, and typography.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {THEME_PRESETS.map((preset) => {
               const isSelected =
                 currentApp.bgType === preset.settings.bgType &&
@@ -430,8 +594,14 @@ export function DesignEditor({
                     style={preset.bgPreviewStyle}
                     className="w-full h-16 rounded-xl mb-2.5 shadow-inner border border-black/10 flex items-center justify-center p-2 relative overflow-hidden"
                   >
-                    <div className="w-full h-6 rounded-lg bg-white/80 backdrop-blur-md shadow-xs border border-white/60 flex items-center px-2">
-                      <div className="h-2 w-12 rounded-full bg-zinc-800/60" />
+                    <div 
+                      style={{ backgroundColor: preset.settings.cardBgColor }}
+                      className="w-full h-6 rounded-lg shadow-xs border border-white/40 flex items-center px-2"
+                    >
+                      <div 
+                        style={{ backgroundColor: preset.settings.cardTextColor }}
+                        className="h-2 w-12 rounded-full opacity-80" 
+                      />
                     </div>
                     {isSelected && (
                       <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-white p-1 rounded-full shadow-md">
@@ -439,7 +609,7 @@ export function DesignEditor({
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-bold text-zinc-900 group-hover:text-black">
+                  <span className="text-xs font-bold text-zinc-900 group-hover:text-black line-clamp-1">
                     {preset.name}
                   </span>
                   <span className="text-[10px] text-zinc-500 leading-tight mt-0.5 line-clamp-1">
@@ -540,10 +710,9 @@ export function DesignEditor({
             </div>
           )}
 
-          {/* REQUIREMENT 1: DIRECT FILE UPLOAD & EXPANDED GALLERY */}
+          {/* DIRECT FILE UPLOAD & EXPANDED GALLERY */}
           {currentApp.bgType === "image" && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-4">
-              {/* Drag and Drop File Input Area */}
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-zinc-700">Upload Background Image from Device</Label>
                 <input
@@ -606,7 +775,6 @@ export function DesignEditor({
                 )}
               </div>
 
-              {/* EXPANDED GALLERY GRID (10 Modern Presets) */}
               <div className="space-y-2 pt-2 border-t border-zinc-200/80">
                 <Label className="text-xs font-bold text-zinc-700">Or Pick From Expanded Background Gallery</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -709,6 +877,7 @@ export function DesignEditor({
                 { name: "Urbanist", family: "'Urbanist', sans-serif" },
                 { name: "Playfair Display", family: "'Playfair Display', serif" },
                 { name: "Poppins", family: "'Poppins', sans-serif" },
+                { name: "Rubik", family: "'Rubik', sans-serif" },
               ].map((font) => {
                 const isSelected = currentApp.fontFamily === font.name;
 
@@ -716,7 +885,10 @@ export function DesignEditor({
                   <button
                     key={font.name}
                     type="button"
-                    onClick={() => updateAppearance({ fontFamily: font.name as any })}
+                    onClick={() => {
+                      console.log("Font Dropdown Changed To:", font.name);
+                      updateAppearance({ fontFamily: font.name as any });
+                    }}
                     className={cn(
                       "flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer bg-white shadow-xs hover:border-zinc-300",
                       isSelected
