@@ -439,26 +439,18 @@ export function MobilePreview({
 
   const previewContent = (
     <div
-      style={{ ...mainContainerStyle, fontFamily: `'${activeFont}', sans-serif`, "--active-font": `'${activeFont}'` } as React.CSSProperties}
+      style={{ ...mainContainerStyle, fontFamily: `'${activeFont}', sans-serif` }}
       data-theme-font="true"
-      className="simulator-font-root profile-theme-font profile-preview-root profile-theme-container relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
+      className="active-simulator-font-wrapper relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
-      {activeFont && (
-        <link
-          key={activeFont}
-          rel="stylesheet"
-          href={`https://fonts.googleapis.com/css2?family=${activeFont.replace(/ /g, '+')}:wght@400;600;700&display=swap`}
-        />
-      )}
-      
-      {/* Dynamic Font Override Style Tag */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .simulator-font-root, .simulator-font-root * {
-            font-family: var(--active-font), sans-serif !important;
-          }
-        `
-      }} />
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=${(activeFont || 'Inter').replace(/ /g, '+')}:wght@400;600;700&display=swap');
+        
+        .active-simulator-font-wrapper,
+        .active-simulator-font-wrapper * {
+          font-family: '${activeFont || 'Inter'}', sans-serif !important;
+        }
+      `}</style>
       {/* Copy Toast Notification */}
       {showCopyToast && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
