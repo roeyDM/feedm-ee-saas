@@ -275,7 +275,6 @@ export default function DashboardPage() {
         avatar_url: avatarUrl,
         custom_hex_color: appearance?.bgColor || customHexColor,
         appearance: appearance ? JSON.parse(JSON.stringify(appearance)) : {},
-        plan_type: planType,
         social_links: socialLinks,
         custom_links: customLinks,
         reels: reels,
@@ -349,7 +348,7 @@ export default function DashboardPage() {
       <main className="flex-1 w-full px-4 py-6 md:px-8 flex flex-col lg:flex-row gap-8 items-start">
         
         {/* LEFT SIDEBAR */}
-        <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto self-start z-20 pb-8">
+        <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto self-start z-10 pb-8">
           {/* User Profile Card */}
           <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm flex flex-col gap-4">
             <div className="flex items-center gap-3">
