@@ -441,16 +441,29 @@ export function MobilePreview({
     <div
       style={{ ...mainContainerStyle, fontFamily: `'${activeFont}', sans-serif` }}
       data-theme-font="true"
+      data-simulator-root="true"
       className="active-simulator-font-wrapper relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=${(activeFont || 'Inter').replace(/ /g, '+')}:wght@400;600;700&display=swap');
-        
-        .active-simulator-font-wrapper,
-        .active-simulator-font-wrapper * {
-          font-family: '${activeFont || 'Inter'}', sans-serif !important;
-        }
-      `}</style>
+      {activeFont && (
+        <>
+          <link
+            rel="stylesheet"
+            href={`https://fonts.googleapis.com/css2?family=${activeFont.replace(/ /g, '+')}:wght@400;600;700&display=swap`}
+          />
+          <style>{`
+            [data-simulator-root],
+            [data-simulator-root] *,
+            [data-simulator-root] h1,
+            [data-simulator-root] h2,
+            [data-simulator-root] p,
+            [data-simulator-root] span,
+            [data-simulator-root] a,
+            [data-simulator-root] button {
+              font-family: '${activeFont}', sans-serif !important;
+            }
+          `}</style>
+        </>
+      )}
       {/* Copy Toast Notification */}
       {showCopyToast && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
