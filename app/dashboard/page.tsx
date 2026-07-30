@@ -19,7 +19,7 @@ import {
 } from "@/components/mobile-preview";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2 } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -489,7 +489,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+          <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm max-w-3xl mx-auto w-full">
             <div>
               <h1 className="text-2xl font-black text-zinc-950 tracking-tight flex items-center gap-2">
                 Creator Studio <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
@@ -561,10 +561,16 @@ export default function DashboardPage() {
 
         {/* RIGHT PANEL: MOBILE PREVIEW */}
         <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3">
-          <div className="text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-zinc-200/80 shadow-sm px-3.5 py-1.5 text-xs font-bold text-zinc-700">
-              <Smartphone className="h-4 w-4 text-emerald-600" /> Live 5-Page Snap Preview
-            </span>
+          <div className="text-center w-full flex justify-center mb-1">
+            <Link href={`/${username}`} target="_blank">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full bg-white border border-zinc-200/80 shadow-sm px-4 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950 transition-colors gap-1.5 h-auto"
+              >
+                <Eye className="h-4 w-4 text-emerald-600" /> View Live Preview
+              </Button>
+            </Link>
           </div>
 
           <MobilePreview
