@@ -124,11 +124,12 @@ export function useGoogleFont(fontFamily?: string) {
     const fontName = fontFamily.trim();
     if (!fontName) return;
 
-    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, "+")}:wght@300;400;500;600;700;800;900&display=swap`;
-    if (!document.querySelector(`link[href="${fontUrl}"]`)) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = fontUrl;
+    const id = `google-font-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
+    if (!document.getElementById(id)) {
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;600;700;800;900&display=swap`;
       document.head.appendChild(link);
     }
   }, [fontFamily]);
@@ -410,6 +411,8 @@ export function MobilePreview({
     fontFamily: `'${activeFont}', sans-serif`,
     ["--selected-profile-font" as any]: `'${activeFont}', sans-serif`,
     ["--user-font-family" as any]: `'${activeFont}', sans-serif`,
+    ["--client-font-family" as any]: `'${activeFont}', sans-serif`,
+    ["--font-sans" as any]: `'${activeFont}', sans-serif`,
   };
 
   if (activeAppearance.bgType === "gradient") {
@@ -439,9 +442,25 @@ export function MobilePreview({
 
   const previewContent = (
     <div
-      style={{ ...mainContainerStyle, fontFamily: activeFont ? `'${activeFont}', sans-serif` : 'inherit' }}
-      className="relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
+      id="simulator-root"
+      style={mainContainerStyle}
+      className="client-page-root relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
+      <style>{`
+        .client-page-root, 
+        .client-page-root * {
+          font-family: var(--client-font-family), sans-serif !important;
+        }
+        #simulator-root h1,
+        #simulator-root h2,
+        #simulator-root h3,
+        #simulator-root p,
+        #simulator-root span,
+        #simulator-root a,
+        #simulator-root button {
+          font-family: var(--client-font-family, inherit) !important;
+        }
+      `}</style>
       {/* Copy Toast Notification */}
       {showCopyToast && (
         <div className="absolute top-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">

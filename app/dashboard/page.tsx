@@ -345,10 +345,10 @@ export default function DashboardPage() {
         />
       </Suspense>
 
-      <main className="flex-1 w-full px-4 py-6 md:px-8 flex flex-col lg:flex-row gap-8 items-start">
+      <main className="flex-1 w-full flex flex-col lg:flex-row items-start">
         
         {/* LEFT SIDEBAR */}
-        <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto self-start z-10 pb-8">
+        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto self-start z-10 bg-zinc-100/80 border-r border-zinc-200 px-4 py-6 lg:px-6 pb-8">
           {/* User Profile Card */}
           <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm flex flex-col gap-4">
             <div className="flex items-center gap-3">
@@ -428,7 +428,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* CENTER WORKSPACE */}
-        <div className="flex-1 min-w-0 flex flex-col gap-6 w-full">
+        <div className="flex-1 min-w-0 flex flex-col gap-6 w-full px-4 py-6 lg:px-8">
           {/* Status Notification Toast Banner */}
           {saveStatus !== "idle" && (
             <div
@@ -560,7 +560,7 @@ export default function DashboardPage() {
         </div>
 
         {/* RIGHT PANEL: MOBILE PREVIEW */}
-        <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3">
+        <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3 px-4 py-6 lg:pr-8">
           <div className="text-center w-full flex justify-center mb-1">
             <Link href={`/${username}`} target="_blank">
               <Button
