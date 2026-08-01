@@ -45,8 +45,7 @@ export interface VideoReel {
   promoCta?: string;
 }
 
-export const DEFAULT_DEMO_REEL_URL =
-  "https://slyjhprwovcwxfcnxjpn.supabase.co/storage/v1/object/public/demo-videos/demo-video-1.mp4";
+export const DEFAULT_DEMO_REEL_URL = "/demo-video-1.mp4";
 
 export const DEFAULT_DEMO_REEL: VideoReel = {
   id: "demo-fallback-reel",
@@ -651,14 +650,15 @@ export function MobilePreview({
                 });
               }
             }}
-            src={reel.videoUrl || DEFAULT_DEMO_REEL_URL}
+            src={reel.videoUrl || "/demo-video-1.mp4"}
             autoPlay
             loop
             muted={isMuted}
             playsInline
+            controls
             preload="auto"
-            crossOrigin="anonymous"
             onError={(e) => console.error("Reel playback error:", e, reel.videoUrl)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
             className="h-full w-full object-cover"
           />
 
