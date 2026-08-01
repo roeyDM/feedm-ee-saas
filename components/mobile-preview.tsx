@@ -644,20 +644,17 @@ export function MobilePreview({
           <video
             ref={(el) => {
               if (el) {
-                el.muted = isMuted;
-                el.play().catch((err) => {
-                  console.warn("Autoplay interrupted/blocked:", err);
-                });
+                el.muted = true;
+                el.play().catch((err) => console.error("Play error:", err));
               }
             }}
             src={reel.videoUrl || "/demo-video-1.mp4"}
             autoPlay
             loop
-            muted={isMuted}
+            muted={true}
             playsInline
             preload="auto"
-            crossOrigin="anonymous"
-            onError={(e) => console.error("Reel playback error:", e, reel.videoUrl)}
+            onError={(e) => console.error("Video failed to load from src:", reel.videoUrl || "/demo-video-1.mp4", e)}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             className="absolute inset-0 h-full w-full object-cover object-center z-0"
           />
