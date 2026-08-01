@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,13 @@ interface DesignEditorProps {
   setCustomHexColor: (hex: string) => void;
   appearance?: AppearanceSettings;
   setAppearance?: (app: AppearanceSettings) => void;
+  onRegisterActions?: (actions: {
+    reset: () => void;
+    undo: () => void;
+    redo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+  }) => void;
 }
 
 export const THEME_PRESETS: {
@@ -384,6 +391,7 @@ export function DesignEditor({
   setCustomHexColor,
   appearance = DEFAULT_APPEARANCE,
   setAppearance,
+  onRegisterActions,
 }: DesignEditorProps) {
   const [history, setHistory] = useState<AppearanceSettings[]>([appearance]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -398,6 +406,18 @@ export function DesignEditor({
 
   // Dynamic Google Font Injection
   useGoogleFont(currentApp.fontFamily);
+
+  useEffect(() => {
+    if (onRegisterActions) {
+      onRegisterActions({
+        reset: handleResetDefault,
+        undo: handleUndo,
+        redo: handleRedo,
+        canUndo: currentIndex > 0,
+        canRedo: currentIndex < history.length - 1,
+      });
+    }
+  }, [currentIndex, history.length]);
 
   const updateAppearance = (newSettings: Partial<AppearanceSettings>) => {
     const updated: AppearanceSettings = {
@@ -515,50 +535,6 @@ export function DesignEditor({
 
   return (
     <div className="flex flex-col gap-6 pb-20">
-      {/* Top Header Card with Actions */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between py-4">
-          <div>
-            <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-              <Palette className="h-4.5 w-4.5 text-emerald-600" /> Appearance &amp; Theme Studio
-            </CardTitle>
-            <CardDescription className="text-xs text-zinc-500 mt-0.5">
-              12 high-contrast color palette presets, custom backgrounds, fonts, and link styling
-            </CardDescription>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetDefault}
-              className="text-xs font-bold text-zinc-700 hover:bg-zinc-100 border-zinc-200"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1 text-zinc-500" /> Reset Default
-            </Button>
-
-            <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg border border-zinc-200">
-              <button
-                onClick={handleUndo}
-                disabled={currentIndex === 0}
-                title="Undo"
-                className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer"
-              >
-                <Undo2 className="h-4 w-4" />
-              </button>
-              <button
-                onClick={handleRedo}
-                disabled={currentIndex === history.length - 1}
-                title="Redo"
-                className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer"
-              >
-                <Redo2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
       {/* TIER 1: PRESETS / THEMES */}
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader className="pb-3">
@@ -609,11 +585,8 @@ export function DesignEditor({
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-bold text-zinc-900 group-hover:text-black line-clamp-1">
+                  <span className="text-[10px] font-bold text-zinc-900 group-hover:text-black truncate w-full text-center tracking-tight leading-tight px-1">
                     {preset.name}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 leading-tight mt-0.5 line-clamp-1">
-                    {preset.description}
                   </span>
                 </button>
               );
@@ -626,7 +599,7 @@ export function DesignEditor({
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
-            <Paintbrush className="h-4 w-4 text-emerald-600" /> 2. Background Customization &amp; File Upload
+            <Paintbrush className="h-4 w-4 text-emerald-600" /> Background
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
             Choose a solid color, multi-tone gradient, or upload a background image directly from your device.

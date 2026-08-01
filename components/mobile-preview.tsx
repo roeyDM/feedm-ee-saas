@@ -45,6 +45,16 @@ export interface VideoReel {
   promoCta?: string;
 }
 
+export const DEFAULT_DEMO_REEL_URL =
+  "https://slyjhprwovcwxfcnxjpn.supabase.co/storage/v1/object/public/demo-videos/demo-video-1.mp4";
+
+export const DEFAULT_DEMO_REEL: VideoReel = {
+  id: "demo-fallback-reel",
+  videoUrl: DEFAULT_DEMO_REEL_URL,
+  caption: "Welcome to FeedM.ee! ✨ Create high-converting video reels & bio links.",
+  likes: 248,
+};
+
 export interface SocialLink {
   id: string;
   platform: "instagram" | "youtube" | "twitter" | "tiktok" | "facebook" | "whatsapp" | "linkedin" | "spotify";
@@ -269,13 +279,16 @@ export function MobilePreview({
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  // Fallback demo reel logic: Use custom reels if uploaded, otherwise fallback to DEFAULT_DEMO_REEL
+  const displayReels = reels && reels.length > 0 ? reels.slice(0, 3) : [DEFAULT_DEMO_REEL];
+
   // Initialize like counts
   useEffect(() => {
     const initialCounts: Record<string, number> = {};
-    reels.forEach((r) => {
+    displayReels.forEach((r) => {
       initialCounts[r.id] = r.likes || 142;
     });
-    setLikeCounts(initialCounts);
+    setLikeCounts((prev) => ({ ...initialCounts, ...prev }));
   }, [reels]);
 
   // Logic Test: Log selected font changes
@@ -285,14 +298,31 @@ export function MobilePreview({
     }
   }, [activeFont]);
 
-  const toggleLike = (reelId: string) => {
-    setLikedReels((prev) => {
-      const isLiked = !!prev[reelId];
-      setLikeCounts((cPrev) => ({
-        ...cPrev,
-        [reelId]: (cPrev[reelId] || 0) + (isLiked ? -1 : 1),
-      }));
-      return { ...prev, [reelId]: !isLiked };
+  // Debounce / lock tracking to prevent double-firing like toggles
+  const lastLikeClickRef = useRef<Record<string, number>>({});
+
+  const toggleLike = (reelId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    const now = Date.now();
+    if (lastLikeClickRef.current[reelId] && now - lastLikeClickRef.current[reelId] < 300) {
+      return; // Debounce rapid clicks within 300ms
+    }
+    lastLikeClickRef.current[reelId] = now;
+
+    const isCurrentlyLiked = !!likedReels[reelId];
+    const newLikedState = !isCurrentlyLiked;
+
+    setLikedReels((prev) => ({ ...prev, [reelId]: newLikedState }));
+    setLikeCounts((prev) => {
+      const currentCount = prev[reelId] ?? (displayReels.find((r) => r.id === reelId)?.likes || 142);
+      return {
+        ...prev,
+        [reelId]: isCurrentlyLiked ? Math.max(0, currentCount - 1) : currentCount + 1,
+      };
     });
   };
 
@@ -606,7 +636,7 @@ export function MobilePreview({
       {/* ------------------------------------------------------------- */}
       {/* PAGES 2 to 4: VERTICAL REEL FEED (Up to 3 Videos) */}
       {/* ------------------------------------------------------------- */}
-      {reels.slice(0, 3).map((reel, idx) => (
+      {displayReels.map((reel, idx) => (
         <div
           key={reel.id || idx}
           className="snap-start snap-always relative h-full w-full overflow-hidden bg-black text-white"
@@ -643,7 +673,7 @@ export function MobilePreview({
             {/* Like Button & Counter */}
             <div className="flex flex-col items-center gap-1">
               <button
-                onClick={() => toggleLike(reel.id)}
+                onClick={(e) => toggleLike(reel.id, e)}
                 className={cn(
                   "flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md border transition-all duration-300 hover:scale-110",
                   likedReels[reel.id]

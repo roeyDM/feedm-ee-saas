@@ -226,18 +226,16 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, se
       return;
     }
 
-    let finalUrl = videoUrl.trim();
+    let finalUrl = "";
 
-    // If a file was selected, upload it first
-    if (selectedFile && uploadMode === "file") {
+    // Direct file upload required
+    if (selectedFile) {
       const uploadedUrl = await uploadToSupabase();
       if (!uploadedUrl) return; // abort if upload failed
       finalUrl = uploadedUrl;
-      showToast("success", "Video uploaded successfully to Supabase!");
-    }
-
-    if (!finalUrl) {
-      showToast("error", "Please select a video file or enter a URL.");
+      showToast("success", "Video uploaded successfully!");
+    } else {
+      showToast("error", "Please select a video file (.mp4 or .mov) to upload.");
       return;
     }
 
@@ -321,135 +319,92 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, se
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-            <Film className="h-4.5 w-4.5 text-emerald-600" /> Video Reels Manager (Pages 2–4)
+            <Film className="h-4.5 w-4.5 text-emerald-600" /> Reels Manager
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
-            Upload .mp4 or .mov files (max {MAX_FILE_SIZE_MB} MB) or paste an external URL
+            Upload .mp4 or .mov files directly from your device (max {MAX_FILE_SIZE_MB} MB)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAdd} className="space-y-4">
 
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1">
-              <button
-                type="button"
-                onClick={() => setUploadMode("file")}
+            {/* ── File Upload ── */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-zinc-700">
+                Video File (.mp4, .mov — max {MAX_FILE_SIZE_MB} MB)
+              </Label>
+
+              {/* Drop-zone styled input */}
+              <div
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold transition-all",
-                  uploadMode === "file"
-                    ? "bg-white text-zinc-900 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
+                  "relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 transition-all duration-200 cursor-pointer",
+                  selectedFile
+                    ? "border-emerald-500/60 bg-emerald-50"
+                    : "border-zinc-300 bg-zinc-50 hover:border-zinc-400 hover:bg-zinc-100"
                 )}
+                onClick={() => fileInputRef.current?.click()}
               >
-                <UploadCloud className="h-4 w-4" /> Upload File
-              </button>
-              <button
-                type="button"
-                onClick={() => setUploadMode("url")}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-xs font-bold transition-all",
-                  uploadMode === "url"
-                    ? "bg-white text-zinc-900 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-700"
-                )}
-              >
-                <Link2 className="h-4 w-4" /> Paste URL
-              </button>
-            </div>
-
-            {/* ── File Upload Mode ── */}
-            {uploadMode === "file" && (
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-zinc-700">
-                  Video File (.mp4, .mov — max {MAX_FILE_SIZE_MB} MB)
-                </Label>
-
-                {/* Drop-zone styled input */}
-                <div
-                  className={cn(
-                    "relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-6 transition-all duration-200 cursor-pointer",
-                    selectedFile
-                      ? "border-emerald-500/60 bg-emerald-50"
-                      : "border-zinc-300 bg-zinc-50 hover:border-zinc-400 hover:bg-zinc-100"
-                  )}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".mp4,.mov,video/mp4,video/quicktime"
-                    onChange={handleFileSelect}
-                    className="sr-only"
-                  />
-
-                  {selectedFile ? (
-                    <>
-                      <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-                      <div className="text-center">
-                        <p className="text-xs font-black text-emerald-800 truncate max-w-[220px]">
-                          {selectedFile.name}
-                        </p>
-                        <p className="text-[10px] text-emerald-700 mt-0.5">
-                          {(selectedFile.size / 1024 / 1024).toFixed(1)} MB — Ready to upload
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedFile(null);
-                          if (fileInputRef.current) fileInputRef.current.value = "";
-                        }}
-                        className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-zinc-600 hover:text-rose-600 shadow-sm"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <UploadCloud className="h-8 w-8 text-zinc-400" />
-                      <div className="text-center">
-                        <p className="text-xs font-bold text-zinc-700">
-                          Click to browse or drag & drop
-                        </p>
-                        <p className="text-[10px] text-zinc-500 mt-0.5">
-                          .mp4 or .mov — maximum {MAX_FILE_SIZE_MB} MB
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Upload Progress Bar */}
-                {(isUploading || uploadProgress > 0) && (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[10px] font-bold">
-                      <span className="text-zinc-600">
-                        {isUploading ? "Uploading to Supabase..." : "Upload complete!"}
-                      </span>
-                      <span className={isUploading ? "text-zinc-500" : "text-emerald-600"}>
-                        {Math.round(Math.min(uploadProgress, 100))}%
-                      </span>
-                    </div>
-                    <ProgressBar percent={Math.min(uploadProgress, 100)} />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── URL Mode ── */}
-            {uploadMode === "url" && (
-              <div className="space-y-1">
-                <Label className="text-xs font-bold text-zinc-700">Video Source URL (MP4)</Label>
-                <Input
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://example.com/video.mp4"
-                  className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".mp4,.mov,video/mp4,video/quicktime"
+                  onChange={handleFileSelect}
+                  className="sr-only"
                 />
+
+                {selectedFile ? (
+                  <>
+                    <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                    <div className="text-center">
+                      <p className="text-xs font-black text-emerald-800 truncate max-w-[220px]">
+                        {selectedFile.name}
+                      </p>
+                      <p className="text-[10px] text-emerald-700 mt-0.5">
+                        {(selectedFile.size / 1024 / 1024).toFixed(1)} MB — Ready to upload
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 text-zinc-600 hover:text-rose-600 shadow-sm"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="h-8 w-8 text-zinc-400" />
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-zinc-700">
+                        Click to browse or drag & drop
+                      </p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">
+                        .mp4 or .mov — maximum {MAX_FILE_SIZE_MB} MB
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
+
+              {/* Upload Progress Bar */}
+              {(isUploading || uploadProgress > 0) && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[10px] font-bold">
+                    <span className="text-zinc-600">
+                      {isUploading ? "Uploading to Supabase..." : "Upload complete!"}
+                    </span>
+                    <span className={isUploading ? "text-zinc-500" : "text-emerald-600"}>
+                      {Math.round(Math.min(uploadProgress, 100))}%
+                    </span>
+                  </div>
+                  <ProgressBar percent={Math.min(uploadProgress, 100)} />
+                </div>
+              )}
+            </div>
 
             {/* Caption */}
             <div className="space-y-1">

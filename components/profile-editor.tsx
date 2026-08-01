@@ -483,7 +483,7 @@ export function ProfileEditor({
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-            <Share2 className="h-4.5 w-4.5 text-emerald-600" /> Social Links / Quick Add
+            <Share2 className="h-4.5 w-4.5 text-emerald-600" /> Social Links
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
             Click to add a social platform icon to your profile header.
@@ -616,7 +616,7 @@ export function ProfileEditor({
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-            <LinkIcon className="h-4.5 w-4.5 text-emerald-600" /> Custom Bio Links (Page 1)
+            <LinkIcon className="h-4.5 w-4.5 text-emerald-600" /> Custom Links
           </CardTitle>
           <CardDescription className="text-xs text-zinc-500">
             Add custom buttons with optional coupon / discount tags (e.g. "10% OFF code: ALEX10")
@@ -800,10 +800,10 @@ export function ProfileEditor({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {/* Section 1: Form Content & Fields */}
+          {/* Section 1: Form Content */}
           <div className="space-y-3.5">
             <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
-              Section 1: Form Content & Fields
+              Form Content
             </h4>
             
             <div className="space-y-1">
@@ -889,7 +889,7 @@ export function ProfileEditor({
           {/* Section 2: Submission Routing */}
           <div className="space-y-3.5 pt-3 border-t border-zinc-100">
             <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
-              Section 2: Submission Routing
+              Submission Routing
             </h4>
             
             <div className="space-y-1">

@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { ProfileEditor } from "@/components/profile-editor";
 import { FeedItemEditor } from "@/components/feed-item-editor";
 import { DesignEditor } from "@/components/design-editor";
+import { BillingEditor } from "@/components/billing-editor";
 import {
   MobilePreview,
   SocialLink,
@@ -19,7 +20,7 @@ import {
 } from "@/components/mobile-preview";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -68,9 +69,31 @@ function StripeCheckoutStatus({
 }
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design">("bio");
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
+
+  // Accordion Sidebar & Account Dropdown State
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
+    myFeed: true,
+    analytics: false,
+    monetization: false,
+    settings: false,
+  });
+
+  const toggleAccordion = (key: string) => {
+    setOpenAccordions((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Design Action Controls (Undo, Redo, Reset Default)
+  const [designActions, setDesignActions] = useState<{
+    reset?: () => void;
+    undo?: () => void;
+    redo?: () => void;
+    canUndo?: boolean;
+    canRedo?: boolean;
+  }>({});
 
   // Creator Profile State
   const [name, setName] = useState("Alex Rivers");
@@ -348,81 +371,219 @@ export default function DashboardPage() {
       <main className="flex-1 w-full flex flex-col lg:flex-row items-start">
         
         {/* LEFT SIDEBAR */}
-        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] overflow-y-auto self-start z-10 bg-zinc-100/80 border-r border-zinc-200 px-4 py-6 lg:px-6 pb-8">
-          {/* User Profile Card */}
-          <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <img
-                src={avatarUrl}
-                alt={name}
-                className="w-10 h-10 rounded-full object-cover border border-zinc-200"
-              />
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-zinc-900 truncate">{name}</span>
-                <span className="text-xs text-zinc-500 truncate">@{username}</span>
+        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-4 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] overflow-y-auto self-start z-10 bg-zinc-100/80 border-r border-zinc-200 px-4 py-5 lg:px-5 pb-8">
+          {/* Consolidated Profile & Feed Switcher */}
+          <div className="relative">
+            <div 
+              onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+              className="bg-white rounded-2xl p-3 border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all flex items-center justify-between cursor-pointer group select-none"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img
+                  src={avatarUrl}
+                  alt={name}
+                  className="w-9 h-9 rounded-full object-cover border border-zinc-200 shrink-0"
+                />
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-xs font-black text-zinc-900 truncate">{name}</span>
+                    <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/80 uppercase shrink-0">
+                      {planType}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500 truncate font-medium">@{username}</span>
+                </div>
               </div>
+              <ChevronDown className={cn("h-4 w-4 text-zinc-400 group-hover:text-zinc-700 transition-transform duration-200 shrink-0", accountMenuOpen && "rotate-180")} />
             </div>
-            <div className="flex gap-2">
-              <button 
-                onClick={handleShareProfile}
-                className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs py-2 rounded-xl border border-emerald-200 transition-colors"
-              >
-                <Share2 className="h-3.5 w-3.5" /> Share
-              </button>
-              <button className="flex-1 bg-zinc-50 hover:bg-zinc-100 text-zinc-700 font-bold text-xs py-2 rounded-xl border border-zinc-200 transition-colors">
-                Support
-              </button>
-            </div>
+
+            {/* Account Switcher Dropdown Menu */}
+            {accountMenuOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-zinc-200 shadow-xl z-30 p-2 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-3 py-1.5 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Switch Feed</div>
+                <button 
+                  onClick={() => setAccountMenuOpen(false)}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 text-emerald-950 font-bold text-xs border border-emerald-200/50"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span className="truncate">My Primary Feed</span>
+                  </div>
+                  <span className="text-[9px] text-emerald-600 font-black uppercase">Active</span>
+                </button>
+                <button 
+                  disabled
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-zinc-400 text-xs font-semibold mt-1 opacity-60 cursor-not-allowed"
+                >
+                  <span className="w-2 h-2 rounded-full bg-zinc-300 shrink-0"></span>
+                  <span className="truncate">+ Add Secondary Feed (Pro)</span>
+                </button>
+
+                <div className="my-2 border-t border-zinc-100"></div>
+
+                <button 
+                  onClick={() => { handleShareProfile(); setAccountMenuOpen(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-700 hover:bg-zinc-100 font-bold text-xs transition-colors"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-zinc-500" />
+                  <span>Share Profile Link</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Navigation Links */}
-          <div className="flex flex-col gap-4">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider px-2">Feed Selector</label>
-              <select
-                className="w-full bg-white border border-zinc-200 text-zinc-900 text-sm font-bold rounded-xl px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+          {/* Collapsible Accordion Navigation Menu */}
+          <div className="flex flex-col gap-2.5">
+            {/* Accordion 1: My Feed */}
+            <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
+              <button
+                onClick={() => toggleAccordion("myFeed")}
+                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none"
               >
-                <option value="default">My Feed</option>
-              </select>
+                <div className="flex items-center gap-2.5">
+                  <Layers className="h-4 w-4 text-emerald-600" />
+                  <span>My Feed</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.myFeed && "rotate-180")} />
+              </button>
+
+              {openAccordions.myFeed && (
+                <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
+                  <button
+                    onClick={() => setActiveTab("bio")}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left",
+                      activeTab === "bio"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <User className="h-4 w-4 shrink-0" />
+                    <span>Bio &amp; Links</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("reels")}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left relative",
+                      activeTab === "reels"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <Film className="h-4 w-4 shrink-0" />
+                    <span>Videos &amp; Reels</span>
+                    {planType === "free" && (
+                      <Lock className={cn("h-3.5 w-3.5 ml-auto", activeTab === "reels" ? "text-amber-400" : "text-amber-500")} />
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab("design")}
+                    className={cn(
+                      "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left",
+                      activeTab === "design"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <Palette className="h-4 w-4 shrink-0" />
+                    <span>Design &amp; Themes</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-col gap-1.5 mt-2">
+            {/* Accordion 2: Analytics & Insights */}
+            <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
-                onClick={() => setActiveTab("bio")}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-left",
-                  activeTab === "bio"
-                    ? "bg-zinc-950 text-white shadow-md"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                )}
+                onClick={() => toggleAccordion("analytics")}
+                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none"
               >
-                <User className="h-4.5 w-4.5 shrink-0" /> Bio &amp; Links
+                <div className="flex items-center gap-2.5">
+                  <BarChart2 className="h-4 w-4 text-zinc-500" />
+                  <span>Analytics / Insights</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-extrabold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">SOON</span>
+                  <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.analytics && "rotate-180")} />
+                </div>
               </button>
 
+              {openAccordions.analytics && (
+                <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
+                  <button disabled className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
+                    <span>Traffic Overview</span>
+                  </button>
+                  <button disabled className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
+                    <span>Click Rates &amp; CTR</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Accordion 3: Monetization & Earn */}
+            <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
-                onClick={() => setActiveTab("reels")}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-left relative",
-                  activeTab === "reels"
-                    ? "bg-zinc-950 text-white shadow-md"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                )}
+                onClick={() => toggleAccordion("monetization")}
+                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none"
               >
-                <Film className="h-4.5 w-4.5 shrink-0" /> Videos &amp; Reels
-                {planType === "free" && <Lock className={cn("h-4 w-4 ml-auto", activeTab === "reels" ? "text-amber-400" : "text-amber-500")} />}
+                <div className="flex items-center gap-2.5">
+                  <DollarSign className="h-4 w-4 text-zinc-500" />
+                  <span>Monetization / Earn</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.monetization && "rotate-180")} />
               </button>
 
+              {openAccordions.monetization && (
+                <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
+                  <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
+                    <span>Lead Capture Form</span>
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Active</span>
+                  </button>
+                  <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
+                    <span>Digital Store</span>
+                    <Lock className="h-3.5 w-3.5 text-amber-500" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Accordion 4: Settings & Tools */}
+            <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
-                onClick={() => setActiveTab("design")}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all text-left",
-                  activeTab === "design"
-                    ? "bg-zinc-950 text-white shadow-md"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                )}
+                onClick={() => toggleAccordion("settings")}
+                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none"
               >
-                <Palette className="h-4.5 w-4.5 shrink-0" /> Design &amp; Themes
+                <div className="flex items-center gap-2.5">
+                  <Settings className="h-4 w-4 text-zinc-500" />
+                  <span>Settings &amp; Tools</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.settings && "rotate-180")} />
               </button>
+
+              {openAccordions.settings && (
+                <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
+                  <button
+                    onClick={() => setActiveTab("settings")}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-left",
+                      activeTab === "settings"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <span>Billing &amp; Subscription</span>
+                  </button>
+                  <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
+                    <span>Custom Domain</span>
+                    <Lock className="h-3.5 w-3.5 text-amber-500" />
+                  </button>
+                  <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
+                    <span>SEO &amp; Social Meta</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </aside>
@@ -489,24 +650,60 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm max-w-3xl mx-auto w-full">
-            <div>
-              <h1 className="text-2xl font-black text-zinc-950 tracking-tight flex items-center gap-2">
-                Creator Studio <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
-              </h1>
-              <p className="text-xs font-semibold text-zinc-500 mt-0.5">
-                Connected to Supabase. Edit settings and click Save Changes to persist.
-              </p>
-            </div>
+          {activeTab !== "settings" && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm max-w-3xl mx-auto w-full">
+              <div>
+                <h1 className="text-2xl font-black text-zinc-950 tracking-tight flex items-center gap-2">
+                  Creator Studio <Sparkles className="h-5 w-5 text-emerald-600 animate-pulse" />
+                </h1>
+                <p className="text-xs font-semibold text-zinc-500 mt-0.5">
+                  Customize your profile, video reels, and design settings.
+                </p>
+              </div>
 
-            <Button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 px-5 gap-1.5 shadow-sm rounded-xl"
-            >
-              <Save className="h-4 w-4" /> Save Profile
-            </Button>
-          </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {activeTab === "design" && designActions.reset && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={designActions.reset}
+                      className="text-xs font-bold text-zinc-700 hover:bg-zinc-100 border-zinc-200 h-10 px-3 rounded-xl shadow-2xs"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 mr-1.5 text-zinc-500" /> Reset Default
+                    </Button>
+
+                    <div className="flex items-center gap-1 bg-zinc-100 p-1.5 rounded-xl border border-zinc-200 h-10">
+                      <button
+                        onClick={designActions.undo}
+                        disabled={!designActions.canUndo}
+                        title="Undo"
+                        className="p-1 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer"
+                      >
+                        <Undo2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={designActions.redo}
+                        disabled={!designActions.canRedo}
+                        title="Redo"
+                        className="p-1 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-white disabled:opacity-30 disabled:hover:bg-transparent transition-all cursor-pointer"
+                      >
+                        <Redo2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 px-5 gap-1.5 shadow-sm rounded-xl"
+                >
+                  <Save className="h-4 w-4" /> Save Profile
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Active Form Panel */}
           <div className="relative max-w-3xl mx-auto w-full">
@@ -553,6 +750,17 @@ export default function DashboardPage() {
                   setCustomHexColor={setCustomHexColor}
                   appearance={appearance}
                   setAppearance={setAppearance}
+                  onRegisterActions={setDesignActions}
+                />
+              </div>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="animate-in fade-in zoom-in-95 duration-200">
+                <BillingEditor 
+                  planType={planType}
+                  setPlanType={setPlanType}
+                  username={username}
                 />
               </div>
             )}

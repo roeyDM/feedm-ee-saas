@@ -17,8 +17,8 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ username, planType = "free", onSave, isSaving = false }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-800 bg-zinc-950 text-white backdrop-blur-md">
-      <div className="flex h-16 w-full items-center justify-between pl-4 lg:pl-6 pr-4 lg:pr-8">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white backdrop-blur-md">
+      <div className="flex h-14 w-full items-center justify-between pl-4 lg:pl-6 pr-4 lg:pr-8">
         
         {/* Brand Logo */}
         <div className="flex items-center gap-4">
