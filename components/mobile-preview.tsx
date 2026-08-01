@@ -655,11 +655,11 @@ export function MobilePreview({
             loop
             muted={isMuted}
             playsInline
-            controls
             preload="auto"
+            crossOrigin="anonymous"
             onError={(e) => console.error("Reel playback error:", e, reel.videoUrl)}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            className="h-full w-full object-cover"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+            className="absolute inset-0 h-full w-full object-cover object-center z-0"
           />
 
           {/* Top Mute Toggle Bar */}
