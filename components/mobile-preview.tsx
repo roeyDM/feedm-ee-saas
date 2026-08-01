@@ -643,11 +643,22 @@ export function MobilePreview({
         >
           {/* Full Screen Video Element */}
           <video
-            src={reel.videoUrl}
+            ref={(el) => {
+              if (el) {
+                el.muted = isMuted;
+                el.play().catch((err) => {
+                  console.warn("Autoplay interrupted/blocked:", err);
+                });
+              }
+            }}
+            src={reel.videoUrl || DEFAULT_DEMO_REEL_URL}
             autoPlay
             loop
             muted={isMuted}
             playsInline
+            preload="auto"
+            crossOrigin="anonymous"
+            onError={(e) => console.error("Reel playback error:", e, reel.videoUrl)}
             className="h-full w-full object-cover"
           />
 
