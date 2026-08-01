@@ -135,29 +135,7 @@ export default function DashboardPage() {
   ]);
 
   // Video Reels (Pages 2–4)
-  const [reels, setReels] = useState<VideoReel[]>([
-    {
-      id: "r1",
-      videoUrl:
-        "https://assets.mixkit.co/videos/preview/mixkit-mysterious-pale-looking-woman-with-neon-make-up-42322-large.mp4",
-      caption: "Chasing neon lights in the city 🌆✨ Which frame is your favorite?",
-      likes: 284,
-    },
-    {
-      id: "r2",
-      videoUrl:
-        "https://assets.mixkit.co/videos/preview/mixkit-girl-taking-selfie-in-front-of-neon-sign-42326-large.mp4",
-      caption: "Sunset waves on the coast 🌊🌅 Turn sound on!",
-      likes: 195,
-    },
-    {
-      id: "r3",
-      videoUrl:
-        "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-leaves-in-autumn-48906-large.mp4",
-      caption: "Golden autumn tree loop 🍂💛 Cozy vibes forever.",
-      likes: 312,
-    },
-  ]);
+  const [reels, setReels] = useState<VideoReel[]>([]);
 
   // Appearance Settings (Page 1 Design)
   const [appearance, setAppearance] = useState<AppearanceSettings>(DEFAULT_APPEARANCE);

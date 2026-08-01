@@ -98,30 +98,11 @@ export default function UserProfilePage({ params }: PageProps) {
     reels: [
       {
         id: "r1",
-        videoUrl:
-          "https://assets.mixkit.co/videos/preview/mixkit-mysterious-pale-looking-woman-with-neon-make-up-42322-large.mp4",
+        videoUrl: "/demo-video-1.mp4",
         caption: `Welcome to @${handleKey}'s feed! Check out this video 🌆`,
         likes: 342,
         showWhatsapp: true,
         showCall: false,
-      },
-      {
-        id: "r2",
-        videoUrl:
-          "https://assets.mixkit.co/videos/preview/mixkit-girl-taking-selfie-in-front-of-neon-sign-42326-large.mp4",
-        caption: "Sunset waves on the coast 🌊🌅 Follow for more reels!",
-        likes: 215,
-        showWhatsapp: true,
-        showCall: true,
-      },
-      {
-        id: "r3",
-        videoUrl:
-          "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-leaves-in-autumn-48906-large.mp4",
-        caption: "Autumn leaves loop 🍂💛 Cozy season is here.",
-        likes: 418,
-        showWhatsapp: false,
-        showCall: true,
       },
     ],
     leadForm: sanitizeLeadForm(null),

@@ -663,7 +663,12 @@ export function MobilePreview({
             playsInline
             preload="auto"
             onLoadedData={() => console.log("Video loaded successfully!")}
-            onError={(e) => console.error("Video failed to load:", e)}
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.src.endsWith("/demo-video-1.mp4")) {
+                target.src = "/demo-video-1.mp4";
+              }
+            }}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             className="absolute inset-0 h-full w-full object-cover object-center z-0"
           />
