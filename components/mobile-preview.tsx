@@ -192,6 +192,7 @@ interface MobilePreviewProps {
   appearance?: AppearanceSettings;
   fontFamily?: string;
   isDemoMode?: boolean;
+  activeTab?: string;
 }
 
 function PromoOverlay({ reel }: { reel: VideoReel }) {
@@ -254,6 +255,7 @@ export function MobilePreview({
   appearance,
   fontFamily,
   isDemoMode = false,
+  activeTab,
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
 
@@ -290,12 +292,17 @@ export function MobilePreview({
     setLikeCounts((prev) => ({ ...initialCounts, ...prev }));
   }, [reels]);
 
-  // Logic Test: Log selected font changes
+  // Auto-scroll simulator when activeTab changes
   useEffect(() => {
-    if (activeFont) {
-      console.log("Simulator Received Font:", activeFont);
+    const root = document.getElementById("simulator-root");
+    if (root) {
+      if (activeTab === "bio") {
+        root.scrollTo({ top: 0, behavior: "smooth" });
+      } else if (activeTab === "reels") {
+        root.scrollTo({ top: root.clientHeight, behavior: "smooth" });
+      }
     }
-  }, [activeFont]);
+  }, [activeTab]);
 
   // Debounce / lock tracking to prevent double-firing like toggles
   const lastLikeClickRef = useRef<Record<string, number>>({});
@@ -642,19 +649,21 @@ export function MobilePreview({
         >
           {/* Full Screen Video Element */}
           <video
+            key={reel.videoUrl || "/demo-video-1.mp4"}
             ref={(el) => {
               if (el) {
-                el.muted = true;
+                el.muted = isMuted;
                 el.play().catch((err) => console.error("Play error:", err));
               }
             }}
             src={reel.videoUrl || "/demo-video-1.mp4"}
             autoPlay
             loop
-            muted={true}
+            muted={isMuted}
             playsInline
             preload="auto"
-            onError={(e) => console.error("Video failed to load from src:", reel.videoUrl || "/demo-video-1.mp4", e)}
+            onLoadedData={() => console.log("Video loaded successfully!")}
+            onError={(e) => console.error("Video failed to load:", e)}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             className="absolute inset-0 h-full w-full object-cover object-center z-0"
           />

@@ -794,6 +794,7 @@ export default function DashboardPage() {
             appearance={appearance}
             fontFamily={appearance?.fontFamily}
             isDemoMode={true}
+            activeTab={activeTab}
           />
         </aside>
       </main>
