@@ -298,6 +298,7 @@ export function MobilePreview({
 
   // Video playback state
   const [isMuted, setIsMuted] = useState(true);
+  const [currentReelIndex, setCurrentReelIndex] = useState(0);
   const [likedReels, setLikedReels] = useState<Record<string, boolean>>({});
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -323,14 +324,32 @@ export function MobilePreview({
     setLikeCounts((prev) => ({ ...initialCounts, ...prev }));
   }, [reels]);
 
+  // Track active reel index on simulator scroll
+  const handleSimulatorScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const height = target.clientHeight;
+    if (!height) return;
+    const pageIndex = Math.round(target.scrollTop / height);
+    const reelIdx = pageIndex - 1;
+    if (reelIdx >= 0 && reelIdx < displayReels.length) {
+      if (reelIdx !== currentReelIndex) {
+        setCurrentReelIndex(reelIdx);
+      }
+    } else if (pageIndex === 0) {
+      setCurrentReelIndex(0);
+    }
+  };
+
   // Auto-scroll simulator when activeTab changes
   useEffect(() => {
     const root = document.getElementById("simulator-root");
     if (root) {
       if (activeTab === "bio") {
         root.scrollTo({ top: 0, behavior: "smooth" });
+        setCurrentReelIndex(0);
       } else if (activeTab === "reels") {
         root.scrollTo({ top: root.clientHeight, behavior: "smooth" });
+        setCurrentReelIndex(0);
       }
     }
   }, [activeTab]);
@@ -510,6 +529,7 @@ export function MobilePreview({
   const previewContent = (
     <div
       id="simulator-root"
+      onScroll={handleSimulatorScroll}
       style={mainContainerStyle}
       className="client-page-root relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
@@ -683,14 +703,19 @@ export function MobilePreview({
             key={reel.videoUrl}
             ref={(el) => {
               if (el) {
-                el.muted = isMuted;
-                el.play().catch((err) => console.error("Play error:", err));
+                const isSlotMuted = idx !== currentReelIndex || isMuted;
+                el.muted = isSlotMuted;
+                if (idx === currentReelIndex) {
+                  el.play().catch((err) => console.error("Play error:", err));
+                } else {
+                  el.pause();
+                }
               }
             }}
             src={reel.videoUrl}
-            autoPlay
+            autoPlay={idx === currentReelIndex}
             loop
-            muted={isMuted}
+            muted={idx !== currentReelIndex || isMuted}
             playsInline
             preload="auto"
             onLoadedData={() => console.log(`Slot ${idx + 1} video loaded: ${reel.videoUrl}`)}
