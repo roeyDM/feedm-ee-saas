@@ -8,6 +8,7 @@ import { ProfileEditor } from "@/components/profile-editor";
 import { FeedItemEditor } from "@/components/feed-item-editor";
 import { DesignEditor } from "@/components/design-editor";
 import { BillingEditor } from "@/components/billing-editor";
+import { AccountSettingsEditor } from "@/components/account-settings-editor";
 import {
   MobilePreview,
   SocialLink,
@@ -408,8 +409,19 @@ export default function DashboardPage() {
                 <div className="my-2 border-t border-zinc-100"></div>
 
                 <button 
+                  onClick={() => {
+                    setActiveTab("settings");
+                    setAccountMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-700 hover:bg-zinc-100 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  <Settings className="h-3.5 w-3.5 text-zinc-500" />
+                  <span>Account Settings</span>
+                </button>
+
+                <button 
                   onClick={() => { handleShareProfile(); setAccountMenuOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-700 hover:bg-zinc-100 font-bold text-xs transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-zinc-700 hover:bg-zinc-100 font-bold text-xs transition-colors cursor-pointer"
                 >
                   <Share2 className="h-3.5 w-3.5 text-zinc-500" />
                   <span>Share Profile Link</span>
@@ -743,10 +755,17 @@ export default function DashboardPage() {
 
             {activeTab === "settings" && (
               <div className="animate-in fade-in zoom-in-95 duration-200">
-                <BillingEditor 
+                <AccountSettingsEditor
+                  name={name}
+                  setName={setName}
+                  username={username}
+                  setUsername={setUsername}
+                  bio={bio}
+                  setBio={setBio}
+                  avatarUrl={avatarUrl}
+                  setAvatarUrl={setAvatarUrl}
                   planType={planType}
                   setPlanType={setPlanType}
-                  username={username}
                 />
               </div>
             )}
