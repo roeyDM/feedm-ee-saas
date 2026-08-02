@@ -240,15 +240,21 @@ function PromoOverlay({ reel }: { reel: VideoReel }) {
   if (!show || !reel.promoEnabled) return null;
 
   return (
-    <div className="absolute bottom-28 left-4 right-16 z-30 pointer-events-none">
-      <div className="bg-black/60 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-lg flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-500">
-        <button onClick={() => setShow(false)} className="absolute top-2 right-2 text-white/60 hover:text-white pointer-events-auto transition">
-          <X className="h-3 w-3" />
+    <div className="absolute bottom-[155px] left-4 right-20 z-30 pointer-events-none">
+      <div className="bg-black/75 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-500">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShow(false);
+          }}
+          className="absolute top-2 right-2 text-white/60 hover:text-white pointer-events-auto transition cursor-pointer p-1"
+        >
+          <X className="h-3.5 w-3.5" />
         </button>
         <div className="pr-5">
-          <h4 className="text-[11px] font-bold text-white leading-tight">{reel.promoTitle || "Special Offer!"}</h4>
+          <h4 className="text-[11px] font-bold text-white leading-tight drop-shadow">{reel.promoTitle || "Special Offer!"}</h4>
           {reel.promoCode && (
-             <div className="mt-1.5 inline-block bg-white/20 text-white text-[9px] px-1.5 py-0.5 rounded border border-white/30">
+             <div className="mt-1.5 inline-block bg-white/20 text-white text-[9px] px-1.5 py-0.5 rounded border border-white/30 font-mono font-bold">
                Code: {reel.promoCode}
              </div>
           )}
@@ -257,6 +263,7 @@ function PromoOverlay({ reel }: { reel: VideoReel }) {
           href={reel.promoUrl || "#"} 
           target="_blank" 
           rel="noreferrer" 
+          onClick={(e) => e.stopPropagation()}
           className="mt-1 w-full flex items-center justify-center gap-1 bg-white text-black hover:bg-zinc-200 text-[10px] font-extrabold py-2 rounded-lg pointer-events-auto transition shadow-sm"
         >
            {reel.promoCta || "Get Deal 🚀"}
