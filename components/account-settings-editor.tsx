@@ -212,61 +212,59 @@ export function AccountSettingsEditor({
   ];
 
   return (
-    <div className="w-full space-y-6 animate-in fade-in duration-300">
-      {/* Header Bar */}
-      <div className="flex flex-col gap-1 pb-2 border-b border-zinc-200/80">
-        <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+    <div className="w-full flex flex-col lg:flex-row items-start min-h-[calc(100vh-3.5rem)] animate-in fade-in duration-300">
+      {/* COLUMN 2: VERTICAL SUB-NAV MENU (Attached to Column 1 Left Sidebar, zero gap) */}
+      <aside className="w-full lg:w-64 shrink-0 bg-white border-r border-zinc-200 p-4 space-y-1 lg:sticky lg:top-14 lg:min-h-[calc(100vh-3.5rem)]">
+        <div className="px-3 py-2 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
           Account Settings
-        </h1>
-        <p className="text-xs font-medium text-zinc-500">
-          Manage your personal details, security preferences, team access, and billing subscription.
-        </p>
-      </div>
-
-      {/* 3-COLUMN / SUB-NAV LAYOUT (Column 2: Vertical Sub-Nav | Column 3: Main Settings Panel) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* COLUMN 2: VERTICAL SUB-NAV MENU (3 cols on lg screens) */}
-        <aside className="lg:col-span-3 bg-white rounded-2xl border border-zinc-200/80 p-2.5 shadow-sm space-y-1 sticky top-24">
-          <div className="px-3 py-2 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
-            Navigation Menu
-          </div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSubTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveSubTab(item.id)}
-                className={cn(
-                  "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                  isActive
-                    ? item.isDanger
-                      ? "bg-rose-500 text-white shadow-md shadow-rose-500/20"
-                      : "bg-zinc-900 text-white shadow-md shadow-zinc-900/10"
-                    : item.isDanger
-                    ? "text-rose-600 hover:bg-rose-50"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+        </div>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeSubTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveSubTab(item.id)}
+              className={cn(
+                "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-left",
+                isActive
+                  ? item.isDanger
+                    ? "bg-rose-500 text-white shadow-md shadow-rose-500/20"
+                    : "bg-zinc-950 text-white shadow-md shadow-zinc-950/10"
+                  : item.isDanger
+                  ? "text-rose-600 hover:bg-rose-50"
+                  : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
+              )}
+            >
+              <div className="flex items-center gap-2.5">
+                <Icon className={cn("h-4 w-4", isActive ? "text-white" : item.isDanger ? "text-rose-500" : "text-zinc-500")} />
+                <span>{item.label}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {item.badge && (
+                  <span className={cn("text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase", isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800")}>
+                    {item.badge}
+                  </span>
                 )}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={cn("h-4 w-4", isActive ? "text-white" : item.isDanger ? "text-rose-500" : "text-zinc-500")} />
-                  <span>{item.label}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {item.badge && (
-                    <span className={cn("text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase", isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800")}>
-                      {item.badge}
-                    </span>
-                  )}
-                  <ChevronRight className={cn("h-3.5 w-3.5 opacity-60", isActive && "translate-x-0.5")} />
-                </div>
-              </button>
-            );
-          })}
-        </aside>
+                <ChevronRight className={cn("h-3.5 w-3.5 opacity-60", isActive && "translate-x-0.5")} />
+              </div>
+            </button>
+          );
+        })}
+      </aside>
 
-        {/* COLUMN 3: MAIN SETTINGS PANEL CONTENT (9 cols on lg screens) */}
-        <main className="lg:col-span-9 space-y-6">
+      {/* COLUMN 3: MAIN SETTINGS PANEL CONTENT (Fills all remaining right-side viewport space) */}
+      <main className="flex-1 min-w-0 w-full p-6 lg:p-10 bg-zinc-50/50">
+        <div className="max-w-4xl space-y-6">
+          {/* Header Bar */}
+          <div className="flex flex-col gap-1 pb-4 border-b border-zinc-200/80">
+            <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
+              {navItems.find((n) => n.id === activeSubTab)?.label || "Account Settings"}
+            </h1>
+            <p className="text-xs font-medium text-zinc-500">
+              Manage your personal details, security preferences, team access, and billing subscription.
+            </p>
+          </div>
           {/* CARD 1: PROFILE INFORMATION */}
           {activeSubTab === "profile" && (
             <Card className="bg-white border-zinc-200/80 shadow-sm animate-in fade-in duration-200">
@@ -858,8 +856,8 @@ export function AccountSettingsEditor({
               </CardContent>
             </Card>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
 
       {/* 2FA SETUP MODAL */}
       {show2FAModal && (
