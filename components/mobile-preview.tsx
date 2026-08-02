@@ -47,12 +47,40 @@ export interface VideoReel {
 
 export const DEFAULT_DEMO_REEL_URL = "/demo-video-1.mp4";
 
-export const DEFAULT_DEMO_REEL: VideoReel = {
-  id: "demo-fallback-reel",
-  videoUrl: DEFAULT_DEMO_REEL_URL,
-  caption: "Welcome to FeedM.ee! ✨ Create high-converting video reels & bio links.",
-  likes: 248,
-};
+export const DEFAULT_DEMO_REELS: VideoReel[] = [
+  {
+    id: "demo-1",
+    videoUrl: "/demo-video-1.mp4",
+    caption: "Still using text links from 2018? Meet FeedM.ee — the video-first bio link that puts your top Reels front & center. 🚀",
+    likes: 342,
+    promoEnabled: true,
+    promoTitle: "Death of Text-Only Bio Links",
+    promoCta: "Upgrade Your Bio",
+    promoUrl: "/pricing",
+  },
+  {
+    id: "demo-2",
+    videoUrl: "/demo-video-2.mp4",
+    caption: "Stop letting your best Reels disappear in the feed! Turn your top content into an interactive 24/7 sales engine. 💰",
+    likes: 518,
+    promoEnabled: true,
+    promoTitle: "Turn Views Into Buyers",
+    promoCta: "Convert Views To Sales",
+    promoUrl: "/pricing",
+  },
+  {
+    id: "demo-3",
+    videoUrl: "/demo-video-3.mp4",
+    caption: "Build your video bio link in under 60 seconds! Connect, upload your top Reels, and add direct conversion links. ⚡",
+    likes: 429,
+    promoEnabled: true,
+    promoTitle: "60-Second Setup",
+    promoCta: "Launch Your Feed",
+    promoUrl: "/pricing",
+  },
+];
+
+export const DEFAULT_DEMO_REEL: VideoReel = DEFAULT_DEMO_REELS[0];
 
 export interface SocialLink {
   id: string;
@@ -280,8 +308,8 @@ export function MobilePreview({
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Fallback demo reel logic: Use custom reels if uploaded, otherwise fallback to DEFAULT_DEMO_REEL
-  const displayReels = reels && reels.length > 0 ? reels.slice(0, 3) : [DEFAULT_DEMO_REEL];
+  // Fallback demo reel logic: Use custom reels if uploaded, otherwise fallback to DEFAULT_DEMO_REELS
+  const displayReels = reels && reels.length > 0 ? reels.slice(0, 3) : DEFAULT_DEMO_REELS;
 
   // Initialize like counts
   useEffect(() => {
