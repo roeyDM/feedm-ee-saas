@@ -43,16 +43,16 @@ const ACCEPTED_TYPES = ["video/mp4", "video/quicktime"]; // .mp4 & .mov
 
 const PRESET_CLIPS = [
   {
-    url: "https://assets.mixkit.co/videos/preview/mixkit-mysterious-pale-looking-woman-with-neon-make-up-42322-large.mp4",
-    caption: "Chasing neon nights and urban vibes 🌆✨ What do you think?",
+    url: "/demo-video-1.mp4",
+    caption: "Still using text links from 2018? Meet FeedM.ee — the video-first bio link. 🚀",
   },
   {
-    url: "https://assets.mixkit.co/videos/preview/mixkit-girl-taking-selfie-in-front-of-neon-sign-42326-large.mp4",
-    caption: "Golden hour sunset by the coast 🌊🌅 Follow for more reels!",
+    url: "/demo-video-2.mp4",
+    caption: "Stop letting your best Reels disappear! Turn top content into a 24/7 sales engine. 💰",
   },
   {
-    url: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-leaves-in-autumn-48906-large.mp4",
-    caption: "Fall season is finally here 🍂💛 Loving this yellow glow.",
+    url: "/demo-video-3.mp4",
+    caption: "Build your video bio link in under 60 seconds! Connect, upload & convert. ⚡",
   },
 ];
 
