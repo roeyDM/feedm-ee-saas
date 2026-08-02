@@ -576,7 +576,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* CENTER WORKSPACE */}
-        <div className={cn("min-w-0 flex flex-col gap-6 w-full px-4 py-6", activeTab === "settings" ? "max-w-7xl mx-auto lg:px-10" : "flex-1 lg:px-8")}>
+        <div className={cn("min-w-0 flex flex-col w-full flex-1", activeTab === "settings" ? "p-0 m-0 border-0" : "px-4 py-6 lg:px-8 gap-6")}>
           {/* Status Notification Toast Banner */}
           {saveStatus !== "idle" && (
             <div
