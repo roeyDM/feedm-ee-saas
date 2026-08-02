@@ -677,25 +677,22 @@ export function MobilePreview({
         >
           {/* Full Screen Video Element */}
           <video
-            key={reel.videoUrl || "/demo-video-1.mp4"}
+            key={reel.videoUrl}
             ref={(el) => {
               if (el) {
                 el.muted = isMuted;
                 el.play().catch((err) => console.error("Play error:", err));
               }
             }}
-            src={reel.videoUrl || "/demo-video-1.mp4"}
+            src={reel.videoUrl}
             autoPlay
             loop
             muted={isMuted}
             playsInline
             preload="auto"
-            onLoadedData={() => console.log("Video loaded successfully!")}
+            onLoadedData={() => console.log(`Slot ${idx + 1} video loaded: ${reel.videoUrl}`)}
             onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.src.endsWith("/demo-video-1.mp4")) {
-                target.src = "/demo-video-1.mp4";
-              }
+              console.error(`Failed to load video for slot ${idx + 1}:`, reel.videoUrl, e);
             }}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             className="absolute inset-0 h-full w-full object-cover object-center z-0"
