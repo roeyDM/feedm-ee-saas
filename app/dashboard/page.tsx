@@ -604,7 +604,7 @@ export default function DashboardPage() {
           )}
 
           {/* Plan Upgrade Banner (if Free) */}
-          {planType === "free" && (
+          {planType === "free" && activeTab !== "settings" && (
             <div className="rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-emerald-500/10 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-zinc-950 shadow-md">
@@ -693,72 +693,72 @@ export default function DashboardPage() {
           )}
 
           {/* Active Form Panel */}
-          <div className="relative max-w-3xl mx-auto w-full">
-            {activeTab === "bio" && (
-              <div className="animate-in fade-in zoom-in-95 duration-200">
-                <ProfileEditor
-                  name={name}
-                  setName={setName}
-                  username={username}
-                  setUsername={setUsername}
-                  bio={bio}
-                  setBio={setBio}
-                  avatarUrl={avatarUrl}
-                  setAvatarUrl={setAvatarUrl}
-                  customHexColor={customHexColor}
-                  setCustomHexColor={setCustomHexColor}
-                  socialLinks={socialLinks}
-                  setSocialLinks={setSocialLinks}
-                  customLinks={customLinks}
-                  setCustomLinks={setCustomLinks}
-                  leadForm={leadForm}
-                  setLeadForm={setLeadForm}
-                  planType={planType}
-                />
-              </div>
-            )}
+          {activeTab !== "settings" ? (
+            <div className="relative max-w-3xl mx-auto w-full">
+              {activeTab === "bio" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200">
+                  <ProfileEditor
+                    name={name}
+                    setName={setName}
+                    username={username}
+                    setUsername={setUsername}
+                    bio={bio}
+                    setBio={setBio}
+                    avatarUrl={avatarUrl}
+                    setAvatarUrl={setAvatarUrl}
+                    customHexColor={customHexColor}
+                    setCustomHexColor={setCustomHexColor}
+                    socialLinks={socialLinks}
+                    setSocialLinks={setSocialLinks}
+                    customLinks={customLinks}
+                    setCustomLinks={setCustomLinks}
+                    leadForm={leadForm}
+                    setLeadForm={setLeadForm}
+                    planType={planType}
+                  />
+                </div>
+              )}
 
-            {activeTab === "reels" && (
-              <div className="animate-in fade-in zoom-in-95 duration-200">
-                <FeedItemEditor 
-                  reels={reels} 
-                  setReels={setReels} 
-                  planType={planType} 
-                  leadForm={leadForm}
-                  setLeadForm={setLeadForm}
-                />
-              </div>
-            )}
+              {activeTab === "reels" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200">
+                  <FeedItemEditor 
+                    reels={reels} 
+                    setReels={setReels} 
+                    planType={planType} 
+                    leadForm={leadForm}
+                    setLeadForm={setLeadForm}
+                  />
+                </div>
+              )}
 
-            {activeTab === "design" && (
-              <div className="animate-in fade-in zoom-in-95 duration-200">
-                <DesignEditor 
-                  customHexColor={customHexColor}
-                  setCustomHexColor={setCustomHexColor}
-                  appearance={appearance}
-                  setAppearance={setAppearance}
-                  onRegisterActions={setDesignActions}
-                />
-              </div>
-            )}
-
-            {activeTab === "settings" && (
-              <div className="animate-in fade-in zoom-in-95 duration-200">
-                <AccountSettingsEditor
-                  name={name}
-                  setName={setName}
-                  username={username}
-                  setUsername={setUsername}
-                  bio={bio}
-                  setBio={setBio}
-                  avatarUrl={avatarUrl}
-                  setAvatarUrl={setAvatarUrl}
-                  planType={planType}
-                  setPlanType={setPlanType}
-                />
-              </div>
-            )}
-          </div>
+              {activeTab === "design" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200">
+                  <DesignEditor 
+                    customHexColor={customHexColor}
+                    setCustomHexColor={setCustomHexColor}
+                    appearance={appearance}
+                    setAppearance={setAppearance}
+                    onRegisterActions={setDesignActions}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="w-full flex-1 animate-in fade-in duration-200">
+              <AccountSettingsEditor
+                name={name}
+                setName={setName}
+                username={username}
+                setUsername={setUsername}
+                bio={bio}
+                setBio={setBio}
+                avatarUrl={avatarUrl}
+                setAvatarUrl={setAvatarUrl}
+                planType={planType}
+                setPlanType={setPlanType}
+              />
+            </div>
+          )}
         </div>
 
         {/* RIGHT PANEL: MOBILE PREVIEW (HIDDEN IN ACCOUNT SETTINGS VIEW) */}

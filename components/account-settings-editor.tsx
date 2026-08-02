@@ -255,7 +255,7 @@ export function AccountSettingsEditor({
 
       {/* COLUMN 3: MAIN SETTINGS PANEL CONTENT (Fills all remaining right-side viewport space) */}
       <main className="flex-1 min-w-0 w-full p-6 lg:p-10 bg-zinc-50/50">
-        <div className="max-w-4xl space-y-6">
+        <div className="max-w-5xl w-full space-y-6">
           {/* Header Bar */}
           <div className="flex flex-col gap-1 pb-4 border-b border-zinc-200/80">
             <h1 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-2">
