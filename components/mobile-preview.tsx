@@ -308,8 +308,11 @@ export function MobilePreview({
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Fallback demo reel logic: Use custom reels if uploaded, otherwise fallback to DEFAULT_DEMO_REELS
-  const displayReels = reels && reels.length > 0 ? reels.slice(0, 3) : DEFAULT_DEMO_REELS;
+  // Fallback demo reel logic: Filter out legacy mixkit.co URLs and use custom reels if uploaded, otherwise fallback to DEFAULT_DEMO_REELS
+  const validUserReels = (reels || []).filter(
+    (r) => r && r.videoUrl && !r.videoUrl.includes("mixkit.co")
+  );
+  const displayReels = validUserReels.length > 0 ? validUserReels.slice(0, 3) : DEFAULT_DEMO_REELS;
 
   // Initialize like counts
   useEffect(() => {

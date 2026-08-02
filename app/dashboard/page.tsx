@@ -201,7 +201,15 @@ export default function DashboardPage() {
             })));
           }
           if (data.custom_links) setCustomLinks(data.custom_links);
-          if (data.reels) setReels(data.reels);
+          if (data.reels) {
+            const cleanedReels = data.reels
+              .map((r: any) => ({
+                ...r,
+                videoUrl: r.videoUrl || r.url || "",
+              }))
+              .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"));
+            setReels(cleanedReels);
+          }
           if (data.lead_form) setLeadForm(sanitizeLeadForm(data.lead_form));
           if (data.appearance) setAppearance(data.appearance);
 
