@@ -562,17 +562,6 @@ export default function DashboardPage() {
 
               {openAccordions.settings && (
                 <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
-                  <button
-                    onClick={() => setActiveTab("settings")}
-                    className={cn(
-                      "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-left",
-                      activeTab === "settings"
-                        ? "bg-zinc-950 text-white shadow-sm"
-                        : "text-zinc-600 hover:bg-zinc-100/80 hover:text-zinc-900"
-                    )}
-                  >
-                    <span>Billing &amp; Subscription</span>
-                  </button>
                   <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
                     <span>Custom Domain</span>
                     <Lock className="h-3.5 w-3.5 text-amber-500" />
@@ -587,7 +576,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* CENTER WORKSPACE */}
-        <div className="flex-1 min-w-0 flex flex-col gap-6 w-full px-4 py-6 lg:px-8">
+        <div className={cn("min-w-0 flex flex-col gap-6 w-full px-4 py-6", activeTab === "settings" ? "max-w-7xl mx-auto lg:px-10" : "flex-1 lg:px-8")}>
           {/* Status Notification Toast Banner */}
           {saveStatus !== "idle" && (
             <div
@@ -772,36 +761,38 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* RIGHT PANEL: MOBILE PREVIEW */}
-        <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3 px-4 py-6 lg:pr-8">
-          <div className="text-center w-full flex justify-center mb-1">
-            <Link href={`/${username}`} target="_blank">
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-full bg-white border border-zinc-200/80 shadow-sm px-4 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950 transition-colors gap-1.5 h-auto"
-              >
-                <Eye className="h-4 w-4 text-emerald-600" /> View Live Preview
-              </Button>
-            </Link>
-          </div>
+        {/* RIGHT PANEL: MOBILE PREVIEW (HIDDEN IN ACCOUNT SETTINGS VIEW) */}
+        {activeTab !== "settings" && (
+          <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3 px-4 py-6 lg:pr-8">
+            <div className="text-center w-full flex justify-center mb-1">
+              <Link href={`/${username}`} target="_blank">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full bg-white border border-zinc-200/80 shadow-sm px-4 py-1.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 hover:text-zinc-950 transition-colors gap-1.5 h-auto"
+                >
+                  <Eye className="h-4 w-4 text-emerald-600" /> View Live Preview
+                </Button>
+              </Link>
+            </div>
 
-          <MobilePreview
-            profileName={name}
-            username={username}
-            bio={bio}
-            avatarUrl={avatarUrl}
-            customHexColor={customHexColor}
-            socialLinks={socialLinks}
-            customLinks={customLinks}
-            reels={reels}
-            leadForm={leadForm}
-            appearance={appearance}
-            fontFamily={appearance?.fontFamily}
-            isDemoMode={true}
-            activeTab={activeTab}
-          />
-        </aside>
+            <MobilePreview
+              profileName={name}
+              username={username}
+              bio={bio}
+              avatarUrl={avatarUrl}
+              customHexColor={customHexColor}
+              socialLinks={socialLinks}
+              customLinks={customLinks}
+              reels={reels}
+              leadForm={leadForm}
+              appearance={appearance}
+              fontFamily={appearance?.fontFamily}
+              isDemoMode={true}
+              activeTab={activeTab}
+            />
+          </aside>
+        )}
       </main>
 
       {/* Floating Unsaved Changes Reminder Toast Bar */}

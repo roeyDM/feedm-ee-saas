@@ -224,9 +224,9 @@ export function AccountSettingsEditor({
       </div>
 
       {/* 3-COLUMN / SUB-NAV LAYOUT (Column 2: Vertical Sub-Nav | Column 3: Main Settings Panel) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* COLUMN 2: VERTICAL SUB-NAV MENU (4 cols on lg screens) */}
-        <aside className="lg:col-span-4 bg-white rounded-2xl border border-zinc-200/80 p-2 shadow-sm space-y-1 sticky top-24">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* COLUMN 2: VERTICAL SUB-NAV MENU (3 cols on lg screens) */}
+        <aside className="lg:col-span-3 bg-white rounded-2xl border border-zinc-200/80 p-2.5 shadow-sm space-y-1 sticky top-24">
           <div className="px-3 py-2 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
             Navigation Menu
           </div>
@@ -265,8 +265,8 @@ export function AccountSettingsEditor({
           })}
         </aside>
 
-        {/* COLUMN 3: MAIN SETTINGS PANEL CONTENT (8 cols on lg screens) */}
-        <main className="lg:col-span-8 space-y-6">
+        {/* COLUMN 3: MAIN SETTINGS PANEL CONTENT (9 cols on lg screens) */}
+        <main className="lg:col-span-9 space-y-6">
           {/* CARD 1: PROFILE INFORMATION */}
           {activeSubTab === "profile" && (
             <Card className="bg-white border-zinc-200/80 shadow-sm animate-in fade-in duration-200">
