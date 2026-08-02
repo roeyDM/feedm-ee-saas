@@ -20,7 +20,8 @@ import {
   Link as LinkIcon,
   Share2,
   UploadCloud,
-  X
+  X,
+  Grid
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppearanceSettings, DEFAULT_APPEARANCE, useGoogleFont } from "./mobile-preview";
@@ -606,53 +607,81 @@ export function DesignEditor({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-1 rounded-xl bg-zinc-100 p-1 border border-zinc-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 rounded-xl bg-zinc-100 p-1.5 border border-zinc-200">
             <button
               type="button"
               onClick={() => updateAppearance({ bgType: "solid" })}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-lg py-2 px-2 text-xs font-bold transition-all cursor-pointer",
                 currentApp.bgType === "solid"
                   ? "bg-white text-zinc-900 shadow-sm"
                   : "text-zinc-500 hover:text-zinc-700"
               )}
             >
-              <Palette className="h-3.5 w-3.5" /> Solid Color
+              <Palette className="h-3.5 w-3.5 text-emerald-600" /> Solid Color
             </button>
+
             <button
               type="button"
               onClick={() => updateAppearance({ bgType: "gradient" })}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all cursor-pointer",
+                "flex items-center justify-center gap-1.5 rounded-lg py-2 px-2 text-xs font-bold transition-all cursor-pointer",
                 currentApp.bgType === "gradient"
                   ? "bg-white text-zinc-900 shadow-sm"
                   : "text-zinc-500 hover:text-zinc-700"
               )}
             >
-              <Layers className="h-3.5 w-3.5" /> Gradient
+              <Sparkles className="h-3.5 w-3.5 text-violet-600" /> Gradient
             </button>
+
             <button
               type="button"
-              onClick={() => updateAppearance({ bgType: "image" })}
+              onClick={() => {
+                const firstStockUrl = EXPANDED_BACKGROUND_GALLERY[0].url;
+                const isCurrentInStock = EXPANDED_BACKGROUND_GALLERY.some((g) => g.url === currentApp.bgImageUrl);
+                updateAppearance({
+                  bgType: "image",
+                  bgImageUrl: isCurrentInStock ? currentApp.bgImageUrl : firstStockUrl,
+                });
+              }}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all cursor-pointer",
-                currentApp.bgType === "image"
+                "flex items-center justify-center gap-1.5 rounded-lg py-2 px-2 text-xs font-bold transition-all cursor-pointer",
+                currentApp.bgType === "image" && EXPANDED_BACKGROUND_GALLERY.some((g) => g.url === currentApp.bgImageUrl)
                   ? "bg-white text-zinc-900 shadow-sm"
                   : "text-zinc-500 hover:text-zinc-700"
               )}
             >
-              <ImageIcon className="h-3.5 w-3.5" /> Image Upload &amp; Gallery
+              <Grid className="h-3.5 w-3.5 text-blue-600" /> Stock Gallery
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const isCurrentInStock = EXPANDED_BACKGROUND_GALLERY.some((g) => g.url === currentApp.bgImageUrl);
+                updateAppearance({
+                  bgType: "image",
+                  bgImageUrl: isCurrentInStock ? "" : currentApp.bgImageUrl,
+                });
+              }}
+              className={cn(
+                "flex items-center justify-center gap-1.5 rounded-lg py-2 px-2 text-xs font-bold transition-all cursor-pointer",
+                currentApp.bgType === "image" && !EXPANDED_BACKGROUND_GALLERY.some((g) => g.url === currentApp.bgImageUrl)
+                  ? "bg-white text-zinc-900 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-700"
+              )}
+            >
+              <UploadCloud className="h-3.5 w-3.5 text-amber-600" /> Upload Image
             </button>
           </div>
 
-          {/* SOLID COLOR */}
+          {/* TAB 1: SOLID COLOR */}
           {currentApp.bgType === "solid" && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
               {renderColorSwatchPicker("Solid Background Color", currentApp.bgColor, "#BAD1CB", "bgColor")}
             </div>
           )}
 
-          {/* GRADIENT CONTROLS */}
+          {/* TAB 2: GRADIENT CONTROLS */}
           {currentApp.bgType === "gradient" && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -683,8 +712,47 @@ export function DesignEditor({
             </div>
           )}
 
-          {/* DIRECT FILE UPLOAD & EXPANDED GALLERY */}
-          {currentApp.bgType === "image" && (
+          {/* TAB 3: STOCK GALLERY */}
+          {currentApp.bgType === "image" && EXPANDED_BACKGROUND_GALLERY.some((g) => g.url === currentApp.bgImageUrl) && (
+            <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-zinc-800">Curated Stock Backgrounds</Label>
+                <span className="text-[10px] text-zinc-500 font-semibold">1-Click Selection</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {EXPANDED_BACKGROUND_GALLERY.map((pattern) => (
+                  <button
+                    key={pattern.name}
+                    type="button"
+                    onClick={() => updateAppearance({ bgType: "image", bgImageUrl: pattern.url })}
+                    className={cn(
+                      "group relative flex flex-col items-center p-1.5 rounded-xl border text-center transition hover:scale-105 bg-white cursor-pointer overflow-hidden",
+                      currentApp.bgImageUrl === pattern.url
+                        ? "border-emerald-500 ring-2 ring-emerald-500/20"
+                        : "border-zinc-200 hover:border-zinc-300"
+                    )}
+                  >
+                    <div
+                      style={{ backgroundImage: `url(${pattern.url})`, backgroundSize: "cover" }}
+                      className="w-full h-14 rounded-lg mb-1 shadow-inner border border-black/10 relative"
+                    >
+                      {currentApp.bgImageUrl === pattern.url && (
+                        <div className="absolute top-1 right-1 bg-emerald-500 text-white rounded-full p-0.5 shadow-md">
+                          <Check className="h-2.5 w-2.5" />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold text-zinc-700 truncate w-full">
+                      {pattern.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: UPLOAD CUSTOM IMAGE */}
+          {currentApp.bgType === "image" && !EXPANDED_BACKGROUND_GALLERY.some((g) => g.url === currentApp.bgImageUrl) && (
             <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-zinc-700">Upload Background Image from Device</Label>
@@ -717,20 +785,25 @@ export function DesignEditor({
                     Click to upload or drag &amp; drop an image
                   </span>
                   <span className="text-[10px] text-zinc-500 mt-0.5">
-                    Supports JPG, PNG, WEBP, or SVG
+                    Supports JPG, PNG, WEBP, or SVG (Up to 10MB)
                   </span>
                 </div>
 
                 {currentApp.bgImageUrl && (
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-zinc-200">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-zinc-200 shadow-sm">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         style={{ backgroundImage: `url(${currentApp.bgImageUrl})`, backgroundSize: "cover" }}
-                        className="h-10 w-10 rounded-lg shrink-0 border border-zinc-200"
+                        className="h-10 w-10 rounded-lg shrink-0 border border-zinc-200 shadow-inner"
                       />
-                      <span className="text-xs font-semibold text-zinc-800 truncate">
-                        Active Image Loaded
-                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-zinc-900 truncate">
+                          Active Custom Image Loaded
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-medium">
+                          Displaying live on simulator
+                        </span>
+                      </div>
                     </div>
                     <Button
                       type="button"
@@ -746,33 +819,6 @@ export function DesignEditor({
                     </Button>
                   </div>
                 )}
-              </div>
-
-              <div className="space-y-2 pt-2 border-t border-zinc-200/80">
-                <Label className="text-xs font-bold text-zinc-700">Or Pick From Expanded Background Gallery</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {EXPANDED_BACKGROUND_GALLERY.map((pattern) => (
-                    <button
-                      key={pattern.name}
-                      type="button"
-                      onClick={() => updateAppearance({ bgType: "image", bgImageUrl: pattern.url })}
-                      className={cn(
-                        "flex flex-col items-center p-1.5 rounded-xl border text-center transition hover:scale-105 bg-white cursor-pointer",
-                        currentApp.bgImageUrl === pattern.url
-                          ? "border-emerald-500 ring-2 ring-emerald-500/20"
-                          : "border-zinc-200 hover:border-zinc-300"
-                      )}
-                    >
-                      <div
-                        style={{ backgroundImage: `url(${pattern.url})`, backgroundSize: "cover" }}
-                        className="w-full h-12 rounded-lg mb-1 shadow-inner border border-black/10"
-                      />
-                      <span className="text-[10px] font-bold text-zinc-700 truncate w-full">
-                        {pattern.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           )}
