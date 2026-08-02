@@ -14,7 +14,8 @@ import {
   Send,
   CheckCircle2,
   Sparkles,
-  X
+  X,
+  Play
 } from "lucide-react";
 
 import { CookieModal } from "./cookie-modal";
@@ -298,6 +299,7 @@ export function MobilePreview({
 
   // Video playback state
   const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [activePageIndex, setActivePageIndex] = useState(0); // 0 = Bio, 1..3 = Reels, 4 = Lead Form
   const [currentReelIndex, setCurrentReelIndex] = useState(0);
   const [likedReels, setLikedReels] = useState<Record<string, boolean>>({});
@@ -336,6 +338,7 @@ export function MobilePreview({
     if (reelIdx >= 0 && reelIdx < displayReels.length) {
       if (reelIdx !== currentReelIndex) {
         setCurrentReelIndex(reelIdx);
+        setIsPlaying(true);
       }
     }
   };
@@ -348,10 +351,12 @@ export function MobilePreview({
         root.scrollTo({ top: 0, behavior: "smooth" });
         setActivePageIndex(0);
         setCurrentReelIndex(0);
+        setIsPlaying(true);
       } else if (activeTab === "reels") {
         root.scrollTo({ top: root.clientHeight, behavior: "smooth" });
         setActivePageIndex(1);
         setCurrentReelIndex(0);
+        setIsPlaying(true);
       }
     }
   }, [activeTab]);
@@ -698,7 +703,12 @@ export function MobilePreview({
       {displayReels.map((reel, idx) => (
         <div
           key={reel.id || idx}
-          className="snap-start snap-always relative h-full w-full overflow-hidden bg-black text-white"
+          onClick={() => {
+            if (idx === currentReelIndex) {
+              setIsPlaying((prev) => !prev);
+            }
+          }}
+          className="snap-start snap-always relative h-full w-full overflow-hidden bg-black text-white cursor-pointer select-none"
         >
           {/* Full Screen Video Element */}
           <video
@@ -706,8 +716,8 @@ export function MobilePreview({
             ref={(el) => {
               if (el) {
                 const isReelSectionActive = activePageIndex >= 1 && activePageIndex <= displayReels.length;
-                const isVideoActive = isReelSectionActive && idx === currentReelIndex;
-                const shouldBeMuted = !isVideoActive || isMuted;
+                const isVideoActive = isReelSectionActive && idx === currentReelIndex && isPlaying;
+                const shouldBeMuted = !isReelSectionActive || idx !== currentReelIndex || isMuted;
 
                 el.muted = shouldBeMuted;
                 if (isVideoActive) {
@@ -718,7 +728,7 @@ export function MobilePreview({
               }
             }}
             src={reel.videoUrl}
-            autoPlay={activePageIndex >= 1 && activePageIndex <= displayReels.length && idx === currentReelIndex}
+            autoPlay={activePageIndex >= 1 && activePageIndex <= displayReels.length && idx === currentReelIndex && isPlaying}
             loop
             muted={!(activePageIndex >= 1 && activePageIndex <= displayReels.length) || idx !== currentReelIndex || isMuted}
             playsInline
@@ -728,13 +738,25 @@ export function MobilePreview({
               console.error(`Failed to load video for slot ${idx + 1}:`, reel.videoUrl, e);
             }}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-            className="absolute inset-0 h-full w-full object-cover object-center z-0"
+            className="absolute inset-0 h-full w-full object-cover object-center z-0 cursor-pointer"
           />
+
+          {/* Center Tap-to-Pause / Play Overlay Icon (Instagram/TikTok style) */}
+          {!isPlaying && idx === currentReelIndex && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md border border-white/30 shadow-2xl animate-in zoom-in-75 fade-in duration-200">
+                <Play className="h-8 w-8 fill-current text-white translate-x-0.5" />
+              </div>
+            </div>
+          )}
 
           {/* Top Mute Toggle Bar */}
           <div className="absolute top-4 left-4 z-20">
             <button
-              onClick={() => setIsMuted(!isMuted)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMuted(!isMuted);
+              }}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/20 transition hover:bg-black/60"
             >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
