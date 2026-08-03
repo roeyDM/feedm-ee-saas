@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import { CustomLink, LeadFormSettings, SocialLink } from "./mobile-preview";
 import {
   User,
@@ -89,6 +90,8 @@ export function ProfileEditor({
   // Social Link Edit State
   const [editingSocialLinkId, setEditingSocialLinkId] = useState<string | null>(null);
   const [editSocialFormData, setEditSocialFormData] = useState<Partial<SocialLink>>({});
+  const [socialEditError, setSocialEditError] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Avatar Upload State
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -119,13 +122,9 @@ export function ProfileEditor({
 
       setAvatarUrl(publicUrl);
     } catch (err: any) {
-      console.error("Avatar upload failed:", err.message);
-      alert("Failed to upload avatar. Please make sure the 'avatars' storage bucket exists and is public.");
+      console.error("Avatar upload failed:", err);
     } finally {
       setIsUploadingAvatar(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
   };
 
@@ -151,14 +150,15 @@ export function ProfileEditor({
     e.preventDefault();
     if (!newTitle || !newUrl) return;
 
-    const item: CustomLink = {
-      id: Math.random().toString(36).substring(2, 9),
+    const newLink: CustomLink = {
+      id: crypto.randomUUID(),
       title: newTitle,
       url: newUrl.startsWith("http") ? newUrl : `https://${newUrl}`,
-      badgeText: newBadge.trim() || undefined,
+      badgeText: newBadge || undefined,
+      isActive: true,
     };
 
-    setCustomLinks([...customLinks, item]);
+    setCustomLinks([...customLinks, newLink]);
     setNewTitle("");
     setNewUrl("");
     setNewBadge("");
@@ -166,9 +166,6 @@ export function ProfileEditor({
 
   const handleDeleteLink = (id: string) => {
     setCustomLinks(customLinks.filter((l) => l.id !== id));
-    if (editingLinkId === id) {
-      setEditingLinkId(null);
-    }
   };
 
   const handleEditClick = (link: CustomLink) => {
@@ -176,19 +173,18 @@ export function ProfileEditor({
     setEditFormData({ ...link });
   };
 
-  const handleCancelEdit = () => {
+  const handleSaveEdit = () => {
+    if (!editingLinkId) return;
+    setCustomLinks(
+      customLinks.map((link) =>
+        link.id === editingLinkId ? { ...link, ...editFormData } as CustomLink : link
+      )
+    );
     setEditingLinkId(null);
     setEditFormData({});
   };
 
-  const handleSaveEdit = () => {
-    if (!editingLinkId || !editFormData.title || !editFormData.url) return;
-    
-    setCustomLinks(
-      customLinks.map((link) =>
-        link.id === editingLinkId ? { ...link, ...editFormData, url: editFormData.url?.startsWith("http") ? editFormData.url : `https://${editFormData.url}` } : link
-      )
-    );
+  const handleCancelEdit = () => {
     setEditingLinkId(null);
     setEditFormData({});
   };
@@ -202,6 +198,7 @@ export function ProfileEditor({
   };
 
   const handleAddSocialLink = (platform: SocialLink["platform"]) => {
+    setSocialEditError(null);
     // Check if it already exists, if so just edit it
     const existing = socialLinks.find(l => l.platform === platform);
     if (existing) {
@@ -226,12 +223,17 @@ export function ProfileEditor({
     setSocialLinks(socialLinks.filter((l) => l.id !== id));
     if (editingSocialLinkId === id) {
       setEditingSocialLinkId(null);
+      setSocialEditError(null);
     }
   };
 
   const handleSaveSocialEdit = () => {
     if (!editingSocialLinkId) return;
-    
+    if (!editSocialFormData.url || !editSocialFormData.url.trim()) {
+      setSocialEditError("Please enter a valid link or remove this item before saving.");
+      return;
+    }
+    setSocialEditError(null);
     setSocialLinks(
       socialLinks.map((link) =>
         link.id === editingSocialLinkId ? { ...link, ...editSocialFormData } : link
@@ -516,13 +518,24 @@ export function ProfileEditor({
                       <span className="text-xs font-bold text-zinc-800">{PLATFORM_INFO[link.platform]?.name || link.platform}</span>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-zinc-500">URL or Username</Label>
+                      <Label className="text-[10px] font-bold text-zinc-500">URL or Username *</Label>
                       <Input
                         value={editSocialFormData.url || ""}
-                        onChange={(e) => setEditSocialFormData({ ...editSocialFormData, url: e.target.value })}
+                        onChange={(e) => {
+                          setEditSocialFormData({ ...editSocialFormData, url: e.target.value });
+                          if (socialEditError) setSocialEditError(null);
+                        }}
                         placeholder={`e.g. https://${link.platform}.com/yourname`}
-                        className="bg-white border-zinc-200 text-xs text-zinc-900 h-8"
+                        className={cn(
+                          "bg-white border-zinc-200 text-xs text-zinc-900 h-8",
+                          socialEditError && "border-rose-500 ring-2 ring-rose-500/20"
+                        )}
                       />
+                      {socialEditError && (
+                        <p className="text-[10px] font-bold text-rose-600 mt-1">
+                          {socialEditError}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[10px] font-bold text-zinc-500">Custom Label (Optional)</Label>
@@ -773,31 +786,60 @@ export function ProfileEditor({
       </Card>
 
       {/* 4. Lead Form Settings */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card className="bg-white border-zinc-200/80 shadow-sm relative overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
-            <Send className="h-4.5 w-4.5 text-emerald-600" /> Lead Form Settings (Page 5)
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
+              <Send className="h-4.5 w-4.5 text-emerald-600" /> Lead Form Settings
+            </CardTitle>
+            {planType === "free" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
+                <Lock className="h-3 w-3" /> Pro Feature
+              </span>
+            )}
+          </div>
           <CardDescription className="text-xs text-zinc-500">
             Configure contact form text content, field requirements, and submission routing
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {/* Section 1: Form Content */}
-          <div className="space-y-3.5">
-            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
-              Form Content
-            </h4>
-            
-            <div className="space-y-1">
-              <Label className="text-xs font-bold text-zinc-700">Form Title</Label>
-              <Input
-                value={leadForm.title}
-                onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
-                placeholder="Get in Touch"
-                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-              />
+          {planType === "free" ? (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-900 flex flex-col items-center text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-zinc-950 shadow-md">
+                <Lock className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black">Lead Capture Form is Locked</h4>
+                <p className="text-xs font-semibold text-amber-800 mt-1 max-w-md">
+                  Lead capture forms are available on the Pro plan ($7/mo). Upgrade to collect names, phone numbers, and email leads directly from your video feed.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-10 px-5 rounded-xl gap-2 cursor-pointer shadow-sm mt-1"
+              >
+                <Zap className="h-4 w-4 fill-current" />
+                <span>Unlock Lead Capture Form</span>
+              </Button>
             </div>
+          ) : (
+            <>
+              {/* Section 1: Form Content */}
+              <div className="space-y-3.5">
+                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
+                  Form Content
+                </h4>
+                
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-zinc-700">Form Title</Label>
+                  <Input
+                    value={leadForm.title}
+                    onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
+                    placeholder="Get in Touch"
+                    className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+                  />
+                </div>
 
             <div className="space-y-1">
               <Label className="text-xs font-bold text-zinc-700">Form Subtitle / Description</Label>
@@ -887,8 +929,12 @@ export function ProfileEditor({
               <p className="text-[10px] text-zinc-500">Form entries will be routed to this destination email address.</p>
             </div>
           </div>
-        </CardContent>
+        </>
+      )}
+      </CardContent>
       </Card>
+
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 }

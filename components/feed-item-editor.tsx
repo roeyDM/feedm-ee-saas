@@ -335,6 +335,21 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
         </div>
       )}
 
+      {/* Pro Plan 0 Reels Smart Readiness Warning */}
+      {planType !== "free" && reels.length === 0 && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-4 text-amber-950 flex items-center gap-3 shadow-2xs">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-black text-sm shadow-sm">
+            ⚠️
+          </div>
+          <div>
+            <h4 className="text-xs font-black">Video Feed Pending Activation</h4>
+            <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
+              Add at least 1 Video Reel to activate your Video Feed on your live public link.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Add Reel Form */}
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader>

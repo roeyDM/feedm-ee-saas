@@ -771,6 +771,15 @@ export function MobilePreview({
             </button>
           </div>
 
+          {/* Watermark Overlay for Simulator Demo Videos */}
+          {isDemoMode && (
+            <div className="absolute top-4 left-16 z-20 pointer-events-none">
+              <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-extrabold text-white/90 border border-white/20 tracking-wider shadow-sm flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-amber-300 fill-current" /> FeedM.ee Example
+              </span>
+            </div>
+          )}
+
           {/* Top Page Indicator Pill */}
           <div className="absolute top-4 right-4 z-20">
             <span className="rounded-full bg-black/40 px-3 py-1 text-[10px] font-bold text-white/90 backdrop-blur-md border border-white/20">
@@ -970,15 +979,17 @@ export function MobilePreview({
             </div>
           )}
 
-          <a
-            href="https://feedm.ee"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-zinc-600 hover:text-zinc-900 transition"
-          >
-            <span>Powered by</span>
-            <span className="font-extrabold text-zinc-950">FeedM.ee</span>
-          </a>
+          {!activeAppearance.hideBranding && (
+            <a
+              href="https://feedm.ee"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-zinc-600 hover:text-zinc-900 transition"
+            >
+              <span>Powered by</span>
+              <span className="font-extrabold text-zinc-950">FeedM.ee</span>
+            </a>
+          )}
 
           <div className="flex items-center gap-3 text-[9px] font-medium text-zinc-500">
             <button onClick={() => setIsCookieModalOpen(true)} className="hover:text-zinc-800 transition">

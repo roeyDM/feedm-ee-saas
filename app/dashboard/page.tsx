@@ -281,6 +281,22 @@ function DashboardContent() {
 
   // Save changes to Supabase
   const handleSave = async () => {
+    // Validation 1: Require at least 1 Custom Link
+    const validCustomLinks = customLinks.filter(l => l.title?.trim() && l.url?.trim());
+    if (validCustomLinks.length === 0) {
+      setSaveStatus("error");
+      setStatusMsg("Add at least 1 Custom Link to save your feed.");
+      return;
+    }
+
+    // Validation 2: Check for empty URLs in active social links
+    const hasEmptySocialLink = socialLinks.some(l => l.isActive !== false && (!l.url || !l.url.trim()));
+    if (hasEmptySocialLink) {
+      setSaveStatus("error");
+      setStatusMsg("Please enter a valid link for all social links or remove empty ones before saving.");
+      return;
+    }
+
     setIsSaving(true);
     setSaveStatus("idle");
     setStatusMsg("");

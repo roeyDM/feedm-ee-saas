@@ -44,6 +44,10 @@ export default function UserProfilePage({ params }: PageProps) {
         if (data && !error) {
           const userPlan = data.plan_type || "free";
           const isFreeUser = userPlan === "free";
+          const hasConfiguredReels = Array.isArray(data.reels) && data.reels.length > 0;
+
+          // Smart Readiness Check: Render reels/lead form ONLY if Pro AND has at least 1 reel
+          const shouldRenderReels = !isFreeUser && hasConfiguredReels;
 
           setProfile({
             name: data.name || handleKey,
@@ -58,9 +62,8 @@ export default function UserProfilePage({ params }: PageProps) {
               isActive: l.isActive !== false
             })),
             customLinks: data.custom_links || [],
-            // Graceful Degradation: Free users render Page 1 (Bio & Links) ONLY!
-            reels: isFreeUser ? [] : (data.reels || []),
-            leadForm: isFreeUser ? sanitizeLeadForm(null) : sanitizeLeadForm(data.lead_form),
+            reels: shouldRenderReels ? data.reels : [],
+            leadForm: shouldRenderReels ? sanitizeLeadForm(data.lead_form) : sanitizeLeadForm(null),
             appearance: {
               ...(data.appearance || {}),
               hideBranding: isFreeUser ? false : !!data.appearance?.hideBranding,
