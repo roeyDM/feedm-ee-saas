@@ -99,24 +99,30 @@ export async function checkUsernameAvailability(
   }
 
   try {
+    console.log("[HandleCheck] Executing Supabase query for handle:", cleanUsername);
+
     const { data, error } = await supabase
       .from("profiles")
-      .select("username")
-      .ilike("username", cleanUsername)
+      .select("id, username")
+      .eq("username", cleanUsername)
       .maybeSingle();
 
+    console.log("[HandleCheck] Supabase query response:", { cleanUsername, data, error });
+
     if (error) {
-      console.warn("Supabase query check failed, falling back to local check:", error.message);
+      console.warn("[HandleCheck] Supabase query error (e.g. RLS policy or connection issue), defaulting to available:", error);
       return { available: true };
     }
 
     if (data) {
+      console.log("[HandleCheck] Handle exists in public.profiles table:", data);
       return { available: false, reason: "This handle is already taken." };
     }
 
+    console.log("[HandleCheck] Handle is available (no row in profiles table)");
     return { available: true };
   } catch (err) {
-    console.error("Error checking username availability:", err);
+    console.error("[HandleCheck] Exception while checking availability:", err);
     return { available: true };
   }
 }

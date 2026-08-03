@@ -53,7 +53,9 @@ function SignupFormContent() {
 
     setCheckingHandle(true);
     const timer = setTimeout(async () => {
+      console.log("[SignupForm] Running handle check for:", clean);
       const result = await checkUsernameAvailability(clean);
+      console.log("[SignupForm] Handle check result:", { clean, result });
       setHandleStatus(result);
       setCheckingHandle(false);
     }, 300);
