@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase, checkUsernameAvailability } from "@/lib/supabase";
+import { supabase, checkUsernameAvailability, sanitizeHandleInput } from "@/lib/supabase";
 import {
   Film,
   Mail,
@@ -25,7 +25,7 @@ function SignupFormContent() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => sanitizeHandleInput(handleParam));
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +37,15 @@ function SignupFormContent() {
 
   useEffect(() => {
     if (handleParam) {
-      setUsername(handleParam.toLowerCase().replace(/[^a-z0-9_]/g, ""));
+      const clean = sanitizeHandleInput(handleParam);
+      setUsername(clean);
     }
   }, [handleParam]);
 
   // Debounced real-time handle check
   useEffect(() => {
-    if (!username || username.length < 3) {
+    const clean = sanitizeHandleInput(username);
+    if (!clean || clean.length < 3) {
       setHandleStatus(null);
       setCheckingHandle(false);
       return;
@@ -51,10 +53,10 @@ function SignupFormContent() {
 
     setCheckingHandle(true);
     const timer = setTimeout(async () => {
-      const result = await checkUsernameAvailability(username);
+      const result = await checkUsernameAvailability(clean);
       setHandleStatus(result);
       setCheckingHandle(false);
-    }, 350);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [username]);
@@ -195,7 +197,7 @@ function SignupFormContent() {
                   type="text"
                   required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+                  onChange={(e) => setUsername(sanitizeHandleInput(e.target.value))}
                   placeholder="yourname"
                   maxLength={30}
                   className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-8 pr-9 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 ${

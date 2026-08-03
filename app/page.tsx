@@ -16,21 +16,41 @@ import { Button } from "@/components/ui/button";
 
 import { Navbar } from "@/components/navbar";
 
-import { validateHandle } from "@/lib/supabase";
+import { validateHandle, checkUsernameAvailability, sanitizeHandleInput } from "@/lib/supabase";
 
 export default function Home() {
   const [handle, setHandle] = useState("");
+  const [checkingHandle, setCheckingHandle] = useState(false);
+  const [handleStatus, setHandleStatus] = useState<{ available: boolean; reason?: string } | null>(null);
   const router = useRouter();
+
+  React.useEffect(() => {
+    const clean = sanitizeHandleInput(handle);
+    if (!clean) {
+      setHandleStatus(null);
+      return;
+    }
+
+    setCheckingHandle(true);
+    const timer = setTimeout(async () => {
+      const res = await checkUsernameAvailability(clean);
+      setHandleStatus(res);
+      setCheckingHandle(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [handle]);
 
   const handleClaim = (e: React.FormEvent) => {
     e.preventDefault();
-    if (handle.trim()) {
-      const validation = validateHandle(handle);
+    const clean = sanitizeHandleInput(handle);
+    if (clean) {
+      const validation = validateHandle(clean);
       if (!validation.valid) {
         alert(validation.reason);
         return;
       }
-      router.push(`/signup?handle=${encodeURIComponent(handle.trim())}`);
+      router.push(`/signup?handle=${encodeURIComponent(clean)}`);
     } else {
       router.push("/signup");
     }
@@ -77,7 +97,7 @@ export default function Home() {
               type="text"
               placeholder="yourhandle"
               value={handle}
-              onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+              onChange={(e) => setHandle(sanitizeHandleInput(e.target.value))}
               className="flex-1 bg-transparent py-2 px-1 text-sm font-bold text-zinc-900 placeholder-zinc-400 focus:outline-none"
             />
             <Button
@@ -91,7 +111,8 @@ export default function Home() {
 
           {/* Dynamic Handle Availability Feedback Badge */}
           {handle.trim().length > 0 && (() => {
-            const validation = validateHandle(handle);
+            const clean = sanitizeHandleInput(handle);
+            const validation = validateHandle(clean);
             if (!validation.valid) {
               return (
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
@@ -102,13 +123,34 @@ export default function Home() {
                 </div>
               );
             }
+
+            if (checkingHandle) {
+              return (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 border border-zinc-200 text-zinc-700 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
+                  <span className="animate-spin rounded-full h-3 w-3 border-2 border-zinc-400 border-t-zinc-800"></span>
+                  <span>Checking feedm.ee/{clean}...</span>
+                </div>
+              );
+            }
+
+            if (handleStatus && !handleStatus.available) {
+              return (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  </span>
+                  <span>❌ <strong>feedm.ee/{clean}</strong> is taken or unavailable ({handleStatus.reason}).</span>
+                </div>
+              );
+            }
+
             return (
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
-                <span>🟢 <strong>feedm.ee/{handle.trim()}</strong> is available! Claim now to unlock 7 days of Pro Features.</span>
+                <span>🟢 <strong>feedm.ee/{clean}</strong> is available! Claim now to unlock 7 days of Pro Features.</span>
               </div>
             );
           })()}

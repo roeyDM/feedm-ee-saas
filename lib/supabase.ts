@@ -13,6 +13,14 @@ export interface HandleValidationResult {
 }
 
 /**
+ * Sanitizes raw handle text by trimming spaces, converting to lowercase, and removing leading @ symbols.
+ */
+export function sanitizeHandleInput(input: string): string {
+  if (!input) return "";
+  return input.replace(/^@+/, "").trim().toLowerCase();
+}
+
+/**
  * Validates a user handle string according to FeedMee rules:
  * - 3 to 30 characters
  * - Alphanumeric (a-z, 0-9), hyphens (-), and underscores (_)
@@ -20,7 +28,7 @@ export interface HandleValidationResult {
  * - Must NOT contain consecutive special characters (-- or __ or -_ or _-)
  */
 export function validateHandle(handle: string): HandleValidationResult {
-  const normalized = handle.trim().toLowerCase();
+  const normalized = sanitizeHandleInput(handle);
 
   if (!normalized) {
     return { valid: false, reason: "Handle cannot be empty." };
@@ -73,15 +81,15 @@ export async function checkUsernameAvailability(
   username: string,
   currentUsername?: string
 ): Promise<{ available: boolean; reason?: string }> {
-  const cleanUsername = username.trim().toLowerCase();
+  const cleanUsername = sanitizeHandleInput(username);
 
   const validation = validateHandle(cleanUsername);
   if (!validation.valid) {
     return { available: false, reason: validation.reason };
   }
 
-  // Reserved handles
-  const reserved = ["login", "signup", "dashboard", "pricing", "api", "auth", "admin", "settings", "alexrivers", "roeybn"];
+  // Reserved handles (System routes only)
+  const reserved = ["login", "signup", "dashboard", "pricing", "api", "auth", "admin", "settings", "privacy", "terms"];
   if (reserved.includes(cleanUsername) && cleanUsername !== currentUsername?.toLowerCase()) {
     return { available: false, reason: "This handle is reserved." };
   }
@@ -94,7 +102,7 @@ export async function checkUsernameAvailability(
     const { data, error } = await supabase
       .from("profiles")
       .select("username")
-      .eq("username", cleanUsername)
+      .ilike("username", cleanUsername)
       .maybeSingle();
 
     if (error) {
@@ -103,7 +111,7 @@ export async function checkUsernameAvailability(
     }
 
     if (data) {
-      return { available: false, reason: "Handle is already taken." };
+      return { available: false, reason: "This handle is already taken." };
     }
 
     return { available: true };
