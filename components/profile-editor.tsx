@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UpgradeModal } from "@/components/upgrade-modal";
+import { AvatarCropModal } from "@/components/avatar-crop-modal";
 import { CustomLink, LeadFormSettings, SocialLink } from "./mobile-preview";
 import {
   User,
@@ -31,7 +32,7 @@ import {
   GripVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PlanType, checkUsernameAvailability, supabase } from "@/lib/supabase";
+import { PlanType, checkUsernameAvailability, validateHandle, sanitizeHandleInput, supabase } from "@/lib/supabase";
 
 import { CountrySelector } from "./country-selector";
 
@@ -93,36 +94,53 @@ export function ProfileEditor({
   const [socialEditError, setSocialEditError] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Avatar Upload State
+  // Avatar Crop & Upload State
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setCropImageSrc(reader.result);
+        setCropModalOpen(true);
+      }
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleCroppedAvatarUpload = async (croppedBlob: Blob) => {
     try {
       setIsUploadingAvatar(true);
-      
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = `avatar_${Math.random().toString(36).substring(2, 11)}_${Date.now()}.webp`;
 
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
+        .from("avatars")
+        .upload(fileName, croppedBlob, {
+          contentType: "image/webp",
+          upsert: true,
+        });
 
       if (uploadError) {
         throw uploadError;
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+        .from("avatars")
+        .getPublicUrl(fileName);
 
       setAvatarUrl(publicUrl);
     } catch (err: any) {
-      console.error("Avatar upload failed:", err);
+      console.error("Cropped avatar upload failed:", err);
+      alert("Failed to upload avatar. Please make sure the 'avatars' storage bucket exists and is public.");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -442,7 +460,7 @@ export function ProfileEditor({
                   type="file"
                   accept="image/*"
                   ref={fileInputRef}
-                  onChange={handleAvatarUpload}
+                  onChange={handleAvatarSelect}
                   className="hidden"
                 />
                 <Button 
@@ -935,6 +953,12 @@ export function ProfileEditor({
       </Card>
 
       <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+      <AvatarCropModal
+        open={cropModalOpen}
+        imageSrc={cropImageSrc}
+        onClose={() => setCropModalOpen(false)}
+        onCropComplete={handleCroppedAvatarUpload}
+      />
     </div>
   );
 }
