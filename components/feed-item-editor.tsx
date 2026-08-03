@@ -34,6 +34,7 @@ interface FeedItemEditorProps {
   reels: VideoReel[];
   setReels: (reels: VideoReel[]) => void;
   planType?: string;
+  setPlanType?: (plan: any) => void;
   leadForm?: LeadFormSettings;
   setLeadForm?: (form: LeadFormSettings) => void;
 }
@@ -109,7 +110,7 @@ function ProgressBar({ percent }: { percent: number }) {
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
-export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, setLeadForm }: FeedItemEditorProps) {
+export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType, leadForm, setLeadForm }: FeedItemEditorProps) {
   // Form state
   const [videoUrl, setVideoUrl] = useState("");
   const [caption, setCaption] = useState("");
@@ -297,7 +298,14 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, se
   return (
     <div className="flex flex-col gap-6">
       {/* Universal Upgrade Modal */}
-      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+      <UpgradeModal 
+        open={showUpgradeModal} 
+        onOpenChange={setShowUpgradeModal} 
+        onActivateTrial={() => {
+          if (setPlanType) setPlanType("pro");
+          showToast("success", "🎉 Pro Trial Activated! You now have full access to Video Reels & Lead Forms.");
+        }}
+      />
 
       {/* Toast Notification Banner */}
       {toast && (
