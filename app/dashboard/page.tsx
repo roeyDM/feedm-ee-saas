@@ -19,9 +19,10 @@ import {
   AppearanceSettings,
   DEFAULT_APPEARANCE,
 } from "@/components/mobile-preview";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2 } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -74,6 +75,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Restore saved offline trial tier state on mount
   useEffect(() => {
@@ -366,9 +368,41 @@ function DashboardContent() {
     }
   };
 
+  const [showErrorToast, setShowErrorToast] = useState(false);
+
+  useEffect(() => {
+    if (saveStatus === "error") {
+      setShowErrorToast(true);
+      const timer = setTimeout(() => setShowErrorToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveStatus, statusMsg]);
+
   return (
-    <div className="min-h-screen bg-zinc-50/80 flex flex-col font-sans text-zinc-900">
-      <DashboardHeader username={username} planType={planType} onSave={handleSave} isSaving={isSaving} />
+    <div className="min-h-screen bg-zinc-50/80 flex flex-col font-sans text-zinc-900 relative">
+      {/* Floating Error Toast Notification Overlay (Auto-dismisses after 4s) */}
+      {showErrorToast && saveStatus === "error" && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3 rounded-2xl bg-rose-950/95 text-white border border-rose-500/50 shadow-2xl px-5 py-3 backdrop-blur-md text-xs font-bold">
+            <AlertCircle className="h-4.5 w-4.5 text-rose-400 shrink-0" />
+            <span>{statusMsg || "Validation error: Please fix highlighted fields."}</span>
+            <button
+              onClick={() => setShowErrorToast(false)}
+              className="ml-2 text-rose-300 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <DashboardHeader
+        username={username}
+        planType={planType}
+        onSave={handleSave}
+        isSaving={isSaving}
+        onUpgradeClick={() => setShowUpgradeModal(true)}
+      />
 
       <Suspense fallback={null}>
         <StripeCheckoutStatus 
@@ -892,6 +926,8 @@ function DashboardContent() {
           </div>
         </div>
       )}
+      {/* In-App Upgrade Modal */}
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 }

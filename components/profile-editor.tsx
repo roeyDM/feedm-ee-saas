@@ -390,21 +390,23 @@ export function ProfileEditor({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3.5">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-start">
             {/* Display Name */}
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-zinc-700">Name</Label>
+              <div className="flex items-center justify-between h-5">
+                <Label className="text-xs font-bold text-zinc-700">Name</Label>
+              </div>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Alex Rivers"
-                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900 h-9"
               />
             </div>
 
             {/* Handle (@username) with Live Availability */}
             <div className="space-y-1">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between h-5">
                 <Label className="text-xs font-bold text-zinc-700">Handle (@username)</Label>
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   Permanent Link
@@ -798,7 +800,7 @@ export function ProfileEditor({
                         </div>
                       )}
                       <div className="min-w-0">
-                        <p className={cn("text-xs font-bold truncate", link.isActive === false ? "text-zinc-400 line-through" : "text-zinc-900")}>
+                        <p className={cn("text-xs font-bold leading-tight line-clamp-2 break-words", link.isActive === false ? "text-zinc-400 line-through" : "text-zinc-900")}>
                           {link.title}
                         </p>
                         <p className="text-[10px] text-zinc-500 truncate">{link.url}</p>

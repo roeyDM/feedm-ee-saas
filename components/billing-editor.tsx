@@ -18,6 +18,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import { PlanType } from "@/lib/supabase";
 
 interface BillingEditorProps {
@@ -39,6 +40,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<"Active" | "Trial" | "Canceled" | "Past Due">(
     planType === "pro" ? "Active" : "Active"
   );
@@ -201,12 +203,11 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
           <div className="flex items-center gap-2">
             {planType === "free" ? (
               <Button
-                onClick={() => handleTriggerCheckout("pro")}
-                disabled={loadingCheckout}
-                className="bg-zinc-950 hover:bg-black text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2"
+                onClick={() => setShowUpgradeModal(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 cursor-pointer"
               >
-                <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
-                <span>{loadingCheckout ? "Processing..." : "Upgrade to Pro ($7/mo)"}</span>
+                <Zap className="h-4 w-4 text-amber-300 fill-amber-300" />
+                <span>Upgrade to Pro ($7/mo)</span>
               </Button>
             ) : (
               <Button
@@ -414,6 +415,8 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
           </div>
         </div>
       )}
+      {/* In-App Upgrade Modal */}
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 }

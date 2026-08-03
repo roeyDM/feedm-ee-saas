@@ -661,7 +661,7 @@ export function MobilePreview({
                 <div className="flex flex-col min-w-0">
                   <span 
                     style={{ color: activeAppearance.cardTextColor || "#09090b" }}
-                    className="text-sm font-bold truncate"
+                    className="text-xs sm:text-sm font-bold leading-tight line-clamp-2 text-left break-words"
                   >
                     {link.title}
                   </span>
@@ -697,8 +697,13 @@ export function MobilePreview({
             </div>
           )}
 
-          {/* Scroll Down Prompt */}
-          <div className="flex items-center gap-1 text-[11px] font-extrabold text-zinc-800 tracking-wider uppercase animate-bounce pt-1">
+          {/* Scroll Down Prompt with Dynamic Contrast */}
+          <div className={cn(
+            "flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1",
+            activeAppearance.bgColor === "#000000" || activeAppearance.bgColor === "#09090b" || activeAppearance.bgColor === "000000" || activeAppearance.bgColor === "09090b" || activeAppearance.cardTextColor === "#FFFFFF" || activeAppearance.cardTextColor === "#ffffff"
+              ? "text-white/90 drop-shadow-md"
+              : "text-zinc-800"
+          )}>
             <span>Scroll for Reels</span>
             <ChevronDown className="h-4 w-4" />
           </div>
