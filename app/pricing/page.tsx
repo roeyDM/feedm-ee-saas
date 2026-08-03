@@ -269,17 +269,17 @@ export default function PricingPage() {
               </div>
               <h2 className="text-2xl font-black text-zinc-950">Business</h2>
               <p className="text-xs font-medium text-zinc-500 mt-1">
-                For agencies and scaling teams managing multiple client feeds.
+                For agencies, scaling teams, and visual brands requiring custom domains.
               </p>
 
               <div className="mt-6 flex items-baseline gap-1">
                 <span className="text-4xl font-black text-zinc-950">
-                  {isAnnual ? "$24" : "$29"}
+                  {isAnnual ? "$15" : "$19"}
                 </span>
                 <span className="text-xs font-bold text-zinc-500">/ month</span>
               </div>
               <p className="text-[11px] font-semibold text-cyan-700 mt-1">
-                {isAnnual ? "Billed $288 annually" : "Billed monthly"}
+                {isAnnual ? "Billed $180 annually (Save ~20%)" : "Billed monthly"}
               </p>
 
               <hr className="my-6 border-zinc-100" />
@@ -287,23 +287,23 @@ export default function PricingPage() {
               <ul className="space-y-3.5 text-xs font-semibold text-zinc-700">
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span><strong>Everything in Pro Plan</strong></span>
+                  <span><strong>Everything in Pro, PLUS:</strong></span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Unlimited Video Reel Hosting &amp; HD Uploads</span>
+                  <span><strong>Custom Domain Integration:</strong> (<code className="text-zinc-600 bg-zinc-100 px-1 py-0.5 rounded">links.yourbrand.com</code>)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Multiple Team Member Workspaces</span>
+                  <span><strong>Advanced Analytics &amp; Pixels:</strong> Meta Pixel &amp; Google Analytics tracking</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Zapier &amp; Webhook CRM Lead Export</span>
+                  <span><strong>Team Collaboration:</strong> Invite Team Members to workspace</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Priority 24/7 Dedicated Support</span>
+                  <span><strong>Priority Support:</strong> 24/7 Dedicated Response</span>
                 </li>
               </ul>
             </div>
@@ -311,7 +311,7 @@ export default function PricingPage() {
             <div className="mt-8">
               <Link href="/signup?plan=business">
                 <Button variant="outline" className="w-full h-11 rounded-xl text-xs font-bold border-zinc-900 bg-zinc-950 text-white hover:bg-black cursor-pointer">
-                  Start Business Trial
+                  Get Business Plan
                 </Button>
               </Link>
             </div>
