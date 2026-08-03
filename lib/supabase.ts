@@ -7,6 +7,64 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type PlanType = "free" | "pro" | "business";
 
+export interface HandleValidationResult {
+  valid: boolean;
+  reason?: string;
+}
+
+/**
+ * Validates a user handle string according to FeedMee rules:
+ * - 3 to 30 characters
+ * - Alphanumeric (a-z, 0-9), hyphens (-), and underscores (_)
+ * - Must NOT start or end with a hyphen or underscore
+ * - Must NOT contain consecutive special characters (-- or __ or -_ or _-)
+ */
+export function validateHandle(handle: string): HandleValidationResult {
+  const normalized = handle.trim().toLowerCase();
+
+  if (!normalized) {
+    return { valid: false, reason: "Handle cannot be empty." };
+  }
+
+  if (normalized.length < 3) {
+    return { valid: false, reason: "Handle must be at least 3 characters." };
+  }
+
+  if (normalized.length > 30) {
+    return { valid: false, reason: "Handle cannot exceed 30 characters." };
+  }
+
+  if (/[^a-z0-9_-]/.test(normalized)) {
+    return {
+      valid: false,
+      reason: "Handle can only contain letters, numbers, hyphens (-), and underscores (_).",
+    };
+  }
+
+  if (/^[_-]/.test(normalized) || /[_-]$/.test(normalized)) {
+    return {
+      valid: false,
+      reason: "Handle cannot start or end with a hyphen (-) or underscore (_).",
+    };
+  }
+
+  if (/[_-]{2,}/.test(normalized)) {
+    return {
+      valid: false,
+      reason: "Handle cannot contain consecutive hyphens (-) or underscores (_).",
+    };
+  }
+
+  if (!/^[a-z0-9]+(?:[_-][a-z0-9]+)*$/.test(normalized)) {
+    return {
+      valid: false,
+      reason: "Handle can only contain letters, numbers, hyphens (-), and underscores (_).",
+    };
+  }
+
+  return { valid: true };
+}
+
 /**
  * Checks real-time username availability against the `profiles` table in Supabase.
  * Returns true if available, false if already taken.
@@ -17,18 +75,15 @@ export async function checkUsernameAvailability(
 ): Promise<{ available: boolean; reason?: string }> {
   const cleanUsername = username.trim().toLowerCase();
 
-  if (!cleanUsername || cleanUsername.length < 3) {
-    return { available: false, reason: "Must be at least 3 characters" };
-  }
-
-  if (!/^[a-z0-9_]+$/.test(cleanUsername)) {
-    return { available: false, reason: "Only lowercase letters, numbers, and underscores allowed" };
+  const validation = validateHandle(cleanUsername);
+  if (!validation.valid) {
+    return { available: false, reason: validation.reason };
   }
 
   // Reserved handles
   const reserved = ["login", "signup", "dashboard", "pricing", "api", "auth", "admin", "settings", "alexrivers", "roeybn"];
   if (reserved.includes(cleanUsername) && cleanUsername !== currentUsername?.toLowerCase()) {
-    return { available: false, reason: "This handle is reserved" };
+    return { available: false, reason: "This handle is reserved." };
   }
 
   if (currentUsername && cleanUsername === currentUsername.toLowerCase()) {
@@ -48,7 +103,7 @@ export async function checkUsernameAvailability(
     }
 
     if (data) {
-      return { available: false, reason: "Handle is already taken" };
+      return { available: false, reason: "Handle is already taken." };
     }
 
     return { available: true };

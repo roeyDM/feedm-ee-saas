@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 
 import { Navbar } from "@/components/navbar";
 
+import { validateHandle } from "@/lib/supabase";
+
 export default function Home() {
   const [handle, setHandle] = useState("");
   const router = useRouter();
@@ -23,6 +25,11 @@ export default function Home() {
   const handleClaim = (e: React.FormEvent) => {
     e.preventDefault();
     if (handle.trim()) {
+      const validation = validateHandle(handle);
+      if (!validation.valid) {
+        alert(validation.reason);
+        return;
+      }
       router.push(`/signup?handle=${encodeURIComponent(handle.trim())}`);
     } else {
       router.push("/signup");
@@ -83,15 +90,28 @@ export default function Home() {
           </div>
 
           {/* Dynamic Handle Availability Feedback Badge */}
-          {handle.trim().length > 0 && (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span>🟢 <strong>feedm.ee/{handle.trim()}</strong> is available! Claim now to unlock 7 days of Pro Features.</span>
-            </div>
-          )}
+          {handle.trim().length > 0 && (() => {
+            const validation = validateHandle(handle);
+            if (!validation.valid) {
+              return (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  </span>
+                  <span>⚠️ {validation.reason}</span>
+                </div>
+              );
+            }
+            return (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span>🟢 <strong>feedm.ee/{handle.trim()}</strong> is available! Claim now to unlock 7 days of Pro Features.</span>
+              </div>
+            );
+          })()}
 
           {/* Trust Badge / Micro-copy */}
           <div className="flex items-center justify-center gap-2 text-[11px] font-extrabold text-zinc-600 bg-white/70 backdrop-blur-xs py-2 px-4 rounded-xl border border-zinc-200/70 shadow-2xs">

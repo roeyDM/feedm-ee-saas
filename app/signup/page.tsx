@@ -176,7 +176,7 @@ function SignupFormContent() {
                   type="text"
                   required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                   placeholder="yourname"
                   maxLength={30}
                   className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-8 pr-9 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 ${

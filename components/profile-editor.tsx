@@ -382,7 +382,7 @@ export function ProfileEditor({
                 <div className="relative">
                   <Input
                     value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                     placeholder="alexrivers"
                     className={`bg-zinc-50 text-xs text-zinc-900 pr-8 ${
                       handleStatus
