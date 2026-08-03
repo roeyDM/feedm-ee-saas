@@ -10,6 +10,7 @@ import {
   Palette,
   Tag,
   Smartphone,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -60,7 +61,7 @@ export default function Home() {
         </p>
 
         {/* Claim Handle Bar */}
-        <form onSubmit={handleClaim} className="mx-auto mt-10 max-w-md">
+        <form onSubmit={handleClaim} className="mx-auto mt-10 max-w-lg space-y-3">
           <div className="relative flex items-center rounded-2xl border border-zinc-200 bg-white/90 p-2 shadow-xl shadow-emerald-950/5 backdrop-blur-md transition focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-emerald-500/20">
             <span className="pl-4 text-sm font-extrabold text-zinc-400 select-none">
               feedm.ee/
@@ -74,15 +75,45 @@ export default function Home() {
             />
             <Button
               type="submit"
-              className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold rounded-xl px-5 h-11 text-xs shrink-0 shadow-sm"
+              className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold rounded-xl px-5 h-11 text-xs shrink-0 shadow-sm gap-1.5 cursor-pointer"
             >
-              Claim Your Feed
+              <span>Claim My Feed</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <p className="mt-3 text-xs font-semibold text-zinc-500">
-            Custom Hex Color Picker • 3 Reel Snap Pages • Business Lead Form
-          </p>
+
+          {/* Dynamic Handle Availability Feedback Badge */}
+          {handle.trim().length > 0 && (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold animate-in fade-in zoom-in-95 duration-200 shadow-2xs">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span>🟢 <strong>feedm.ee/{handle.trim()}</strong> is available! Claim now to unlock 7 days of Pro Features.</span>
+            </div>
+          )}
+
+          {/* Trust Badge / Micro-copy */}
+          <div className="flex items-center justify-center gap-2 text-[11px] font-extrabold text-zinc-600 bg-white/70 backdrop-blur-xs py-2 px-4 rounded-xl border border-zinc-200/70 shadow-2xs">
+            <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span>⚡ 7-Day Pro Trial Included • No Credit Card Required • Keep Your Handle Forever</span>
+          </div>
         </form>
+
+        {/* Value Proposition Banner */}
+        <div className="mx-auto mt-10 max-w-2xl rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 p-4.5 shadow-sm flex items-center gap-4 text-left">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+              Zero Risk Guarantee <span className="bg-emerald-200 text-emerald-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Permanent Link</span>
+            </h4>
+            <p className="text-xs font-semibold text-zinc-700 mt-0.5 leading-relaxed">
+              Your link never breaks. Even if your 7-day Pro trial ends, your <strong>feedm.ee/{handle.trim() || "yourhandle"}</strong> link stays live on your bio forever.
+            </p>
+          </div>
+        </div>
 
       </section>
 

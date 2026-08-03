@@ -15,6 +15,7 @@ import {
   XCircle,
   Loader2,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 
 function SignupFormContent() {
@@ -152,6 +153,12 @@ function SignupFormContent() {
 
         {/* Card */}
         <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-8 shadow-xl shadow-zinc-900/5 backdrop-blur-md">
+          {/* Pro Trial Included Callout Badge */}
+          <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-300/80 px-3.5 py-2.5 text-xs font-black text-emerald-950 shadow-2xs">
+            <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse shrink-0" />
+            <span>⚡ 7-Day Pro Trial Included • No Credit Card Required</span>
+          </div>
+
           {error && (
             <div className="mb-4 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2.5 text-xs font-bold text-rose-700">
               <AlertCircle className="h-4 w-4 shrink-0" />
