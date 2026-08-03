@@ -154,7 +154,7 @@ export default function PricingPage() {
               </div>
               <h2 className="text-2xl font-black text-zinc-950">Starter</h2>
               <p className="text-xs font-medium text-zinc-500 mt-1">
-                Perfect for essential link-in-bio presence with $0 upfront cost.
+                Essential link-in-bio presence with $0 upfront cost.
               </p>
 
               <div className="mt-6 flex items-baseline gap-1">
@@ -167,15 +167,15 @@ export default function PricingPage() {
               <ul className="space-y-3.5 text-xs font-semibold text-zinc-700">
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Permanent Custom Link:</strong> <code className="text-zinc-600 bg-zinc-100 px-1.5 py-0.5 rounded">feedm.ee/yourname</code> (Never breaks)</span>
+                  <span>Permanent custom link (<code className="text-zinc-600 bg-zinc-100 px-1.5 py-0.5 rounded">feedm.ee/yourname</code>) - Never breaks</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Page 1:</strong> Unlimited Bio Links &amp; Social Icons</span>
+                  <span>Unlimited Bio Links &amp; Social Icons</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Mobile-optimized vertical snap layout</span>
+                  <span>Mobile-optimized vertical layout</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -228,11 +228,11 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>Pages 2–4:</strong> Full Vertical Video Reels Feed</span>
+                  <span>3 Reels Full Vertical Video Feed</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>Page 5:</strong> Built-in Lead Capture Form</span>
+                  <span>Built-in Lead Capture Form</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
@@ -240,11 +240,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span>Custom Domain Integration (<code className="text-emerald-800 bg-emerald-50 px-1 py-0.5 rounded">links.yourbrand.com</code>)</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span>Advanced Analytics &amp; Conversion Tracking</span>
+                  <span>Standard Support</span>
                 </li>
               </ul>
             </div>
@@ -291,19 +287,19 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span><strong>Custom Domain Integration:</strong> (<code className="text-zinc-600 bg-zinc-100 px-1 py-0.5 rounded">links.yourbrand.com</code>)</span>
+                  <span>Custom Domain Integration (e.g., <code className="text-zinc-600 bg-zinc-100 px-1 py-0.5 rounded">links.yourbrand.com</code>)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span><strong>Advanced Analytics &amp; Pixels:</strong> Meta Pixel &amp; Google Analytics tracking</span>
+                  <span>Advanced Analytics, Pixels &amp; Conversion Tracking (Meta Pixel, Google Analytics)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span><strong>Team Collaboration:</strong> Invite Team Members to workspace</span>
+                  <span>Team &amp; Workspace Collaboration</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span><strong>Priority Support:</strong> 24/7 Dedicated Response</span>
+                  <span>Priority 24/7 Support</span>
                 </li>
               </ul>
             </div>
@@ -330,7 +326,7 @@ export default function PricingPage() {
                 🔒 No risk. Your link never breaks!
               </h4>
               <p className="text-xs font-semibold text-zinc-700 mt-1 leading-relaxed">
-                If your 7-day Pro trial ends without upgrading, your feed automatically stays live on the <strong>Starter plan (Page 1)</strong> without losing your custom handle.
+                If your 7-day Pro trial ends without upgrading, your feed automatically stays live on the <strong>Starter plan</strong> without losing your custom handle.
               </p>
             </div>
           </div>
