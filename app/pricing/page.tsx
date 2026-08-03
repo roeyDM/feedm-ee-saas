@@ -257,30 +257,39 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Tier 3: BUSINESS (BRAND) */}
-          <div className="flex flex-col justify-between rounded-3xl border border-zinc-200/80 bg-white/90 p-8 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition duration-300">
+          {/* Tier 3: BUSINESS (BRAND) - COMING SOON STATE */}
+          <div className="relative flex flex-col justify-between rounded-3xl border border-zinc-200/80 bg-zinc-50/70 p-8 shadow-sm backdrop-blur-md opacity-90 transition duration-300">
+            {/* Top Badge */}
+            <div className="absolute top-0 right-8 -translate-y-1/2 rounded-full bg-cyan-100 border border-cyan-300 px-3.5 py-1 text-[10px] font-black text-cyan-900 uppercase tracking-wider shadow-2xs">
+              🚀 COMING SOON
+            </div>
+
             <div>
               <div className="inline-block rounded-xl bg-cyan-100/80 px-3 py-1 text-xs font-bold text-cyan-800 mb-4">
                 Business &amp; Brand
               </div>
-              <h2 className="text-2xl font-black text-zinc-950">Business</h2>
+              <h2 className="text-2xl font-black text-zinc-950 flex items-center gap-2">
+                Business
+                <span className="text-xs font-extrabold text-cyan-700 bg-cyan-100 px-2.5 py-0.5 rounded-full border border-cyan-200">Soon</span>
+              </h2>
               <p className="text-xs font-medium text-zinc-500 mt-1">
                 For agencies, scaling teams, and visual brands requiring custom domains.
               </p>
 
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-4xl font-black text-zinc-950">
-                  {isAnnual ? "$15" : "$19"}
+              <div className="mt-6 flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-zinc-900">$19</span>
+                <span className="text-xs font-bold text-zinc-400">/ mo</span>
+                <span className="text-[11px] font-extrabold text-cyan-700 bg-cyan-100/80 px-2 py-0.5 rounded-md ml-1">
+                  Coming Soon
                 </span>
-                <span className="text-xs font-bold text-zinc-500">/ month</span>
               </div>
-              <p className="text-[11px] font-semibold text-cyan-700 mt-1">
-                {isAnnual ? "Billed $180 annually (Save ~20%)" : "Billed monthly"}
+              <p className="text-[11px] font-semibold text-zinc-400 mt-1">
+                Feature launch in active development
               </p>
 
-              <hr className="my-6 border-zinc-100" />
+              <hr className="my-6 border-zinc-200/70" />
 
-              <ul className="space-y-3.5 text-xs font-semibold text-zinc-700">
+              <ul className="space-y-3.5 text-xs font-semibold text-zinc-600">
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
                   <span><strong>Everything in Pro, PLUS:</strong></span>
@@ -291,7 +300,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Advanced Analytics, Pixels &amp; Conversion Tracking (Meta Pixel, Google Analytics)</span>
+                  <span>Advanced Analytics &amp; Pixels (Meta Pixel, Google Analytics)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
@@ -305,11 +314,13 @@ export default function PricingPage() {
             </div>
 
             <div className="mt-8">
-              <Link href="/signup?plan=business">
-                <Button variant="outline" className="w-full h-11 rounded-xl text-xs font-bold border-zinc-900 bg-zinc-950 text-white hover:bg-black cursor-pointer">
-                  Get Business Plan
-                </Button>
-              </Link>
+              <Button
+                disabled
+                variant="outline"
+                className="w-full h-11 rounded-xl text-xs font-extrabold border-zinc-200 bg-zinc-100 text-zinc-400 cursor-not-allowed shadow-none"
+              >
+                Coming Soon — Join Waitlist
+              </Button>
             </div>
           </div>
 
