@@ -738,6 +738,7 @@ export default function DashboardPage() {
                     setCustomHexColor={setCustomHexColor}
                     appearance={appearance}
                     setAppearance={setAppearance}
+                    planType={planType}
                     onRegisterActions={setDesignActions}
                   />
                 </div>

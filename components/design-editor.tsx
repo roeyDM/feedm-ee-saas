@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import { 
   Palette, 
   RotateCcw, 
@@ -21,7 +22,8 @@ import {
   Share2,
   UploadCloud,
   X,
-  Grid
+  Grid,
+  Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppearanceSettings, DEFAULT_APPEARANCE, useGoogleFont } from "./mobile-preview";
@@ -31,6 +33,7 @@ interface DesignEditorProps {
   setCustomHexColor: (hex: string) => void;
   appearance?: AppearanceSettings;
   setAppearance?: (app: AppearanceSettings) => void;
+  planType?: string;
   onRegisterActions?: (actions: {
     reset: () => void;
     undo: () => void;
@@ -392,8 +395,10 @@ export function DesignEditor({
   setCustomHexColor,
   appearance = DEFAULT_APPEARANCE,
   setAppearance,
+  planType = "pro",
   onRegisterActions,
 }: DesignEditorProps) {
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [history, setHistory] = useState<AppearanceSettings[]>([appearance]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -1043,6 +1048,52 @@ export function DesignEditor({
           )}
         </CardContent>
       </Card>
+
+      {/* FEEDMEE BRANDING WATERMARK CARD */}
+      <Card className="bg-white border-zinc-200/80 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
+              <Sparkles className="h-4 w-4 text-emerald-600" /> FeedM.ee Branding Watermark
+            </CardTitle>
+            {planType === "free" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
+                <Lock className="h-3 w-3" /> Pro Feature
+              </span>
+            )}
+          </div>
+          <CardDescription className="text-xs text-zinc-500">
+            Control the visibility of the "Powered by FeedM.ee" watermark at the bottom of your feed.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
+            <div>
+              <p className="text-xs font-bold text-zinc-900">Remove FeedM.ee Branding</p>
+              <p className="text-[11px] font-medium text-zinc-500 mt-0.5">
+                {planType === "free"
+                  ? "Requires Pro Plan to hide watermark (currently visible on Starter)"
+                  : "Hide watermark for a 100% white-label creator feed"}
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              checked={planType !== "free" && !!currentApp.hideBranding}
+              disabled={planType === "free"}
+              onChange={(e) => {
+                if (planType === "free") {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                updateAppearance({ hideBranding: e.target.checked });
+              }}
+              className="h-5 w-5 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer disabled:cursor-not-allowed"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </div>
   );
 }

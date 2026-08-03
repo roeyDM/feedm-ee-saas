@@ -42,6 +42,9 @@ export default function UserProfilePage({ params }: PageProps) {
           .single();
 
         if (data && !error) {
+          const userPlan = data.plan_type || "free";
+          const isFreeUser = userPlan === "free";
+
           setProfile({
             name: data.name || handleKey,
             bio: data.bio || "",
@@ -55,9 +58,13 @@ export default function UserProfilePage({ params }: PageProps) {
               isActive: l.isActive !== false
             })),
             customLinks: data.custom_links || [],
-            reels: data.reels || [],
-            leadForm: sanitizeLeadForm(data.lead_form),
-            appearance: data.appearance,
+            // Graceful Degradation: Free users render Page 1 (Bio & Links) ONLY!
+            reels: isFreeUser ? [] : (data.reels || []),
+            leadForm: isFreeUser ? sanitizeLeadForm({ ...data.lead_form, enabled: false }) : sanitizeLeadForm(data.lead_form),
+            appearance: {
+              ...(data.appearance || {}),
+              hideBranding: isFreeUser ? false : !!data.appearance?.hideBranding,
+            },
           });
         }
       } catch (err) {

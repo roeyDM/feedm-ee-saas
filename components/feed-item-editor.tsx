@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import {
   Film,
   Trash2,
@@ -23,7 +24,8 @@ import {
   Link2,
   Zap,
   ArrowRight,
-  GripVertical
+  GripVertical,
+  Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -130,6 +132,12 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, se
 
   // ─── File Selection Validation ────────────────────────────────────────────────
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (planType === "free") {
+      setShowUpgradeModal(true);
+      if (e.target) e.target.value = "";
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -216,6 +224,11 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, se
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (planType === "free") {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     if (reels.length >= 3) {
       showToast("error", "Maximum 3 video reels allowed.");
       return;
@@ -283,36 +296,35 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", leadForm, se
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Promo Upgrade Modal */}
-      {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => setShowUpgradeModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-full p-2 transition"
-            >
-              <Trash2 className="h-4 w-4" /> {/* Fallback icon, preferably X */}
-            </button>
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 to-emerald-500 text-white shadow-xl shadow-amber-500/20 mb-5">
-              <Zap className="h-8 w-8 stroke-[2.5]" />
-            </div>
-            <h3 className="text-xl font-black text-zinc-900 tracking-tight">Unlock Shoppable Reels</h3>
-            <p className="text-sm font-semibold text-zinc-600 mt-2 mb-6 leading-relaxed">
-              Convert your viewers into customers! Upgrade to PRO to add targeted promos, coupon codes, and deal links directly inside your video reels.
-            </p>
-            <a 
-              href="/pricing"
-              className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm h-12 rounded-xl shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.02]"
-            >
-              Upgrade to PRO ($7/mo) <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
-      )}
+      {/* Universal Upgrade Modal */}
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
 
       {/* Toast Notification Banner */}
       {toast && (
         <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
+      )}
+
+      {/* Free Plan Lock Warning Banner */}
+      {planType === "free" && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm font-black">
+              <Lock className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black">Video Reels &amp; Pages 2–4 Locked</h4>
+              <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
+                Upgrade to Pro to unlock 3 vertical video reels, lead form, and remove branding.
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setShowUpgradeModal(true)}
+            className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-3.5 rounded-xl shrink-0 gap-1.5 cursor-pointer shadow-xs"
+          >
+            <span>Unlock Pro</span> <Zap className="h-3.5 w-3.5 fill-current" />
+          </Button>
+        </div>
       )}
 
       {/* Add Reel Form */}

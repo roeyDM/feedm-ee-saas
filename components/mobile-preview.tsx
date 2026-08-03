@@ -128,6 +128,7 @@ export interface AppearanceSettings {
   socialIconBgColor?: string;
   socialLogoMode?: "brand" | "flat";
   socialFlatColor?: string;
+  hideBranding?: boolean;
 }
 
 export const DEFAULT_APPEARANCE: AppearanceSettings = {
