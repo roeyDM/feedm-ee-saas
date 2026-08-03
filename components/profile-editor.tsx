@@ -96,6 +96,7 @@ export function ProfileEditor({
 
   // Avatar Crop & Upload State
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +104,9 @@ export function ProfileEditor({
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setIsUploadingAvatar(false);
+    setAvatarError(null);
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -120,9 +124,13 @@ export function ProfileEditor({
   const handleCroppedAvatarUpload = async (croppedBlob: Blob) => {
     try {
       setIsUploadingAvatar(true);
+      setAvatarError(null);
+      
       const fileName = `avatar_${Math.random().toString(36).substring(2, 11)}_${Date.now()}.webp`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log("[AvatarUpload] Starting upload to Supabase avatars bucket...", fileName);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(fileName, croppedBlob, {
           contentType: "image/webp",
@@ -130,17 +138,37 @@ export function ProfileEditor({
         });
 
       if (uploadError) {
-        throw uploadError;
+        console.warn("[AvatarUpload] Supabase Storage upload failed/restricted:", uploadError.message);
+        
+        // Fallback: Convert cropped blob to Base64 DataURL so user is NEVER stuck
+        const base64Url = await new Promise<string>((resolve) => {
+          const r = new FileReader();
+          r.onloadend = () => resolve(r.result as string);
+          r.readAsDataURL(croppedBlob);
+        });
+
+        setAvatarUrl(base64Url);
+        setAvatarError("Avatar applied locally (Supabase Storage 'avatars' bucket policy required).");
+        return;
       }
 
       const { data: { publicUrl } } = supabase.storage
         .from("avatars")
         .getPublicUrl(fileName);
 
+      console.log("[AvatarUpload] Supabase upload success! Public URL:", publicUrl);
       setAvatarUrl(publicUrl);
+      setAvatarError(null);
     } catch (err: any) {
-      console.error("Cropped avatar upload failed:", err);
-      alert("Failed to upload avatar. Please make sure the 'avatars' storage bucket exists and is public.");
+      console.error("[AvatarUpload] Exception during upload:", err);
+      // Fallback DataURL
+      const base64Url = await new Promise<string>((resolve) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.readAsDataURL(croppedBlob);
+      });
+      setAvatarUrl(base64Url);
+      setAvatarError("Avatar applied locally.");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -476,6 +504,11 @@ export function ProfileEditor({
                 <p className="text-[10px] text-zinc-500 mt-1.5 font-medium">
                   Recommended: Square image, at least 300x300px.
                 </p>
+                {avatarError && (
+                  <p className="text-[10px] font-bold text-amber-700 mt-1 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                    ⚠️ {avatarError}
+                  </p>
+                )}
               </div>
             </div>
           </div>
