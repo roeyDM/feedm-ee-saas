@@ -354,60 +354,43 @@ export function ProfileEditor({
               />
             </div>
 
-            {/* Handle (@username) with Live Availability & Plan Lock */}
+            {/* Handle (@username) with Live Availability */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold text-zinc-700">Handle (@username)</Label>
-                {planType === "free" && (
-                  <span className="text-[10px] font-bold text-amber-600 flex items-center gap-0.5">
-                    <Lock className="h-3 w-3" /> Pro Feature
-                  </span>
-                )}
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Permanent Link
+                </span>
               </div>
 
-              {planType === "free" ? (
-                <div className="relative">
-                  <Input
-                    disabled
-                    value={username}
-                    className="bg-zinc-100 border-zinc-200 text-xs text-zinc-500 font-medium cursor-not-allowed pr-20"
-                  />
-                  <Link href="/pricing" className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <span className="rounded-lg bg-amber-500 px-2 py-1 text-[10px] font-black text-zinc-950 hover:bg-amber-400 transition flex items-center gap-1 shadow-sm">
-                      <Zap className="h-3 w-3 fill-current" /> Upgrade
-                    </span>
-                  </Link>
+              <div className="relative">
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+                  placeholder="alexrivers"
+                  className={`bg-zinc-50 text-xs text-zinc-900 pr-8 ${
+                    handleStatus
+                      ? handleStatus.available
+                        ? "border-emerald-500 focus:ring-emerald-500/30"
+                        : "border-rose-500 focus:ring-rose-500/30"
+                      : "border-zinc-200"
+                  }`}
+                />
+                <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                  {checkingHandle ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-400" />
+                  ) : handleStatus ? (
+                    handleStatus.available ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                    )
+                  ) : null}
                 </div>
-              ) : (
-                <div className="relative">
-                  <Input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
-                    placeholder="alexrivers"
-                    className={`bg-zinc-50 text-xs text-zinc-900 pr-8 ${
-                      handleStatus
-                        ? handleStatus.available
-                          ? "border-emerald-500 focus:ring-emerald-500/30"
-                          : "border-rose-500 focus:ring-rose-500/30"
-                        : "border-zinc-200"
-                    }`}
-                  />
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                    {checkingHandle ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-400" />
-                    ) : handleStatus ? (
-                      handleStatus.available ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                      ) : (
-                        <XCircle className="h-3.5 w-3.5 text-rose-600" />
-                      )
-                    ) : null}
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Status indicator text */}
-              {planType !== "free" && handleStatus && (
+              {handleStatus && (
                 <p className={`text-[10px] font-bold mt-1 ${handleStatus.available ? "text-emerald-600" : "text-rose-600"}`}>
                   {handleStatus.available ? `✓ feedm.ee/${username} is available!` : `✕ ${handleStatus.reason}`}
                 </p>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Zap, Check, X, ArrowRight, ShieldCheck, Lock, Unlock, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { supabase } from "@/lib/supabase";
+
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,31 +27,49 @@ export function UpgradeModal({
 
   if (!open) return null;
 
-  const handleActivate = () => {
+  const handleActivate = async () => {
     setIsActivating(true);
 
-    // Save offline trial session state to localStorage
+    const now = new Date();
+    const trialStartIso = now.toISOString();
+    const trialEndMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    const trialEndIso = new Date(trialEndMs).toISOString();
+
+    // 1. Save local state for instant responsiveness
     if (typeof window !== "undefined") {
-      const trialEndDate = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days from now
       localStorage.setItem("feedmee_subscription_tier", "pro");
       localStorage.setItem("feedmee_trial_active", "true");
-      localStorage.setItem("feedmee_trial_end", String(trialEndDate));
+      localStorage.setItem("feedmee_trial_end", String(trialEndMs));
     }
 
-    setTimeout(() => {
-      setIsActivating(false);
-      setActivated(true);
-
-      if (onActivateTrial) {
-        onActivateTrial();
+    // 2. Persist Pro trial state in live database (Supabase)
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({
+          plan_type: "pro",
+          is_trial_active: true,
+          trial_start_date: trialStartIso,
+          trial_end_date: trialEndIso,
+          updated_at: trialStartIso,
+        }).eq("id", user.id);
       }
+    } catch (err) {
+      console.warn("Supabase database update warning (trial active locally):", err);
+    }
 
-      // Automatically close modal after 1.5s
-      setTimeout(() => {
-        setActivated(false);
-        onOpenChange(false);
-      }, 1500);
-    }, 600);
+    setIsActivating(false);
+    setActivated(true);
+
+    if (onActivateTrial) {
+      onActivateTrial();
+    }
+
+    // Automatically close modal after 1.5s
+    setTimeout(() => {
+      setActivated(false);
+      onOpenChange(false);
+    }, 1500);
   };
 
   return (
