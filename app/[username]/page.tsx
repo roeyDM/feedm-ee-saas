@@ -60,7 +60,7 @@ export default function UserProfilePage({ params }: PageProps) {
             customLinks: data.custom_links || [],
             // Graceful Degradation: Free users render Page 1 (Bio & Links) ONLY!
             reels: isFreeUser ? [] : (data.reels || []),
-            leadForm: isFreeUser ? sanitizeLeadForm({ ...data.lead_form, enabled: false }) : sanitizeLeadForm(data.lead_form),
+            leadForm: isFreeUser ? sanitizeLeadForm(null) : sanitizeLeadForm(data.lead_form),
             appearance: {
               ...(data.appearance || {}),
               hideBranding: isFreeUser ? false : !!data.appearance?.hideBranding,
@@ -76,42 +76,26 @@ export default function UserProfilePage({ params }: PageProps) {
     fetchCreatorProfile();
   }, [handleKey]);
 
-  // Fallback demo profile if no database record exists yet
+  // Fallback demo profile if no database record exists yet (Free Tier default: Page 1 Only)
   const fallbackName = handleKey.charAt(0).toUpperCase() + handleKey.slice(1);
   const activeProfile = profile || {
     name: fallbackName,
-    bio: `Filmmaker & visual creator. Tap my links or scroll down to explore my video reels.`,
+    bio: `Welcome to my FeedM.ee page! Check out my links below.`,
     avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
     customHexColor: "#bad1cb",
     socialLinks: [
       { id: "s1", platform: "instagram", url: `https://instagram.com/${handleKey}`, isActive: true },
       { id: "s2", platform: "tiktok", url: `https://tiktok.com/@${handleKey}`, isActive: true },
-      { id: "s3", platform: "youtube", url: `https://youtube.com/${handleKey}`, isActive: true },
     ] as SocialLink[],
     customLinks: [
       {
         id: "1",
-        title: "Preset Lightroom Pack 🎨",
-        url: "https://example.com/presets",
-        badgeText: "20% OFF: SAVE20",
-      },
-      {
-        id: "2",
-        title: "My Favorite Gear & Merch 👕",
-        url: "https://example.com/shop",
-        badgeText: "Free Shipping",
+        title: "Visit My Website 🌐",
+        url: "https://example.com",
       },
     ],
-    reels: [
-      {
-        id: "r1",
-        videoUrl: "/demo-video-1.mp4",
-        caption: `Welcome to @${handleKey}'s feed! Check out this video 🌆`,
-        likes: 342,
-        showWhatsapp: true,
-        showCall: false,
-      },
-    ],
+    // Strictly NO reels or lead forms on public feed for Free tier!
+    reels: [],
     leadForm: sanitizeLeadForm(null),
     appearance: undefined,
   };

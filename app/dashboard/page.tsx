@@ -69,7 +69,8 @@ function StripeCheckoutStatus({
   return null;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
@@ -106,44 +107,18 @@ export default function DashboardPage() {
     canRedo?: boolean;
   }>({});
 
-  // Creator Profile State
-  const [name, setName] = useState("Alex Rivers");
-  const [username, setUsername] = useState("alexrivers");
-  const [bio, setBio] = useState(
-    "Travel filmmaker & visual storyteller. Capturing warm golden hours & cozy autumn vibes."
-  );
-  const [avatarUrl, setAvatarUrl] = useState(
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop"
-  );
+  // Creator Profile State (default empty until session loads)
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [customHexColor, setCustomHexColor] = useState("#bad1cb");
 
   // Social Links
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
-    { id: "1", platform: "instagram", url: "https://instagram.com/alexrivers", isActive: true },
-    { id: "2", platform: "tiktok", url: "https://tiktok.com/@alexrivers", isActive: true },
-    { id: "3", platform: "youtube", url: "https://youtube.com/alexrivers", isActive: true },
-  ]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
 
   // Linktree Custom Links (Page 1)
-  const [customLinks, setCustomLinks] = useState<CustomLink[]>([
-    {
-      id: "1",
-      title: "My Preset Lightroom Pack 🎨",
-      url: "https://example.com/presets",
-      badgeText: "20% OFF: ALEX20",
-    },
-    {
-      id: "2",
-      title: "My Camera Gear Setup 📸",
-      url: "https://example.com/gear",
-      badgeText: "Free Shipping",
-    },
-    {
-      id: "3",
-      title: "Join My Masterclass 🚀",
-      url: "https://example.com/masterclass",
-    },
-  ]);
+  const [customLinks, setCustomLinks] = useState<CustomLink[]>([]);
 
   // Video Reels (Pages 2–4)
   const [reels, setReels] = useState<VideoReel[]>([]);
@@ -187,33 +162,57 @@ export default function DashboardPage() {
     });
   };
 
-  // Auto-fetch profile from Supabase on handle change or mount
+  // ─── Load Authenticated User Profile on Mount ──────────────────────────────
   useEffect(() => {
-    async function fetchProfile() {
-      if (!username) return;
+    async function loadAuthUserSession() {
       try {
-        const { data, error } = await supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        let fallbackUser = "";
+        let fallbackName = "";
+
+        if (user) {
+          fallbackUser = (user.user_metadata?.username || user.email?.split("@")[0] || "").toLowerCase();
+          fallbackName = user.user_metadata?.display_name || user.user_metadata?.name || (fallbackUser ? fallbackUser.charAt(0).toUpperCase() + fallbackUser.slice(1) : "");
+        } else {
+          // Check query params if unauthenticated local preview
+          const urlHandle = searchParams.get("handle");
+          if (urlHandle) {
+            fallbackUser = urlHandle.toLowerCase();
+            fallbackName = urlHandle.charAt(0).toUpperCase() + urlHandle.slice(1);
+          }
+        }
+
+        // Default initial values before DB load
+        if (fallbackUser) setUsername(fallbackUser);
+        if (fallbackName) setName(fallbackName);
+
+        // Fetch profile row from Supabase
+        const targetUsername = fallbackUser || username;
+        if (!targetUsername) return;
+
+        const { data: profile, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("username", username.toLowerCase())
-          .single();
+          .or(`username.eq.${targetUsername.toLowerCase()}${user ? `,id.eq.${user.id}` : ""}`)
+          .maybeSingle();
 
-        if (data && !error) {
-          if (data.name) setName(data.name);
-          if (data.bio) setBio(data.bio);
-          if (data.avatar_url) setAvatarUrl(data.avatar_url);
-          if (data.custom_hex_color) setCustomHexColor(data.custom_hex_color);
-          if (data.plan_type) setPlanType(data.plan_type as PlanType);
-          if (data.social_links) {
-            setSocialLinks(data.social_links.map((l: any) => ({
+        if (profile && !error) {
+          if (profile.name) setName(profile.name);
+          if (profile.username) setUsername(profile.username);
+          if (profile.bio !== undefined) setBio(profile.bio);
+          if (profile.avatar_url !== undefined) setAvatarUrl(profile.avatar_url);
+          if (profile.custom_hex_color) setCustomHexColor(profile.custom_hex_color);
+          if (profile.plan_type) setPlanType(profile.plan_type as PlanType);
+          if (profile.social_links) {
+            setSocialLinks(profile.social_links.map((l: any) => ({
               ...l,
               id: l.id || crypto.randomUUID(),
               isActive: l.isActive !== false
             })));
           }
-          if (data.custom_links) setCustomLinks(data.custom_links);
-          if (data.reels) {
-            const cleanedReels = data.reels
+          if (profile.custom_links) setCustomLinks(profile.custom_links);
+          if (profile.reels) {
+            const cleanedReels = profile.reels
               .map((r: any) => ({
                 ...r,
                 videoUrl: r.videoUrl || r.url || "",
@@ -221,32 +220,31 @@ export default function DashboardPage() {
               .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"));
             setReels(cleanedReels);
           }
-          if (data.lead_form) setLeadForm(sanitizeLeadForm(data.lead_form));
-          if (data.appearance) setAppearance(data.appearance);
+          if (profile.lead_form) setLeadForm(sanitizeLeadForm(profile.lead_form));
+          if (profile.appearance) setAppearance(profile.appearance);
 
-          // Store initial saved snapshot
           setSavedSnapshot(JSON.stringify({
-            name: data.name || name,
-            bio: data.bio || bio,
-            avatarUrl: data.avatar_url || avatarUrl,
-            customHexColor: data.custom_hex_color || customHexColor,
-            planType: data.plan_type || planType,
-            socialLinks: data.social_links ? data.social_links.map((l: any) => ({ ...l, id: l.id || crypto.randomUUID(), isActive: l.isActive !== false })) : socialLinks,
-            customLinks: data.custom_links || customLinks,
-            reels: data.reels || reels,
-            leadForm: sanitizeLeadForm(data.lead_form) || leadForm,
-            appearance: data.appearance || appearance,
+            name: profile.name || fallbackName,
+            bio: profile.bio || "",
+            avatarUrl: profile.avatar_url || "",
+            customHexColor: profile.custom_hex_color || "#bad1cb",
+            planType: profile.plan_type || "free",
+            socialLinks: profile.social_links || [],
+            customLinks: profile.custom_links || [],
+            reels: profile.reels || [],
+            leadForm: sanitizeLeadForm(profile.lead_form) || leadForm,
+            appearance: profile.appearance || appearance,
           }));
         } else {
           setSavedSnapshot(getCurrentStateJSON());
         }
       } catch (err) {
-        console.log("No existing profile found or fetch error:", err);
+        console.warn("User session load warning:", err);
         setSavedSnapshot(getCurrentStateJSON());
       }
     }
-    fetchProfile();
-  }, [username]);
+    loadAuthUserSession();
+  }, [searchParams]);
 
   // Dirty State calculation & Browser Navigation Protection
   const isDirty = savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
@@ -879,5 +877,13 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   );
 }

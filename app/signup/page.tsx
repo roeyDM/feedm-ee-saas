@@ -84,13 +84,15 @@ function SignupFormContent() {
 
     // Dynamic redirect URL — works on localhost AND Netlify production
     const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
+    const cleanUsername = username.toLowerCase().trim();
+    const formattedName = cleanUsername.charAt(0).toUpperCase() + cleanUsername.slice(1);
 
     const { data, error: signupError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectTo,
-        data: { username, display_name: username },
+        data: { username: cleanUsername, display_name: formattedName },
       },
     });
 
@@ -98,6 +100,23 @@ function SignupFormContent() {
       setError(signupError.message);
       setLoading(false);
       return;
+    }
+
+    // Persist real user profile data in Supabase profiles table
+    if (data.user) {
+      try {
+        await supabase.from("profiles").upsert({
+          id: data.user.id,
+          username: cleanUsername,
+          name: formattedName,
+          bio: "",
+          avatar_url: "",
+          plan_type: "free",
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id" });
+      } catch (err) {
+        console.warn("Failed to create profile record on signup:", err);
+      }
     }
 
     // If user auto-confirmed (no email verification required), redirect immediately
