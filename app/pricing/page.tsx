@@ -109,7 +109,7 @@ export default function PricingPage() {
           </span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base font-medium text-zinc-600 sm:text-lg">
-          Start for free, then upgrade to unlock custom handles, 3 snap video reels, and instant WhatsApp lead forms.
+          Start for free, then upgrade to unlock 3 snap video reels, custom domains, and instant WhatsApp lead forms.
         </p>
 
         {/* Annual / Monthly Toggle */}
