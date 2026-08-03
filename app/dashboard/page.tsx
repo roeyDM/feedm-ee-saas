@@ -756,6 +756,10 @@ export default function DashboardPage() {
                 setAvatarUrl={setAvatarUrl}
                 planType={planType}
                 setPlanType={setPlanType}
+                socialLinks={socialLinks}
+                customLinks={customLinks}
+                reels={reels}
+                leadForm={leadForm}
               />
             </div>
           )}

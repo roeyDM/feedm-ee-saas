@@ -270,111 +270,116 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
         </div>
       </div>
 
-      {/* SECTION 2: Payment Methods */}
-      <div className="bg-white rounded-3xl p-6 border border-zinc-200/90 shadow-sm flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-zinc-700" />
-            <h3 className="text-base font-black text-zinc-900">Payment Methods</h3>
-          </div>
-          <Button
-            onClick={handleOpenStripePortal}
-            variant="outline"
-            className="border-zinc-300 text-xs font-bold rounded-xl px-3 py-1.5"
-          >
-            + Update Payment Method
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200/70">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-7 bg-zinc-900 text-white rounded-md flex items-center justify-center font-black text-[10px] tracking-wider shrink-0 shadow-xs">
-              VISA
+      {/* PAID TIER ONLY SECTIONS */}
+      {planType === "pro" && (
+        <>
+          {/* SECTION 2: Payment Methods */}
+          <div className="bg-white rounded-3xl p-6 border border-zinc-200/90 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-zinc-700" />
+                <h3 className="text-base font-black text-zinc-900">Payment Methods</h3>
+              </div>
+              <Button
+                onClick={handleOpenStripePortal}
+                variant="outline"
+                className="border-zinc-300 text-xs font-bold rounded-xl px-3 py-1.5"
+              >
+                + Update Payment Method
+              </Button>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-zinc-900">Visa ending in 4242</span>
-              <span className="text-[11px] font-medium text-zinc-500">Expires 12/2028</span>
+
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200/70">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-7 bg-zinc-900 text-white rounded-md flex items-center justify-center font-black text-[10px] tracking-wider shrink-0 shadow-xs">
+                  VISA
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-zinc-900">Visa ending in 4242</span>
+                  <span className="text-[11px] font-medium text-zinc-500">Expires 12/2028</span>
+                </div>
+              </div>
+              <span className="text-[10px] font-extrabold bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-full uppercase">
+                Default
+              </span>
             </div>
           </div>
-          <span className="text-[10px] font-extrabold bg-zinc-200 text-zinc-700 px-2 py-0.5 rounded-full uppercase">
-            Default
-          </span>
-        </div>
-      </div>
 
-      {/* SECTION 3: Invoice & Billing History */}
-      <div className="bg-white rounded-3xl p-6 border border-zinc-200/90 shadow-sm flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-zinc-700" />
-            <h3 className="text-base font-black text-zinc-900">Invoice &amp; Billing History</h3>
+          {/* SECTION 3: Invoice & Billing History */}
+          <div className="bg-white rounded-3xl p-6 border border-zinc-200/90 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-zinc-700" />
+                <h3 className="text-base font-black text-zinc-900">Invoice &amp; Billing History</h3>
+              </div>
+              <span className="text-xs font-semibold text-zinc-500">Billing Receipts</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-100 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
+                    <th className="pb-3 px-2">Invoice ID</th>
+                    <th className="pb-3 px-2">Date</th>
+                    <th className="pb-3 px-2">Plan Name</th>
+                    <th className="pb-3 px-2">Amount</th>
+                    <th className="pb-3 px-2">Status</th>
+                    <th className="pb-3 px-2 text-right">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 font-semibold text-zinc-700">
+                  {invoices.map((inv) => (
+                    <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
+                      <td className="py-3 px-2 font-mono text-zinc-900 font-bold">{inv.id}</td>
+                      <td className="py-3 px-2">{inv.date}</td>
+                      <td className="py-3 px-2 text-zinc-900 font-bold">{inv.planName}</td>
+                      <td className="py-3 px-2 font-mono font-bold text-zinc-900">{inv.amount}</td>
+                      <td className="py-3 px-2">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          {inv.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <button
+                          onClick={handleOpenStripePortal}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+                        >
+                          <Download className="h-3.5 w-3.5" /> PDF
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <span className="text-xs font-semibold text-zinc-500">Billing Receipts</span>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-zinc-100 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                <th className="pb-3 px-2">Invoice ID</th>
-                <th className="pb-3 px-2">Date</th>
-                <th className="pb-3 px-2">Plan Name</th>
-                <th className="pb-3 px-2">Amount</th>
-                <th className="pb-3 px-2">Status</th>
-                <th className="pb-3 px-2 text-right">Receipt</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 font-semibold text-zinc-700">
-              {invoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-zinc-50/80 transition-colors">
-                  <td className="py-3 px-2 font-mono text-zinc-900 font-bold">{inv.id}</td>
-                  <td className="py-3 px-2">{inv.date}</td>
-                  <td className="py-3 px-2 text-zinc-900 font-bold">{inv.planName}</td>
-                  <td className="py-3 px-2 font-mono font-bold text-zinc-900">{inv.amount}</td>
-                  <td className="py-3 px-2">
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                      {inv.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 text-right">
-                    <button
-                      onClick={handleOpenStripePortal}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
-                    >
-                      <Download className="h-3.5 w-3.5" /> PDF
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          {/* SECTION 4: Customer Portal Trigger Card */}
+          <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black text-white rounded-3xl p-6 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                <Lock className="h-6 w-6 text-emerald-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-extrabold">Self-Serve Stripe Customer Portal</span>
+                <span className="text-xs font-medium text-zinc-400 mt-0.5">
+                  Update credit card info, download tax invoices, or cancel subscription anytime.
+                </span>
+              </div>
+            </div>
 
-      {/* SECTION 4: Customer Portal Trigger Card */}
-      <div className="bg-gradient-to-r from-zinc-900 via-zinc-950 to-black text-white rounded-3xl p-6 border border-zinc-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
-            <Lock className="h-6 w-6 text-emerald-400" />
+            <Button
+              onClick={handleOpenStripePortal}
+              disabled={loadingPortal}
+              className="bg-white text-zinc-950 hover:bg-zinc-100 font-extrabold text-xs px-5 py-2.5 rounded-xl shrink-0 shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>{loadingPortal ? "Redirecting..." : "Launch Portal"}</span>
+            </Button>
           </div>
-          <div className="flex flex-col">
-            <h4 className="text-base font-black tracking-tight">Need to manage your billing settings?</h4>
-            <p className="text-xs text-zinc-400 font-medium">
-              Update tax details, request receipts, or switch payment cards securely in the official customer billing portal.
-            </p>
-          </div>
-        </div>
-
-        <Button
-          onClick={handleOpenStripePortal}
-          disabled={loadingPortal}
-          className="bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs px-5 py-3 rounded-xl shadow-lg shrink-0 flex items-center gap-2"
-        >
-          <span>{loadingPortal ? "Launching..." : "Launch Customer Billing Portal"}</span>
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </div>
+        </>
+      )}
 
       {/* Cancel Subscription Confirmation Modal */}
       {showCancelModal && (

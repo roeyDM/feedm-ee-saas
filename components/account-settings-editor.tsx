@@ -42,12 +42,16 @@ interface AccountSettingsEditorProps {
   setName: (v: string) => void;
   username: string;
   setUsername: (v: string) => void;
-  bio: string;
-  setBio: (v: string) => void;
-  avatarUrl: string;
-  setAvatarUrl: (v: string) => void;
+  bio?: string;
+  setBio?: (v: string) => void;
+  avatarUrl?: string;
+  setAvatarUrl?: (v: string) => void;
   planType: PlanType;
   setPlanType: (plan: PlanType) => void;
+  socialLinks?: any[];
+  customLinks?: any[];
+  reels?: any[];
+  leadForm?: any;
 }
 
 export type SettingsSubTab =
@@ -77,11 +81,16 @@ export function AccountSettingsEditor({
   setAvatarUrl,
   planType,
   setPlanType,
+  socialLinks = [],
+  customLinks = [],
+  reels = [],
+  leadForm = null,
 }: AccountSettingsEditorProps) {
   const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("profile");
 
-  // Profile Form Local State
-  const [brandName, setBrandName] = useState("Rivers Media Studio");
+  // Account-level Profile State (Strictly decoupled from public Feed Builder)
+  const [accountAvatarUrl, setAccountAvatarUrl] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop");
+  const [companyName, setCompanyName] = useState("Rivers Media Studio LLC");
   const [email, setEmail] = useState("alex@riversmedia.com");
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -95,7 +104,7 @@ export function AccountSettingsEditor({
   const [show2FAModal, setShow2FAModal] = useState(false);
 
   // Preferences State
-  const [language, setLanguage] = useState<"en" | "he">("en");
+  const [language, setLanguage] = useState<"en">("en");
   const [timezone, setTimezone] = useState("Asia/Jerusalem");
   const [dateFormat, setDateFormat] = useState("MM/DD/YYYY");
 
@@ -126,8 +135,8 @@ export function AccountSettingsEditor({
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          setAvatarUrl(event.target.result as string);
-          setProfileSuccessMsg("Avatar updated successfully!");
+          setAccountAvatarUrl(event.target.result as string);
+          setProfileSuccessMsg("Account profile photo updated successfully!");
           setTimeout(() => setProfileSuccessMsg(null), 3000);
         }
       };
@@ -137,7 +146,7 @@ export function AccountSettingsEditor({
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileSuccessMsg("Profile information saved successfully!");
+    setProfileSuccessMsg("Account profile details saved successfully!");
     setTimeout(() => setProfileSuccessMsg(null), 3000);
   };
 
@@ -185,17 +194,37 @@ export function AccountSettingsEditor({
   };
 
   const handleExportCSV = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      "Type,Title/Name,Detail\n" +
-      `Profile,${name},@${username}\n` +
-      `Plan,${planType},Active\n` +
-      `ExportDate,${new Date().toISOString()},System`;
+    const rows: string[] = [];
+    rows.push("Category,Field/Item,Value/Detail");
+    rows.push(`Account,Full Name,"${name}"`);
+    rows.push(`Account,Email Address,"${email}"`);
+    rows.push(`Account,Company Name,"${companyName || "N/A"}"`);
+    rows.push(`Account,Feed Handle,"${username}"`);
+    rows.push(`Account,Subscription Tier,"${planType}"`);
+    rows.push(`Account,Export Date,"${new Date().toISOString()}"`);
 
-    const encodedUri = encodeURI(csvContent);
+    if (customLinks && customLinks.length > 0) {
+      customLinks.forEach((link, idx) => {
+        rows.push(`Bio Links,Link ${idx + 1},"Title: ${link.title || ""} | URL: ${link.url || "#"} | Clicks: ${link.clicks || 0}"`);
+      });
+    }
+
+    if (reels && reels.length > 0) {
+      reels.forEach((reel, idx) => {
+        const videoUrl = reel.video_url || reel.videoUrl || "";
+        const buttonText = reel.button_text || reel.buttonText || "";
+        rows.push(`Video Reels,Reel ${idx + 1},"Title: ${reel.title || ""} | Video: ${videoUrl} | Button: ${buttonText} | Likes: ${reel.likes || 0}"`);
+      });
+    }
+
+    if (leadForm) {
+      rows.push(`Lead Form,Config,"Headline: ${leadForm.headline || ""} | Target Email: ${leadForm.emailTarget || "N/A"}"`);
+    }
+
+    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(rows.join("\n"));
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `feedmee_account_export_${username}.csv`);
+    link.setAttribute("href", csvContent);
+    link.setAttribute("download", `feedmee_complete_backup_${username}_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -270,10 +299,10 @@ export function AccountSettingsEditor({
             <Card className="bg-white border-zinc-200/80 shadow-sm animate-in fade-in duration-200">
               <CardHeader>
                 <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                  <User className="h-4 w-4 text-emerald-600" /> Profile Information
+                  <User className="h-4 w-4 text-emerald-600" /> Account Profile Information
                 </CardTitle>
                 <CardDescription className="text-xs text-zinc-500">
-                  Update your account avatar, display name, public handle, and personal contact details.
+                  Update your system account photo, full legal name, optional company name, and contact details.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -285,11 +314,11 @@ export function AccountSettingsEditor({
                     </div>
                   )}
 
-                  {/* Avatar Upload */}
+                  {/* Account Avatar (Independent from Public Feed Builder) */}
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80">
                     <div className="relative shrink-0">
                       <img
-                        src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop"}
+                        src={accountAvatarUrl}
                         alt={name}
                         className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-md"
                       />
@@ -310,14 +339,14 @@ export function AccountSettingsEditor({
                           onClick={() => avatarInputRef.current?.click()}
                           className="h-8 text-xs font-bold rounded-xl gap-1.5 cursor-pointer"
                         >
-                          <Upload className="h-3.5 w-3.5 text-zinc-600" /> Upload New Photo
+                          <Upload className="h-3.5 w-3.5 text-zinc-600" /> Upload Account Photo
                         </Button>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            setAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop");
+                            setAccountAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop");
                           }}
                           className="h-8 text-xs text-rose-600 hover:bg-rose-50 rounded-xl"
                         >
@@ -325,12 +354,12 @@ export function AccountSettingsEditor({
                         </Button>
                       </div>
                       <span className="text-[10px] text-zinc-500">
-                        Supports JPG, PNG or WEBP (Max 5MB)
+                        System account photo (Independent from your public bio feed avatar)
                       </span>
                     </div>
                   </div>
 
-                  {/* Form Inputs */}
+                  {/* Form Inputs: Full Name & Company Name */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-bold text-zinc-700">Full Name</Label>
@@ -338,60 +367,43 @@ export function AccountSettingsEditor({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="rounded-xl border-zinc-200 text-xs font-semibold"
+                        required
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-zinc-700">Public Display / Brand Name</Label>
+                      <Label className="text-xs font-bold text-zinc-700">Company Name (Optional)</Label>
                       <Input
-                        value={brandName}
-                        onChange={(e) => setBrandName(e.target.value)}
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="e.g. Acme Media Corp"
                         className="rounded-xl border-zinc-200 text-xs font-semibold"
                       />
+                      <span className="text-[10px] text-zinc-400 font-medium block">
+                        If provided, Company Name will be included alongside your Full Name on all billing invoices.
+                      </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-zinc-700">Username / Handle</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-2.5 text-xs font-bold text-zinc-400">@</span>
-                        <Input
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                          className="pl-7 rounded-xl border-zinc-200 text-xs font-semibold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold text-zinc-700">Email Address</Label>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          <BadgeCheck className="h-3 w-3 text-emerald-600" /> Verified
-                        </span>
-                      </div>
-                      <Input
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="rounded-xl border-zinc-200 text-xs font-semibold"
-                      />
-                    </div>
-                  </div>
-
+                  {/* Account Email Address */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-bold text-zinc-700">Short Bio</Label>
-                    <textarea
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      rows={3}
-                      className="w-full rounded-xl border border-zinc-200 p-3 text-xs font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-zinc-700">Account Email Address</Label>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        <BadgeCheck className="h-3 w-3 text-emerald-600" /> Verified
+                      </span>
+                    </div>
+                    <Input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="rounded-xl border-zinc-200 text-xs font-semibold"
+                      required
                     />
                   </div>
 
                   <div className="pt-2 flex justify-end">
                     <Button type="submit" className="bg-zinc-900 text-white hover:bg-zinc-800 text-xs font-bold px-5 py-2.5 rounded-xl cursor-pointer">
-                      Save Profile Changes
+                      Save Account Profile
                     </Button>
                   </div>
                 </form>
@@ -413,7 +425,7 @@ export function AccountSettingsEditor({
               <Card className="bg-white border-zinc-200/80 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                    <Lock className="h-4 w-4 text-emerald-600" /> Password & Authentication
+                    <Lock className="h-4 w-4 text-emerald-600" /> Password
                   </CardTitle>
                   <CardDescription className="text-xs text-zinc-500">
                     Change your password to keep your creator account safe.
@@ -474,11 +486,11 @@ export function AccountSettingsEditor({
                 </CardContent>
               </Card>
 
-              {/* 2FA Card */}
+              {/* Two-Factor Authentication Card */}
               <Card className="bg-white border-zinc-200/80 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                    <Smartphone className="h-4 w-4 text-violet-600" /> Two-Factor Authentication (2FA)
+                    <Smartphone className="h-4 w-4 text-violet-600" /> Two-Factor Authentication
                   </CardTitle>
                   <CardDescription className="text-xs text-zinc-500">
                     Add an extra layer of protection to your account using an authenticator app.
@@ -493,7 +505,7 @@ export function AccountSettingsEditor({
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-zinc-900">Authenticator App (TOTP)</span>
                         <span className="text-[11px] text-zinc-500 font-medium">
-                          {is2FAEnabled ? "2FA is active and protecting your account." : "Disabled — Enable for enhanced account security."}
+                          {is2FAEnabled ? "Two-Factor Authentication is active and protecting your account." : "Disabled — Enable for enhanced account security."}
                         </span>
                       </div>
                     </div>
@@ -503,7 +515,7 @@ export function AccountSettingsEditor({
                       onClick={() => setShow2FAModal(true)}
                       className={cn("rounded-xl text-xs font-bold px-4 py-2 cursor-pointer", !is2FAEnabled && "bg-violet-600 hover:bg-violet-700 text-white")}
                     >
-                      {is2FAEnabled ? "Manage 2FA" : "Enable 2FA"}
+                      {is2FAEnabled ? "Manage Two-Factor Authentication" : "Enable Two-Factor Authentication"}
                     </Button>
                   </div>
                 </CardContent>
@@ -566,30 +578,13 @@ export function AccountSettingsEditor({
                 {/* Language Selector */}
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-zinc-700">Interface Language</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setLanguage("en")}
-                      className={cn(
-                        "flex items-center justify-between p-3.5 rounded-xl border text-xs font-bold transition-all cursor-pointer",
-                        language === "en" ? "border-emerald-500 bg-emerald-50/40 text-emerald-950 shadow-sm" : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-                      )}
-                    >
-                      <span>English (US)</span>
-                      {language === "en" && <Check className="h-4 w-4 text-emerald-600" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLanguage("he")}
-                      className={cn(
-                        "flex items-center justify-between p-3.5 rounded-xl border text-xs font-bold transition-all cursor-pointer",
-                        language === "he" ? "border-emerald-500 bg-emerald-50/40 text-emerald-950 shadow-sm" : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-                      )}
-                    >
-                      <span>Hebrew (עברית)</span>
-                      {language === "he" && <Check className="h-4 w-4 text-emerald-600" />}
-                    </button>
+                  <div className="p-3.5 rounded-xl border border-emerald-500 bg-emerald-50/40 text-emerald-950 flex items-center justify-between text-xs font-bold">
+                    <span>English (US)</span>
+                    <Check className="h-4 w-4 text-emerald-600" />
                   </div>
+                  <span className="text-[10px] text-zinc-400 font-medium block">
+                    English (US) is the default system interface language. Multi-language localization support coming soon.
+                  </span>
                 </div>
 
                 {/* Timezone Selector */}
