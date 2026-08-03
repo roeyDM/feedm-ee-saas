@@ -144,22 +144,22 @@ export default function PricingPage() {
 
       {/* Pricing Cards Grid */}
       <section className="mx-auto max-w-6xl px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
 
-          {/* Tier 1: FREE */}
+          {/* Tier 1: STARTER (FREE) */}
           <div className="flex flex-col justify-between rounded-3xl border border-zinc-200/80 bg-white/90 p-8 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition duration-300">
             <div>
               <div className="inline-block rounded-xl bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-700 mb-4">
                 Starter
               </div>
-              <h2 className="text-2xl font-black text-zinc-950">Free Forever</h2>
+              <h2 className="text-2xl font-black text-zinc-950">Starter</h2>
               <p className="text-xs font-medium text-zinc-500 mt-1">
-                Perfect for trying out your first link-in-bio page.
+                Perfect for essential link-in-bio presence with $0 upfront cost.
               </p>
 
               <div className="mt-6 flex items-baseline gap-1">
                 <span className="text-4xl font-black text-zinc-950">$0</span>
-                <span className="text-xs font-bold text-zinc-400">/ month forever</span>
+                <span className="text-xs font-bold text-zinc-400">/ forever</span>
               </div>
 
               <hr className="my-6 border-zinc-100" />
@@ -167,41 +167,33 @@ export default function PricingPage() {
               <ul className="space-y-3.5 text-xs font-semibold text-zinc-700">
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Page 1: Custom Bio &amp; Linktree Links</span>
+                  <span><strong>Permanent Custom Link:</strong> <code className="text-zinc-600 bg-zinc-100 px-1.5 py-0.5 rounded">feedm.ee/yourname</code> (Never breaks)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Custom Hex Color Picker Engine</span>
+                  <span><strong>Page 1:</strong> Unlimited Bio Links &amp; Social Icons</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>System Handle (<code className="text-zinc-500">feedm.ee/u_123</code>)</span>
+                  <span>Mobile-optimized vertical snap layout</span>
                 </li>
-                <li className="flex items-start gap-2.5 text-zinc-400">
-                  <X className="h-4 w-4 text-zinc-300 shrink-0 mt-0.5" />
-                  <span className="line-through">Video Reels (Pages 2–4)</span>
-                </li>
-                <li className="flex items-start gap-2.5 text-zinc-400">
-                  <X className="h-4 w-4 text-zinc-300 shrink-0 mt-0.5" />
-                  <span className="line-through">Lead Contact Form (Page 5)</span>
-                </li>
-                <li className="flex items-start gap-2.5 text-zinc-400">
-                  <X className="h-4 w-4 text-zinc-300 shrink-0 mt-0.5" />
-                  <span className="line-through">Custom Handle (<code className="text-zinc-500">feedm.ee/yourname</code>)</span>
+                <li className="flex items-start gap-2.5">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>FeedM.ee branding at bottom</span>
                 </li>
               </ul>
             </div>
 
             <div className="mt-8">
-              <Link href="/signup?plan=free">
-                <Button variant="outline" className="w-full h-11 rounded-xl text-xs font-bold border-zinc-200 hover:bg-zinc-100 text-zinc-900">
-                  Get Started Free
+              <Link href="/signup">
+                <Button variant="outline" className="w-full h-11 rounded-xl text-xs font-bold border-zinc-300 hover:bg-zinc-100 text-zinc-900 cursor-pointer">
+                  Claim Free Feed
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Tier 2: PRO (CREATOR) - HIGHLIGHTED */}
+          {/* Tier 2: PRO (HIGHLIGHTED / MOST POPULAR) */}
           <div className="relative flex flex-col justify-between rounded-3xl border-2 border-emerald-500 bg-white p-8 shadow-2xl shadow-emerald-600/15 backdrop-blur-md scale-[1.02] z-10">
             {/* Best Value Ribbon */}
             <div className="absolute top-0 right-8 -translate-y-1/2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-1 text-[11px] font-black text-white shadow-md flex items-center gap-1.5">
@@ -209,12 +201,12 @@ export default function PricingPage() {
             </div>
 
             <div>
-              <div className="inline-block rounded-xl bg-emerald-100/80 px-3 py-1 text-xs font-bold text-emerald-800 mb-4">
-                Pro Creator
+              <div className="inline-block rounded-xl bg-amber-100 px-3 py-1 text-[10px] font-black text-amber-900 uppercase tracking-wider mb-3">
+                7 DAYS FREE TRIAL • NO CREDIT CARD REQUIRED
               </div>
-              <h2 className="text-2xl font-black text-zinc-950">Pro Plan</h2>
+              <h2 className="text-2xl font-black text-zinc-950">Pro</h2>
               <p className="text-xs font-medium text-zinc-500 mt-1">
-                Full 5-Page Snap Reel profile for serious visual creators.
+                Full 5-Page snap video reel experience for creators &amp; visual brands.
               </p>
 
               <div className="mt-6 flex items-baseline gap-1">
@@ -224,7 +216,7 @@ export default function PricingPage() {
                 <span className="text-xs font-bold text-zinc-500">/ month</span>
               </div>
               <p className="text-[11px] font-semibold text-emerald-700 mt-1">
-                {isAnnual ? "Billed $84 annually (Save ~$24/yr)" : "Billed monthly"}
+                {isAnnual ? "Billed $84 annually (Save ~20%)" : "Billed monthly"}
               </p>
 
               <hr className="my-6 border-zinc-100" />
@@ -232,41 +224,40 @@ export default function PricingPage() {
               <ul className="space-y-3.5 text-xs font-bold text-zinc-800">
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>Custom Handle:</strong> <code className="text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">feedm.ee/yourname</code></span>
+                  <span><strong>Everything in Starter, PLUS:</strong></span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>3 Vertical Snap Video Reels:</strong> Direct Supabase video upload (.mp4 / .mov)</span>
+                  <span><strong>Pages 2–4:</strong> Full Vertical Video Reels Feed</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>Lead Contact Form:</strong> Page 5 lead collection directly to dashboard</span>
+                  <span><strong>Page 5:</strong> Built-in Lead Capture Form</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>Action Buttons:</strong> Instant WhatsApp &amp; Phone Call buttons on reels</span>
+                  <span>Zero FeedM.ee Branding (100% White-label)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>Coupon Badges:</strong> Styled Linktree links with discount codes</span>
+                  <span>Custom Domain Integration (<code className="text-emerald-800 bg-emerald-50 px-1 py-0.5 rounded">links.yourbrand.com</code>)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5 stroke-[3]" />
-                  <span><strong>No Watermark:</strong> 100% clean custom branded page</span>
+                  <span>Advanced Analytics &amp; Conversion Tracking</span>
                 </li>
               </ul>
             </div>
 
             <div className="mt-8">
-              <Button 
-                onClick={() => handleCheckout("pro")}
-                disabled={isCheckoutLoading}
-                className="w-full h-11 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25"
-              >
-                {isCheckoutLoading ? "Loading..." : (
-                  <>Upgrade to Pro <Zap className="h-4 w-4 ml-1.5 fill-current" /></>
-                )}
-              </Button>
+              <Link href="/signup">
+                <Button 
+                  className="w-full h-11 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 cursor-pointer gap-1.5"
+                >
+                  <Sparkles className="h-4 w-4 fill-current" />
+                  <span>Start 7-Day Free Trial</span>
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -276,9 +267,9 @@ export default function PricingPage() {
               <div className="inline-block rounded-xl bg-cyan-100/80 px-3 py-1 text-xs font-bold text-cyan-800 mb-4">
                 Business &amp; Brand
               </div>
-              <h2 className="text-2xl font-black text-zinc-950">Business Plan</h2>
+              <h2 className="text-2xl font-black text-zinc-950">Business</h2>
               <p className="text-xs font-medium text-zinc-500 mt-1">
-                For brands and businesses scaling high-converting video campaigns.
+                For agencies and scaling teams managing multiple client feeds.
               </p>
 
               <div className="mt-6 flex items-baseline gap-1">
@@ -300,11 +291,11 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Unlimited Video Reel Hosting</span>
+                  <span>Unlimited Video Reel Hosting &amp; HD Uploads</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
-                  <span>Custom Domain Support (<code className="text-zinc-500">bio.yourdomain.com</code>)</span>
+                  <span>Multiple Team Member Workspaces</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-cyan-600 shrink-0 mt-0.5" />
@@ -319,13 +310,35 @@ export default function PricingPage() {
 
             <div className="mt-8">
               <Link href="/signup?plan=business">
-                <Button variant="outline" className="w-full h-11 rounded-xl text-xs font-bold border-zinc-900 bg-zinc-950 text-white hover:bg-black">
+                <Button variant="outline" className="w-full h-11 rounded-xl text-xs font-bold border-zinc-900 bg-zinc-950 text-white hover:bg-black cursor-pointer">
                   Start Business Trial
                 </Button>
               </Link>
             </div>
           </div>
 
+        </div>
+
+        {/* Value Proposition Callout Banner */}
+        <div className="mt-12 rounded-3xl border border-emerald-300 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-zinc-950 flex items-center gap-2">
+                🔒 No risk. Your link never breaks!
+              </h4>
+              <p className="text-xs font-semibold text-zinc-700 mt-1 leading-relaxed">
+                If your 7-day Pro trial ends without upgrading, your feed automatically stays live on the <strong>Starter plan (Page 1)</strong> without losing your custom handle.
+              </p>
+            </div>
+          </div>
+          <Link href="/signup" className="shrink-0">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-10 px-5 rounded-xl shadow-sm gap-1.5 cursor-pointer">
+              <span>Try 7 Days Free</span> <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </Link>
         </div>
       </section>
 
