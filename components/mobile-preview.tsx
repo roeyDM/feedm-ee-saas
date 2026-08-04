@@ -434,13 +434,29 @@ export function MobilePreview({
     }
   };
 
+  // Helper to sanitize text inputs against XSS HTML injection
+  const sanitizeInput = (str: string) => {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;")
+      .trim();
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName) return;
-    if (leadForm.is_phone_required && !formPhone) return;
-    if (leadForm.is_email_required && !formEmail) return;
+    const cleanName = sanitizeInput(formName);
+    const cleanPhone = sanitizeInput(formPhone);
+    const cleanEmail = sanitizeInput(formEmail);
+
+    if (!cleanName) return;
+    if (leadForm.is_phone_required && !cleanPhone) return;
+    if (leadForm.is_email_required && !cleanEmail) return;
     
-    console.log("Form submitted via email", { formName, formPhone, formEmail });
+    console.log("Form submitted via email", { formName: cleanName, formPhone: cleanPhone, formEmail: cleanEmail });
     setFormSubmitted(true);
   };
 
