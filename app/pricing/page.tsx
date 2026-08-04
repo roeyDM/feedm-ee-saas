@@ -167,7 +167,7 @@ export default function PricingPage() {
               <ul className="space-y-3.5 text-xs font-semibold text-zinc-700">
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Permanent custom link (<code className="text-zinc-600 bg-zinc-100 px-1.5 py-0.5 rounded">feedm.ee/yourname</code>) - Never breaks</span>
+                  <span>Permanent Custom Handle (<code className="text-zinc-700 bg-zinc-100 px-1.5 py-0.5 rounded font-mono font-bold">feedm.ee/yourname</code>) &bull; Free Forever</span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
