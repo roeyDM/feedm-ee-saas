@@ -1087,6 +1087,19 @@ export function MobilePreview({
                     >
                       <Send className="h-3.5 w-3.5" /> Submit
                     </button>
+
+                    <p className="text-[10px] text-center opacity-65 leading-tight mt-1.5 px-1">
+                      By submitting, you agree to receive communications from this creator and accept our{" "}
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-medium hover:opacity-100 transition-opacity"
+                      >
+                        Privacy Policy
+                      </a>
+                      .
+                    </p>
                   </form>
                 )}
               </div>
