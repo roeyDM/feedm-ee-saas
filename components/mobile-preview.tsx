@@ -242,7 +242,7 @@ interface MobilePreviewProps {
   fontFamily?: string;
   isDemoMode?: boolean;
   activeTab?: string;
-  onTestLeadSubmit?: (targetEmail: string, leadData: { name: string; phone: string; email: string }) => void;
+  onTestLeadSubmit?: (targetEmail: string, leadData: { name: string; phone: string; email: string }) => Promise<void> | void;
 }
 
 function PromoOverlay({ reel }: { reel: VideoReel }) {

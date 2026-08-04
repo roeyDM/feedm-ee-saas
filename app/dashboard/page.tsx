@@ -983,10 +983,36 @@ function DashboardContent() {
               fontFamily={appearance?.fontFamily}
               isDemoMode={true}
               activeTab={activeTab}
-              onTestLeadSubmit={(targetEmail) => {
-                setSaveStatus("success");
-                setStatusMsg(`🧪 Test submission successful! Email sent to ${targetEmail}.`);
-                setTimeout(() => setSaveStatus("idle"), 5000);
+              onTestLeadSubmit={async (targetEmail, leadData) => {
+                try {
+                  const res = await fetch("/api/leads/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      targetEmail,
+                      name: leadData.name,
+                      email: leadData.email,
+                      phone: leadData.phone,
+                      isTest: true,
+                    }),
+                  });
+
+                  const data = await res.json();
+                  if (res.ok && data.success) {
+                    setSaveStatus("success");
+                    setStatusMsg(`✅ Lead captured & email sent to ${targetEmail}!`);
+                  } else {
+                    console.error("[Email Error]:", data);
+                    setSaveStatus("error");
+                    setStatusMsg(`⚠️ Form submitted, but email failed to send: ${data.error || "Unknown error"}`);
+                  }
+                } catch (err: any) {
+                  console.error("[Email Error]:", err);
+                  setSaveStatus("error");
+                  setStatusMsg(`⚠️ Form submitted, but email failed to send: ${err.message || "Network error"}`);
+                } finally {
+                  setTimeout(() => setSaveStatus("idle"), 6500);
+                }
               }}
             />
           </aside>
