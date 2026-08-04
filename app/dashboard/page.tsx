@@ -985,7 +985,7 @@ function DashboardContent() {
               activeTab={activeTab}
               onTestLeadSubmit={async (targetEmail, leadData) => {
                 try {
-                  const res = await fetch("/api/leads/submit", {
+                  const res = await fetch("/api/send-lead-email", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({

@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const targetEmail = body.targetEmail || body.target_email || "";
     const fullName = body.fullName || body.name || "";
-    const feedId = body.feedId || body.username || "";
+    const feedId = body.feedId || body.feedName || body.username || "";
     const email = body.email || "";
     const phone = body.phone || "";
 
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
       console.warn("[Supabase Lead Insert Note]:", dbErr);
     }
 
+    // 2. Read Server API Key with hardened fallback (process.env.RESEND_API_KEY -> process.env.NEXT_PUBLIC_RESEND_API_KEY -> process.env.LEAD_EMAIL_API_KEY)
     const apiKey =
       process.env.RESEND_API_KEY ||
       process.env.NEXT_PUBLIC_RESEND_API_KEY ||
@@ -43,11 +44,11 @@ export async function POST(request: Request) {
     console.log("[Resend Key Status]:", !!apiKey, apiKey ? `Key length: ${apiKey.length}` : "No key found");
 
     if (!apiKey) {
-      console.error("[Email Error]: RESEND_API_KEY environment variable is not configured on server.");
+      console.error("[Email Error]: RESEND_API_KEY environment variable is not configured in Netlify settings.");
       return NextResponse.json({
         success: true,
-        warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify Environment Variables.",
-        message: "Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify Environment Variables.",
+        warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify settings.",
+        message: "Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify settings.",
       });
     }
 
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey.trim()}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

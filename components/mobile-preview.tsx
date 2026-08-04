@@ -471,7 +471,7 @@ export function MobilePreview({
       if (onTestLeadSubmit) {
         await onTestLeadSubmit(targetEmail, { name: cleanName, phone: cleanPhone, email: cleanEmail });
       } else {
-        const res = await fetch("/api/leads/submit", {
+        const res = await fetch("/api/send-lead-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
