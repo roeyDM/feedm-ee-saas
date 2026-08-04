@@ -700,14 +700,31 @@ export function MobilePreview({
             </div>
           )}
 
-          {/* Scroll Down Prompt with Dynamic Theme Preset Text Color */}
-          <div 
-            style={{ color: activeAppearance.cardTextColor || "#09090b" }}
-            className="flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1 drop-shadow-xs"
-          >
-            <span>Scroll for Reels</span>
-            <ChevronDown className="h-4 w-4" />
-          </div>
+          {/* Scroll Down Prompt with Dynamic Contrast */}
+          {(() => {
+            const isDarkBg = 
+              activeAppearance.bgColor === "#000000" ||
+              activeAppearance.bgColor === "#09090b" ||
+              activeAppearance.bgColor === "000000" ||
+              activeAppearance.bgColor === "09090b" ||
+              activeAppearance.bgColor === "#18181b" ||
+              activeAppearance.bgColor === "#0f172a" ||
+              activeAppearance.bgColor === "#111827" ||
+              activeAppearance.cardTextColor === "#FFFFFF" ||
+              activeAppearance.cardTextColor === "#ffffff" ||
+              activeAppearance.cardTextColor === "#F8FAFC" ||
+              activeAppearance.cardTextColor === "#f8fafc";
+
+            return (
+              <div 
+                style={{ color: isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090b") }}
+                className="flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1 drop-shadow-md"
+              >
+                <span>Scroll for Reels</span>
+                <ChevronDown className="h-4 w-4" />
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -893,107 +910,113 @@ export function MobilePreview({
           activeAppearance.bgColor === "#09090b" ||
           activeAppearance.bgColor === "000000" ||
           activeAppearance.bgColor === "09090b" ||
+          activeAppearance.bgColor === "#18181b" ||
+          activeAppearance.bgColor === "#0f172a" ||
+          activeAppearance.bgColor === "#111827" ||
           activeAppearance.cardTextColor === "#FFFFFF" ||
           activeAppearance.cardTextColor === "#ffffff" ||
           activeAppearance.cardTextColor === "#F8FAFC" ||
           activeAppearance.cardTextColor === "#f8fafc";
         
         const headerTextColor = isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090b");
-        const subtitleTextColor = isDarkBg ? "rgba(255, 255, 255, 0.85)" : (activeAppearance.cardTextColor || "rgba(9, 9, 11, 0.85)");
+        const subtitleTextColor = isDarkBg ? "rgba(255, 255, 255, 0.9)" : (activeAppearance.cardTextColor || "rgba(9, 9, 11, 0.85)");
 
         return (
           <div className="snap-start snap-always relative flex h-full w-full flex-col justify-between p-6 overflow-hidden">
             {/* Subtle glow orb */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-white/20 blur-3xl pointer-events-none" />
 
-            {/* Header - Top Section */}
-            <div className="relative z-10 pt-2 text-center space-y-1">
-              <h2
-                style={{ color: headerTextColor }}
-                className="text-xl font-black tracking-tight text-center drop-shadow-sm"
+            {/* Center Section: Header + Form Card grouped directly together */}
+            <div className="relative z-10 my-auto flex flex-col gap-2.5 w-full">
+              {/* Header - Positioned DIRECTLY above the lead form card with tight spacing */}
+              <div className="text-center space-y-1 px-2">
+                <h2
+                  style={{ color: headerTextColor }}
+                  className="text-xl font-black tracking-tight text-center drop-shadow-md"
+                >
+                  {cleanLeadForm.title}
+                </h2>
+                <p
+                  style={{ color: subtitleTextColor }}
+                  className="text-xs font-medium text-center drop-shadow-md leading-snug"
+                >
+                  {cleanLeadForm.subtitle}
+                </p>
+              </div>
+
+              {/* Lead Form Card */}
+              <div
+                style={{
+                  backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.9)",
+                  color: activeAppearance.cardTextColor || "#09090b",
+                  borderColor: activeAppearance.cardBorderColor || "rgba(255, 255, 255, 0.8)",
+                }}
+                className="rounded-3xl p-5 shadow-xl shadow-black/5 backdrop-blur-md border"
               >
-                {cleanLeadForm.title}
-              </h2>
-              <p
-                style={{ color: subtitleTextColor }}
-                className="text-xs font-medium text-center drop-shadow-sm"
-              >
-                {cleanLeadForm.subtitle}
-              </p>
-            </div>
-
-            {/* Lead Form Card - Center Section (Preserved shape & padding) */}
-            <div
-              style={{
-                backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.9)",
-                color: activeAppearance.cardTextColor || "#09090b",
-                borderColor: activeAppearance.cardBorderColor || "rgba(255, 255, 255, 0.8)",
-              }}
-              className="relative z-10 my-auto rounded-3xl p-5 shadow-xl shadow-black/5 backdrop-blur-md border"
-            >
-              {formSubmitted ? (
-                <div className="flex flex-col items-center py-6 text-center">
-                  <CheckCircle2 className="h-12 w-12 text-emerald-600 mb-2 animate-bounce" />
-                  <h3 className="text-base font-bold">Thank you!</h3>
-                  <p className="text-xs opacity-80 mt-1">We will get back to you shortly.</p>
-                  <button
-                    type="button"
-                    onClick={() => setFormSubmitted(false)}
-                    className="mt-4 text-xs font-bold underline"
-                  >
-                    Send another message
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
-                  <div>
-                    <label className="block text-[11px] font-bold opacity-80 mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="John Doe"
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-                    />
+                {formSubmitted ? (
+                  <div className="flex flex-col items-center py-6 text-center">
+                    <CheckCircle2 className="h-12 w-12 text-emerald-600 mb-2 animate-bounce" />
+                    <h3 className="text-base font-bold">Thank you!</h3>
+                    <p className="text-xs opacity-80 mt-1">We will get back to you shortly.</p>
+                    <button
+                      type="button"
+                      onClick={() => setFormSubmitted(false)}
+                      className="mt-4 text-xs font-bold underline"
+                    >
+                      Send another message
+                    </button>
                   </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold opacity-80 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="John Doe"
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold opacity-80 mb-1">
-                      Phone Number {!leadForm.is_phone_required && "(Optional)"}
-                    </label>
-                    <input
-                      type="tel"
-                      required={leadForm.is_phone_required}
-                      placeholder="+1 (555) 000-0000"
-                      value={formPhone}
-                      onChange={(e) => setFormPhone(e.target.value)}
-                      className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-[11px] font-bold opacity-80 mb-1">
+                        Phone Number {!leadForm.is_phone_required && "(Optional)"}
+                      </label>
+                      <input
+                        type="tel"
+                        required={leadForm.is_phone_required}
+                        placeholder="+1 (555) 000-0000"
+                        value={formPhone}
+                        onChange={(e) => setFormPhone(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold opacity-80 mb-1">
-                      Email Address {!leadForm.is_email_required && "(Optional)"}
-                    </label>
-                    <input
-                      type="email"
-                      required={leadForm.is_email_required}
-                      placeholder="john@example.com"
-                      value={formEmail}
-                      onChange={(e) => setFormEmail(e.target.value)}
-                      className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-                    />
-                  </div>
+                    <div>
+                      <label className="block text-[11px] font-bold opacity-80 mb-1">
+                        Email Address {!leadForm.is_email_required && "(Optional)"}
+                      </label>
+                      <input
+                        type="email"
+                        required={leadForm.is_email_required}
+                        placeholder="john@example.com"
+                        value={formEmail}
+                        onChange={(e) => setFormEmail(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                      />
+                    </div>
 
-                  <button
-                    type="submit"
-                    className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
-                  >
-                    <Send className="h-3.5 w-3.5" /> Submit
-                  </button>
-                </form>
-              )}
+                    <button
+                      type="submit"
+                      className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
+                    >
+                      <Send className="h-3.5 w-3.5" /> Submit
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
 
             {/* Footer: Social Icons & Powered By - Strictly at Bottom */}
