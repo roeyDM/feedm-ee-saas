@@ -22,7 +22,7 @@ import {
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2 } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -483,24 +483,37 @@ function DashboardContent() {
 
             {/* Account Switcher Dropdown Menu */}
             {accountMenuOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-zinc-200 shadow-xl z-30 p-2 animate-in fade-in slide-in-from-top-2 duration-150">
-                <div className="px-3 py-1.5 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Switch Feed</div>
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-zinc-200 shadow-xl z-30 p-2 animate-in fade-in slide-in-from-top-2 duration-150 overflow-hidden">
+                <div className="px-3 py-1.5 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">MY FEEDS</div>
+                
+                {/* Active Primary Feed Item */}
                 <button 
                   onClick={() => setAccountMenuOpen(false)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50 text-emerald-950 font-bold text-xs border border-emerald-200/50"
+                  className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl bg-emerald-50 text-emerald-950 font-bold text-xs border border-emerald-200/50 transition-colors min-w-0"
                 >
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                    <span className="truncate">My Primary Feed</span>
+                  <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                    <img
+                      src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
+                      alt=""
+                      className="w-5 h-5 rounded-full object-cover border border-emerald-300 shrink-0"
+                    />
+                    <span className="truncate text-xs font-bold text-emerald-950">@{username || "username"}</span>
                   </div>
-                  <span className="text-[9px] text-emerald-600 font-black uppercase">Active</span>
+                  <span className="text-[9px] text-emerald-700 font-black uppercase shrink-0 ml-1.5 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-200">Active</span>
                 </button>
+
+                {/* Add More Feeds Button */}
                 <button 
-                  disabled
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-zinc-400 text-xs font-semibold mt-1 opacity-60 cursor-not-allowed"
+                  onClick={() => {
+                    setShowUpgradeModal(true);
+                    setAccountMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 text-xs font-bold mt-1 transition-colors cursor-pointer min-w-0 group"
                 >
-                  <span className="w-2 h-2 rounded-full bg-zinc-300 shrink-0"></span>
-                  <span className="truncate">+ Add Secondary Feed (Pro)</span>
+                  <Plus className="h-3.5 w-3.5 text-zinc-400 group-hover:text-emerald-600 shrink-0" />
+                  <span className="truncate text-left text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">
+                    + Add More Feeds (Upgrade to Business)
+                  </span>
                 </button>
 
                 <div className="my-2 border-t border-zinc-100"></div>
