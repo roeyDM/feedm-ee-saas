@@ -1000,7 +1000,7 @@ function DashboardContent() {
                   const data = await res.json();
                   if (res.ok && data.success && !data.warning) {
                     setSaveStatus("success");
-                    setStatusMsg(`✅ Lead saved & email notification sent to ${targetEmail}!`);
+                    setStatusMsg(`✅ Lead saved & email notification sent!`);
                   } else {
                     console.error("[Email Error]:", data.error || data.warning || data);
                     setSaveStatus("error");
