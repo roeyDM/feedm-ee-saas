@@ -226,7 +226,15 @@ function DashboardContent() {
               .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"));
             setReels(cleanedReels);
           }
-          if (profile.lead_form) setLeadForm(sanitizeLeadForm(profile.lead_form));
+          if (profile.lead_form) {
+            let sanitized = sanitizeLeadForm(profile.lead_form);
+            if ((!sanitized.target || !sanitized.target.trim()) && user?.email) {
+              sanitized = { ...sanitized, target: user.email };
+            }
+            setLeadForm(sanitized);
+          } else if (user?.email) {
+            setLeadForm((prev) => ({ ...prev, target: user.email || "" }));
+          }
 
           // Appearance Persistence with localStorage fallback
           let loadedAppearance = profile.appearance;
@@ -314,6 +322,13 @@ function DashboardContent() {
     if (hasEmptySocialLink) {
       setSaveStatus("error");
       setStatusMsg("Please enter a valid link for all social links or remove empty ones before saving.");
+      return;
+    }
+
+    // Validation 3: Check for target email in leadForm
+    if (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@")) {
+      setSaveStatus("error");
+      setStatusMsg("Please enter a valid email address to receive lead notifications.");
       return;
     }
 
@@ -968,6 +983,11 @@ function DashboardContent() {
               fontFamily={appearance?.fontFamily}
               isDemoMode={true}
               activeTab={activeTab}
+              onTestLeadSubmit={(targetEmail) => {
+                setSaveStatus("success");
+                setStatusMsg(`🧪 Test submission successful! Email sent to ${targetEmail}.`);
+                setTimeout(() => setSaveStatus("idle"), 5000);
+              }}
             />
           </aside>
         )}

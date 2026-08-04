@@ -242,6 +242,7 @@ interface MobilePreviewProps {
   fontFamily?: string;
   isDemoMode?: boolean;
   activeTab?: string;
+  onTestLeadSubmit?: (targetEmail: string, leadData: { name: string; phone: string; email: string }) => void;
 }
 
 function PromoOverlay({ reel }: { reel: VideoReel }) {
@@ -312,6 +313,7 @@ export function MobilePreview({
   fontFamily,
   isDemoMode = false,
   activeTab,
+  onTestLeadSubmit,
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
 
@@ -455,9 +457,19 @@ export function MobilePreview({
     if (!cleanName) return;
     if (leadForm.is_phone_required && !cleanPhone) return;
     if (leadForm.is_email_required && !cleanEmail) return;
+
+    const targetEmail = (leadForm.target || "").trim();
+    if (!targetEmail || !targetEmail.includes("@")) {
+      alert("Please enter a valid target email address in Lead Form settings.");
+      return;
+    }
     
-    console.log("Form submitted via email", { formName: cleanName, formPhone: cleanPhone, formEmail: cleanEmail });
+    console.log("Form submitted via email", { targetEmail, formName: cleanName, formPhone: cleanPhone, formEmail: cleanEmail });
     setFormSubmitted(true);
+
+    if (onTestLeadSubmit) {
+      onTestLeadSubmit(targetEmail, { name: cleanName, phone: cleanPhone, email: cleanEmail });
+    }
   };
 
   // Helper for rendering social icons

@@ -22,6 +22,7 @@ import {
   Zap,
   CheckCircle2,
   XCircle,
+  AlertCircle,
   Loader2,
   Upload,
   Edit2,
@@ -977,9 +978,21 @@ export function ProfileEditor({
                 value={leadForm.target || ""}
                 onChange={(e) => setLeadForm({ ...leadForm, target: e.target.value })}
                 placeholder="mail@domain.com"
-                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900 font-mono"
+                className={cn(
+                  "bg-zinc-50 text-xs text-zinc-900 font-mono",
+                  (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@"))
+                    ? "border-rose-400 focus:ring-rose-500/30"
+                    : "border-zinc-200"
+                )}
               />
-              <p className="text-[10px] text-zinc-500">Form entries will be routed to this destination email address.</p>
+              {(!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@")) ? (
+                <p className="text-[11px] font-extrabold text-rose-600 flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  Please enter a valid email address to receive lead notifications.
+                </p>
+              ) : (
+                <p className="text-[10px] text-zinc-500">Form entries will be routed to this destination email address.</p>
+              )}
             </div>
           </div>
         </>
