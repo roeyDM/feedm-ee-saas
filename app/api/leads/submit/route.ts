@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { targetEmail, name, email, phone, username, feedId, isTest } = body;
+    const targetEmail = body.targetEmail || body.target_email || "";
+    const fullName = body.fullName || body.name || "";
+    const feedId = body.feedId || body.username || "";
+    const email = body.email || "";
+    const phone = body.phone || "";
 
     if (!targetEmail || typeof targetEmail !== "string" || !targetEmail.includes("@")) {
       return NextResponse.json(
@@ -17,11 +21,12 @@ export async function POST(request: Request) {
       const { supabase } = await import("@/lib/supabase");
       await supabase.from("leads").insert([
         {
-          username: username || "unknown",
+          username: feedId || "unknown",
+          feed_id: feedId || "unknown",
           target_email: targetEmail,
-          full_name: name || "",
-          email: email || "",
-          phone: phone || "",
+          full_name: fullName,
+          email: email,
+          phone: phone,
           created_at: new Date().toISOString(),
         },
       ]);
@@ -33,17 +38,15 @@ export async function POST(request: Request) {
     const apiKey = process.env.RESEND_API_KEY || process.env.LEAD_EMAIL_API_KEY;
 
     if (!apiKey) {
-      console.warn("[Lead Server Warning]: Lead saved to DB (Email API key missing)");
+      console.error("[Email Error]: RESEND_API_KEY environment variable is not configured on server.");
       return NextResponse.json({
         success: true,
-        message: `Lead saved to database (Email API key missing on server)`,
-        warning: "Lead saved to DB (Email API key missing)",
+        warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY.",
+        message: "Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY.",
       });
     }
 
-    const subject = isTest
-      ? `[Test Lead] New Submission from FeedM.ee Simulator`
-      : `[New Lead] ${name || "New Lead"} submitted details via FeedM.ee`;
+    const subject = `New Lead Received from ${fullName || "Website Visitor"}`;
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -62,7 +65,7 @@ export async function POST(request: Request) {
             <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin: 15px 0;">
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280; width: 35%;">Full Name:</td>
-                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #111827; font-weight: bold;">${name || "N/A"}</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #111827; font-weight: bold;">${fullName || "N/A"}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;">Email Address:</td>

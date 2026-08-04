@@ -998,18 +998,18 @@ function DashboardContent() {
                   });
 
                   const data = await res.json();
-                  if (res.ok && data.success) {
+                  if (res.ok && data.success && !data.warning) {
                     setSaveStatus("success");
-                    setStatusMsg(`✅ Lead captured & email sent to ${targetEmail}!`);
+                    setStatusMsg(`✅ Lead saved & email notification sent to ${targetEmail}!`);
                   } else {
-                    console.error("[Email Error]:", data);
+                    console.error("[Email Error]:", data.error || data.warning || data);
                     setSaveStatus("error");
-                    setStatusMsg(`⚠️ Form submitted, but email failed to send: ${data.error || "Unknown error"}`);
+                    setStatusMsg(data.warning || `⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY.`);
                   }
                 } catch (err: any) {
                   console.error("[Email Error]:", err);
                   setSaveStatus("error");
-                  setStatusMsg(`⚠️ Form submitted, but email failed to send: ${err.message || "Network error"}`);
+                  setStatusMsg(`⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY.`);
                 } finally {
                   setTimeout(() => setSaveStatus("idle"), 6500);
                 }
