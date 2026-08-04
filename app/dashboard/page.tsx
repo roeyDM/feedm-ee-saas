@@ -9,6 +9,7 @@ import { FeedItemEditor } from "@/components/feed-item-editor";
 import { DesignEditor } from "@/components/design-editor";
 import { BillingEditor } from "@/components/billing-editor";
 import { AccountSettingsEditor } from "@/components/account-settings-editor";
+import { LeadsManager } from "@/components/leads-manager";
 import {
   MobilePreview,
   SocialLink,
@@ -22,7 +23,7 @@ import {
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -72,7 +73,7 @@ function StripeCheckoutStatus({
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings">("bio");
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -698,17 +699,35 @@ function DashboardContent() {
                 className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none"
               >
                 <div className="flex items-center gap-2.5">
-                  <Settings className="h-4 w-4 text-zinc-500" />
+                  <Settings className="h-4 w-4 text-emerald-600" />
                   <span>Marketing Tools</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-extrabold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">SOON</span>
-                  <Lock className="h-3.5 w-3.5 text-zinc-400" />
+                  <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">Active</span>
+                  <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.settings && "rotate-180")} />
                 </div>
               </button>
 
               {openAccordions.settings && (
                 <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
+                  <button
+                    onClick={() => setActiveTab("leads")}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                      activeTab === "leads"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Inbox className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>Leads CRM</span>
+                    </div>
+                    <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
+                      New
+                    </span>
+                  </button>
+
                   <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
                     <span>Custom Domain</span>
                     <Lock className="h-3.5 w-3.5 text-amber-500" />
@@ -929,6 +948,12 @@ function DashboardContent() {
                     planType={planType}
                     onRegisterActions={setDesignActions}
                   />
+                </div>
+              )}
+
+              {activeTab === "leads" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200 max-w-4xl mx-auto w-full">
+                  <LeadsManager username={username} targetEmail={leadForm.target} />
                 </div>
               )}
             </div>
