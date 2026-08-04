@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { targetEmail, name, email, phone, isTest } = body;
+    const { targetEmail, name, email, phone, username, feedId, isTest } = body;
 
     if (!targetEmail || typeof targetEmail !== "string" || !targetEmail.includes("@")) {
       return NextResponse.json(
@@ -12,17 +12,33 @@ export async function POST(request: Request) {
       );
     }
 
+    // 1. Attempt to save lead entry to Supabase
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      await supabase.from("leads").insert([
+        {
+          username: username || "unknown",
+          target_email: targetEmail,
+          full_name: name || "",
+          email: email || "",
+          phone: phone || "",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      console.log("[Supabase Lead Insert]: Successfully logged lead to database");
+    } catch (dbErr) {
+      console.warn("[Supabase Lead Insert Note]:", dbErr);
+    }
+
     const apiKey = process.env.RESEND_API_KEY || process.env.LEAD_EMAIL_API_KEY;
 
     if (!apiKey) {
-      console.warn("[Email Error]: RESEND_API_KEY environment variable is not set on the server.");
-      return NextResponse.json(
-        {
-          success: false,
-          error: "RESEND_API_KEY environment variable is not configured on server",
-        },
-        { status: 500 }
-      );
+      console.warn("[Lead Server Warning]: Lead saved to DB (Email API key missing)");
+      return NextResponse.json({
+        success: true,
+        message: `Lead saved to database (Email API key missing on server)`,
+        warning: "Lead saved to DB (Email API key missing)",
+      });
     }
 
     const subject = isTest

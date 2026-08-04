@@ -448,7 +448,7 @@ export function MobilePreview({
       .trim();
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = sanitizeInput(formName);
     const cleanPhone = sanitizeInput(formPhone);
@@ -464,11 +464,33 @@ export function MobilePreview({
       return;
     }
     
-    console.log("Form submitted via email", { targetEmail, formName: cleanName, formPhone: cleanPhone, formEmail: cleanEmail });
+    console.log("Form submitted", { targetEmail, fullName: cleanName, phone: cleanPhone, email: cleanEmail, username });
     setFormSubmitted(true);
 
-    if (onTestLeadSubmit) {
-      onTestLeadSubmit(targetEmail, { name: cleanName, phone: cleanPhone, email: cleanEmail });
+    try {
+      if (onTestLeadSubmit) {
+        await onTestLeadSubmit(targetEmail, { name: cleanName, phone: cleanPhone, email: cleanEmail });
+      } else {
+        const res = await fetch("/api/leads/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: cleanName,
+            email: cleanEmail,
+            phone: cleanPhone,
+            targetEmail,
+            username,
+            isTest: false,
+          }),
+        });
+
+        const data = await res.json();
+        if (data.warning) {
+          console.warn("[Lead Server Warning]:", data.warning);
+        }
+      }
+    } catch (err) {
+      console.error("[Lead Submission API Error]:", err);
     }
   };
 
