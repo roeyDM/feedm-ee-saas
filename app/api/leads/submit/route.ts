@@ -37,12 +37,14 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.RESEND_API_KEY || process.env.LEAD_EMAIL_API_KEY;
 
+    console.log("[Resend Key Status]:", !!apiKey);
+
     if (!apiKey) {
       console.error("[Email Error]: RESEND_API_KEY environment variable is not configured on server.");
       return NextResponse.json({
         success: true,
-        warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY.",
-        message: "Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY.",
+        warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify Environment Variables.",
+        message: "Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify Environment Variables.",
       });
     }
 
