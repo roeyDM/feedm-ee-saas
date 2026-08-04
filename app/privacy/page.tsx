@@ -19,11 +19,12 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-2xl font-bold text-zinc-900 mb-3">1. Information We Collect</h2>
               <p className="mb-3">
-                At FeedM.ee, we believe in being transparent about how we collect and use data. We collect information you provide directly to us, such as when you create or modify your account, request customer support, or otherwise communicate with us. This includes:
+                At FeedM.ee, we believe in being transparent about how we collect and use data. We collect information you provide directly to us, such as when you create or modify your account, request customer support, or interact with forms on our platform. This includes:
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li><strong>Account Data:</strong> Email address, name, username, and password.</li>
                 <li><strong>Profile Contents:</strong> Links, video assets, texts, and settings you upload to your FeedM.ee profile.</li>
+                <li><strong>Lead Data:</strong> Contact details (such as full name, email address, and phone number) submitted by end-users via lead capture forms embedded on FeedM.ee profiles.</li>
                 <li><strong>Usage Analytics:</strong> Automatically collected information on how you interact with our services, including IP address, browser type, and device information.</li>
               </ul>
             </section>
@@ -36,6 +37,7 @@ export default function PrivacyPolicyPage() {
               <ul className="list-disc pl-5 space-y-2">
                 <li>Provide, maintain, and improve our platform and user profiles.</li>
                 <li>Process transactions and send related information, including confirmations and receipts.</li>
+                <li>Dispatch real-time email notifications regarding new lead submissions to account owners.</li>
                 <li>Send technical notices, updates, security alerts, and support messages.</li>
                 <li>Monitor and analyze trends, usage, and activities in connection with our services.</li>
               </ul>
@@ -48,7 +50,8 @@ export default function PrivacyPolicyPage() {
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li><strong>Stripe:</strong> Used for secure payment processing. We do not store your full credit card details.</li>
-                <li><strong>Supabase:</strong> Used for database hosting, authentication, and secure file storage.</li>
+                <li><strong>Supabase:</strong> Used for database hosting, user authentication, and secure file storage.</li>
+                <li><strong>Resend:</strong> Used as our email delivery service provider for sending system alerts, transactional emails, and lead submission notifications.</li>
               </ul>
             </section>
 
