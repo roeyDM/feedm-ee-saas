@@ -36,8 +36,11 @@ export interface VideoReel {
   id: string;
   videoUrl: string;
   thumbnailUrl?: string;
+  posterUrl?: string;
   caption: string;
   likes: number;
+  productTag?: string;
+  isMock?: boolean;
   promoEnabled?: boolean;
   promoTitle?: string;
   promoCode?: string;
@@ -697,13 +700,11 @@ export function MobilePreview({
             </div>
           )}
 
-          {/* Scroll Down Prompt with Dynamic Contrast */}
-          <div className={cn(
-            "flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1",
-            activeAppearance.bgColor === "#000000" || activeAppearance.bgColor === "#09090b" || activeAppearance.bgColor === "000000" || activeAppearance.bgColor === "09090b" || activeAppearance.cardTextColor === "#FFFFFF" || activeAppearance.cardTextColor === "#ffffff"
-              ? "text-white/90 drop-shadow-md"
-              : "text-zinc-800"
-          )}>
+          {/* Scroll Down Prompt with Dynamic Theme Preset Text Color */}
+          <div 
+            style={{ color: activeAppearance.cardTextColor || "#09090b" }}
+            className="flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1 drop-shadow-xs"
+          >
             <span>Scroll for Reels</span>
             <ChevronDown className="h-4 w-4" />
           </div>
@@ -713,7 +714,11 @@ export function MobilePreview({
       {/* ------------------------------------------------------------- */}
       {/* PAGES 2 to 4: VERTICAL REEL FEED (Up to 3 Videos) */}
       {/* ------------------------------------------------------------- */}
-      {displayReels.map((reel, idx) => (
+      {displayReels.map((reel, idx) => {
+        // Watermark check: Show "FeedM.ee Example" ONLY IF video is default/fallback mock video
+        const isMockVideo = !reel.videoUrl || reel.videoUrl.includes("coverr.co") || reel.videoUrl.includes("sample-3s") || Boolean((reel as any).isMock);
+
+        return (
         <div
           key={reel.id || idx}
           onClick={() => {
@@ -746,17 +751,16 @@ export function MobilePreview({
             muted={!(activePageIndex >= 1 && activePageIndex <= displayReels.length) || idx !== currentReelIndex || isMuted}
             playsInline
             preload="auto"
-            onLoadedData={() => console.log(`Slot ${idx + 1} video loaded: ${reel.videoUrl}`)}
-            onError={(e) => {
-              console.error(`Failed to load video for slot ${idx + 1}:`, reel.videoUrl, e);
-            }}
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
             className="absolute inset-0 h-full w-full object-cover object-center z-0 cursor-pointer"
           />
 
-          {/* Center Tap-to-Pause / Play Overlay Icon (Instagram/TikTok style) */}
+          {/* Video Overlay Tint */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 pointer-events-none" />
+
+          {/* Play/Pause Center Indicator */}
           {!isPlaying && idx === currentReelIndex && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px] pointer-events-none">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md border border-white/30 shadow-2xl animate-in zoom-in-75 fade-in duration-200">
                 <Play className="h-8 w-8 fill-current text-white translate-x-0.5" />
               </div>
@@ -776,8 +780,8 @@ export function MobilePreview({
             </button>
           </div>
 
-          {/* Watermark Overlay for Simulator Demo Videos */}
-          {isDemoMode && (
+          {/* Watermark Overlay ONLY for Fallback/Mock Demo Videos (Removed for Custom Videos) */}
+          {isMockVideo && (
             <div className="absolute top-4 left-16 z-20 pointer-events-none">
               <span className="rounded-full bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-extrabold text-white/90 border border-white/20 tracking-wider shadow-sm flex items-center gap-1">
                 <Sparkles className="h-3 w-3 text-amber-300 fill-current" /> FeedM.ee Example
@@ -838,11 +842,13 @@ export function MobilePreview({
                 }
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white border border-emerald-400 shadow-lg shadow-emerald-500/30 transition hover:scale-110"
+                onClick={(e) => e.stopPropagation()}
+                className="flex flex-col items-center gap-1 group"
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.489-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                </svg>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 transition duration-300 group-hover:scale-110">
+                  <MessageCircle className="h-6 w-6 fill-current text-white" />
+                </div>
+                <span className="text-[10px] font-extrabold text-white drop-shadow-md">WhatsApp</span>
               </a>
             )}
 
@@ -861,62 +867,67 @@ export function MobilePreview({
             )}
           </div>
 
-            {/* Bottom Left Video Overlay Footer */}
-            <div className="absolute bottom-6 left-4 right-16 z-20 flex flex-col gap-2">
-              {/* Creator Handle badge */}
-              <div className="flex items-center gap-2">
-                <img
-                  src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
-                  alt=""
-                  className="h-8 w-8 rounded-full object-cover border border-white/40 shadow-sm"
-                />
-                <span className="text-xs font-black text-white drop-shadow-md">
-                  @{username || "username"}
-                </span>
-              </div>
+            {/* Bottom Caption & Product Overlay */}
+            <div className="absolute bottom-6 left-4 right-16 z-20 space-y-3.5 text-left">
+              {reel.productTag && (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-bold text-white shadow-md backdrop-blur-md">
+                  <Tag className="h-3.5 w-3.5" />
+                  <span>{reel.productTag}</span>
+                </div>
+              )}
 
-              {/* Video Caption */}
-              <p className="text-xs font-medium text-white/95 line-clamp-3 leading-relaxed drop-shadow-md pr-2">
+              <p className="text-sm font-medium text-white/90 drop-shadow-md line-clamp-3 leading-snug">
                 {reel.caption}
               </p>
             </div>
-
-            {/* Promo Banner Overlay */}
-            <PromoOverlay reel={reel} />
-
-            {/* Bottom Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 pointer-events-none" />
         </div>
-      ))}
+      );
+      })}
 
       {/* ------------------------------------------------------------- */}
       {/* PAGE 5: THE CONTACT / COLLABORATION FORM */}
       {/* ------------------------------------------------------------- */}
-      <div className="snap-start snap-always relative flex h-full w-full flex-col justify-between p-6 overflow-hidden">
+      <div className="snap-start snap-always relative flex h-full w-full flex-col justify-center p-6 gap-3 overflow-hidden">
         {/* Subtle glow orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-white/40 blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-white/20 blur-3xl pointer-events-none" />
 
-        {/* Header */}
-        <div className="relative z-10 pt-4 text-center">
-          <h2 className="text-xl font-black text-zinc-900 tracking-tight text-center">
+        {/* Header - Sits directly above lead form card */}
+        <div className="relative z-10 text-center space-y-1">
+          <h2
+            style={{ color: activeAppearance.cardTextColor || "#09090b" }}
+            className="text-xl font-black tracking-tight text-center drop-shadow-xs"
+          >
             {cleanLeadForm.title}
           </h2>
-          <p className="mt-1 text-xs font-medium text-zinc-700 text-center">
+          <p
+            style={{ color: activeAppearance.cardTextColor || "#09090b", opacity: 0.85 }}
+            className="text-xs font-medium text-center drop-shadow-xs"
+          >
             {cleanLeadForm.subtitle}
           </p>
         </div>
 
-        {/* Lead Form Card */}
-        <div className="relative z-10 my-auto rounded-3xl bg-white/90 p-5 shadow-xl shadow-black/5 border border-white/80 backdrop-blur-md">
+        {/* Lead Form Card Themed Seamlessly with Active Preset */}
+        <div
+          style={{
+            backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.9)",
+            color: activeAppearance.cardTextColor || "#09090b",
+            borderColor: activeAppearance.cardBorderColor || "rgba(255, 255, 255, 0.8)",
+          }}
+          className={cn(
+            "relative z-10 p-5 shadow-xl shadow-black/5 backdrop-blur-md border",
+            getButtonShapeClass()
+          )}
+        >
           {formSubmitted ? (
             <div className="flex flex-col items-center py-6 text-center">
               <CheckCircle2 className="h-12 w-12 text-emerald-600 mb-2 animate-bounce" />
-              <h3 className="text-base font-bold text-zinc-900">Thank you!</h3>
-              <p className="text-xs text-zinc-600 mt-1">We will get back to you shortly.</p>
+              <h3 className="text-base font-bold">Thank you!</h3>
+              <p className="text-xs opacity-80 mt-1">We will get back to you shortly.</p>
               <button
                 type="button"
                 onClick={() => setFormSubmitted(false)}
-                className="mt-4 text-xs font-bold text-zinc-800 underline"
+                className="mt-4 text-xs font-bold underline"
               >
                 Send another message
               </button>
@@ -924,19 +935,19 @@ export function MobilePreview({
           ) : (
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-zinc-700 mb-1">Full Name</label>
+                <label className="block text-[11px] font-bold opacity-80 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   placeholder="John Doe"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-700 mb-1">
+                <label className="block text-[11px] font-bold opacity-80 mb-1">
                   Phone Number {!leadForm.is_phone_required && "(Optional)"}
                 </label>
                 <input
@@ -945,12 +956,12 @@ export function MobilePreview({
                   placeholder="+1 (555) 000-0000"
                   value={formPhone}
                   onChange={(e) => setFormPhone(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-700 mb-1">
+                <label className="block text-[11px] font-bold opacity-80 mb-1">
                   Email Address {!leadForm.is_email_required && "(Optional)"}
                 </label>
                 <input
@@ -959,13 +970,13 @@ export function MobilePreview({
                   placeholder="john@example.com"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
                 />
               </div>
 
               <button
                 type="submit"
-                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-zinc-900 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-black"
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
               >
                 <Send className="h-3.5 w-3.5" /> Submit
               </button>

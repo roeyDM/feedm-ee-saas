@@ -972,7 +972,16 @@ function DashboardContent() {
         </div>
       )}
       {/* In-App Upgrade Modal */}
-      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+      <UpgradeModal
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        onActivateTrial={() => {
+          setPlanType("pro");
+          if (typeof window !== "undefined") {
+            localStorage.setItem("feedmee_subscription_tier", "pro");
+          }
+        }}
+      />
     </div>
   );
 }
