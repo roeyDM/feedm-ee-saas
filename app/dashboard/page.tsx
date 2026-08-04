@@ -22,7 +22,7 @@ import {
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -109,6 +109,9 @@ function DashboardContent() {
     canRedo?: boolean;
   }>({});
 
+  // Creator Profile Loading State (prevents flash of default mock data)
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
+
   // Creator Profile State (default empty until session loads)
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -167,6 +170,7 @@ function DashboardContent() {
   // ─── Load Authenticated User Profile on Mount ──────────────────────────────
   useEffect(() => {
     async function loadAuthUserSession() {
+      setIsProfileLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
         let fallbackUser = "";
@@ -223,19 +227,31 @@ function DashboardContent() {
             setReels(cleanedReels);
           }
           if (profile.lead_form) setLeadForm(sanitizeLeadForm(profile.lead_form));
-          if (profile.appearance) setAppearance(profile.appearance);
+
+          // Appearance Persistence with localStorage fallback
+          let loadedAppearance = profile.appearance;
+          if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
+            const localApp = localStorage.getItem(`feedmee_appearance_${(profile.username || targetUsername).toLowerCase()}`);
+            if (localApp) {
+              try { loadedAppearance = JSON.parse(localApp); } catch(e) {}
+            }
+          }
+          if (loadedAppearance && Object.keys(loadedAppearance).length > 0) {
+            setAppearance(loadedAppearance);
+            if (loadedAppearance.bgColor) setCustomHexColor(loadedAppearance.bgColor);
+          }
 
           setSavedSnapshot(JSON.stringify({
             name: profile.name || fallbackName,
             bio: profile.bio || "",
             avatarUrl: profile.avatar_url || "",
-            customHexColor: profile.custom_hex_color || "#bad1cb",
+            customHexColor: loadedAppearance?.bgColor || profile.custom_hex_color || "#bad1cb",
             planType: profile.plan_type || "free",
             socialLinks: profile.social_links || [],
             customLinks: profile.custom_links || [],
             reels: profile.reels || [],
             leadForm: sanitizeLeadForm(profile.lead_form) || leadForm,
-            appearance: profile.appearance || appearance,
+            appearance: loadedAppearance || appearance,
           }));
         } else {
           setSavedSnapshot(getCurrentStateJSON());
@@ -243,6 +259,8 @@ function DashboardContent() {
       } catch (err) {
         console.warn("User session load warning:", err);
         setSavedSnapshot(getCurrentStateJSON());
+      } finally {
+        setIsProfileLoading(false);
       }
     }
     loadAuthUserSession();
@@ -336,8 +354,13 @@ function DashboardContent() {
         throw error;
       }
 
+      // Always store appearance in localStorage as immediate fallback
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`feedmee_appearance_${username.toLowerCase().trim()}`, JSON.stringify(appearance));
+      }
+
       setSaveStatus("success");
-      setStatusMsg("Profile saved successfully to Supabase!");
+      setStatusMsg("Profile saved successfully!");
       setSavedSnapshot(getCurrentStateJSON());
       setTimeout(() => setSaveStatus("idle"), 4000);
     } catch (err: any) {
@@ -377,6 +400,22 @@ function DashboardContent() {
       return () => clearTimeout(timer);
     }
   }, [saveStatus, statusMsg]);
+
+  if (isProfileLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col font-sans text-white items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4 bg-zinc-900/90 border border-zinc-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl max-w-sm w-full text-center animate-in fade-in duration-300">
+          <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-extrabold text-white">Loading Creator Studio...</h3>
+            <p className="text-xs text-zinc-400 font-medium">Fetching your custom profile &amp; themes</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50/80 flex flex-col font-sans text-zinc-900 relative">
@@ -578,7 +617,7 @@ function DashboardContent() {
               )}
             </div>
 
-            {/* Accordion 3: Monetization & Earn */}
+            {/* Accordion 3: Monetization */}
             <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
                 onClick={() => toggleAccordion("monetization")}
@@ -586,9 +625,12 @@ function DashboardContent() {
               >
                 <div className="flex items-center gap-2.5">
                   <DollarSign className="h-4 w-4 text-zinc-500" />
-                  <span>Monetization / Earn</span>
+                  <span>Monetization</span>
                 </div>
-                <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.monetization && "rotate-180")} />
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-extrabold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">SOON</span>
+                  <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.monetization && "rotate-180")} />
+                </div>
               </button>
 
               {openAccordions.monetization && (
@@ -605,7 +647,7 @@ function DashboardContent() {
               )}
             </div>
 
-            {/* Accordion 4: Settings & Tools */}
+            {/* Accordion 4: Marketing Tools */}
             <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
                 onClick={() => toggleAccordion("settings")}
@@ -613,9 +655,12 @@ function DashboardContent() {
               >
                 <div className="flex items-center gap-2.5">
                   <Settings className="h-4 w-4 text-zinc-500" />
-                  <span>Settings &amp; Tools</span>
+                  <span>Marketing Tools</span>
                 </div>
-                <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.settings && "rotate-180")} />
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-extrabold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">SOON</span>
+                  <Lock className="h-3.5 w-3.5 text-zinc-400" />
+                </div>
               </button>
 
               {openAccordions.settings && (
@@ -792,7 +837,7 @@ function DashboardContent() {
 
           {/* Active Form Panel */}
           {activeTab !== "settings" ? (
-            <div className="relative max-w-3xl mx-auto w-full space-y-6">
+            <div className={cn("relative max-w-3xl mx-auto w-full space-y-6 transition-all duration-300", isDirty && "pb-28")}>
               {activeTab === "bio" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
                   <ProfileEditor

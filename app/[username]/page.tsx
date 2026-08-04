@@ -49,13 +49,21 @@ export default function UserProfilePage({ params }: PageProps) {
           // Smart Readiness Check: Render reels/lead form ONLY if Pro AND has at least 1 reel
           const shouldRenderReels = !isFreeUser && hasConfiguredReels;
 
+          let loadedAppearance = data.appearance;
+          if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
+            const localApp = localStorage.getItem(`feedmee_appearance_${handleKey.toLowerCase()}`);
+            if (localApp) {
+              try { loadedAppearance = JSON.parse(localApp); } catch(e) {}
+            }
+          }
+
           setProfile({
             name: data.name || handleKey,
             bio: data.bio || "",
             avatarUrl:
               data.avatar_url ||
               "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-            customHexColor: data.custom_hex_color || "#bad1cb",
+            customHexColor: loadedAppearance?.bgColor || data.custom_hex_color || "#bad1cb",
             socialLinks: (data.social_links || []).map((l: any) => ({
               ...l,
               id: l.id || crypto.randomUUID(),
@@ -65,8 +73,8 @@ export default function UserProfilePage({ params }: PageProps) {
             reels: shouldRenderReels ? data.reels : [],
             leadForm: shouldRenderReels ? sanitizeLeadForm(data.lead_form) : sanitizeLeadForm(null),
             appearance: {
-              ...(data.appearance || {}),
-              hideBranding: isFreeUser ? false : !!data.appearance?.hideBranding,
+              ...(loadedAppearance || {}),
+              hideBranding: isFreeUser ? false : !!loadedAppearance?.hideBranding,
             },
           });
         }

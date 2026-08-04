@@ -898,9 +898,6 @@ export function MobilePreview({
 
         {/* Header */}
         <div className="relative z-10 pt-4 text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 shadow-md text-zinc-900">
-            <Sparkles className="h-6 w-6 text-emerald-600" />
-          </div>
           <h2 className="text-xl font-black text-zinc-900 tracking-tight text-center">
             {cleanLeadForm.title}
           </h2>
