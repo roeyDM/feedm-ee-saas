@@ -887,138 +887,156 @@ export function MobilePreview({
       {/* ------------------------------------------------------------- */}
       {/* PAGE 5: THE CONTACT / COLLABORATION FORM */}
       {/* ------------------------------------------------------------- */}
-      <div className="snap-start snap-always relative flex h-full w-full flex-col justify-center p-6 gap-3 overflow-hidden">
-        {/* Subtle glow orb */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-white/20 blur-3xl pointer-events-none" />
+      {(() => {
+        const isDarkBg = 
+          activeAppearance.bgColor === "#000000" ||
+          activeAppearance.bgColor === "#09090b" ||
+          activeAppearance.bgColor === "000000" ||
+          activeAppearance.bgColor === "09090b" ||
+          activeAppearance.cardTextColor === "#FFFFFF" ||
+          activeAppearance.cardTextColor === "#ffffff" ||
+          activeAppearance.cardTextColor === "#F8FAFC" ||
+          activeAppearance.cardTextColor === "#f8fafc";
+        
+        const headerTextColor = isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090b");
+        const subtitleTextColor = isDarkBg ? "rgba(255, 255, 255, 0.85)" : (activeAppearance.cardTextColor || "rgba(9, 9, 11, 0.85)");
 
-        {/* Header - Sits directly above lead form card */}
-        <div className="relative z-10 text-center space-y-1">
-          <h2
-            style={{ color: activeAppearance.cardTextColor || "#09090b" }}
-            className="text-xl font-black tracking-tight text-center drop-shadow-xs"
-          >
-            {cleanLeadForm.title}
-          </h2>
-          <p
-            style={{ color: activeAppearance.cardTextColor || "#09090b", opacity: 0.85 }}
-            className="text-xs font-medium text-center drop-shadow-xs"
-          >
-            {cleanLeadForm.subtitle}
-          </p>
-        </div>
+        return (
+          <div className="snap-start snap-always relative flex h-full w-full flex-col justify-between p-6 overflow-hidden">
+            {/* Subtle glow orb */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-white/20 blur-3xl pointer-events-none" />
 
-        {/* Lead Form Card Themed Seamlessly with Active Preset */}
-        <div
-          style={{
-            backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.9)",
-            color: activeAppearance.cardTextColor || "#09090b",
-            borderColor: activeAppearance.cardBorderColor || "rgba(255, 255, 255, 0.8)",
-          }}
-          className={cn(
-            "relative z-10 p-5 shadow-xl shadow-black/5 backdrop-blur-md border",
-            getButtonShapeClass()
-          )}
-        >
-          {formSubmitted ? (
-            <div className="flex flex-col items-center py-6 text-center">
-              <CheckCircle2 className="h-12 w-12 text-emerald-600 mb-2 animate-bounce" />
-              <h3 className="text-base font-bold">Thank you!</h3>
-              <p className="text-xs opacity-80 mt-1">We will get back to you shortly.</p>
-              <button
-                type="button"
-                onClick={() => setFormSubmitted(false)}
-                className="mt-4 text-xs font-bold underline"
+            {/* Header - Top Section */}
+            <div className="relative z-10 pt-2 text-center space-y-1">
+              <h2
+                style={{ color: headerTextColor }}
+                className="text-xl font-black tracking-tight text-center drop-shadow-sm"
               >
-                Send another message
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
-              <div>
-                <label className="block text-[11px] font-bold opacity-80 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="John Doe"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold opacity-80 mb-1">
-                  Phone Number {!leadForm.is_phone_required && "(Optional)"}
-                </label>
-                <input
-                  type="tel"
-                  required={leadForm.is_phone_required}
-                  placeholder="+1 (555) 000-0000"
-                  value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold opacity-80 mb-1">
-                  Email Address {!leadForm.is_email_required && "(Optional)"}
-                </label>
-                <input
-                  type="email"
-                  required={leadForm.is_email_required}
-                  placeholder="john@example.com"
-                  value={formEmail}
-                  onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
+                {cleanLeadForm.title}
+              </h2>
+              <p
+                style={{ color: subtitleTextColor }}
+                className="text-xs font-medium text-center drop-shadow-sm"
               >
-                <Send className="h-3.5 w-3.5" /> Submit
-              </button>
-            </form>
-          )}
-        </div>
-
-        {/* Footer: Social Icons & Powered By */}
-        <div className="relative z-10 flex flex-col items-center gap-3 pb-2">
-          {socialLinks.length > 0 && (
-            <div className="flex items-center gap-2 justify-center">
-              {socialLinks.map(renderSocialIcon)}
+                {cleanLeadForm.subtitle}
+              </p>
             </div>
-          )}
 
-          {!activeAppearance.hideBranding && (
-            <a
-              href="https://feedm.ee"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-zinc-600 hover:text-zinc-900 transition"
+            {/* Lead Form Card - Center Section (Preserved shape & padding) */}
+            <div
+              style={{
+                backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.9)",
+                color: activeAppearance.cardTextColor || "#09090b",
+                borderColor: activeAppearance.cardBorderColor || "rgba(255, 255, 255, 0.8)",
+              }}
+              className="relative z-10 my-auto rounded-3xl p-5 shadow-xl shadow-black/5 backdrop-blur-md border"
             >
-              <span>Powered by</span>
-              <span className="font-extrabold text-zinc-950">FeedM.ee</span>
-            </a>
-          )}
+              {formSubmitted ? (
+                <div className="flex flex-col items-center py-6 text-center">
+                  <CheckCircle2 className="h-12 w-12 text-emerald-600 mb-2 animate-bounce" />
+                  <h3 className="text-base font-bold">Thank you!</h3>
+                  <p className="text-xs opacity-80 mt-1">We will get back to you shortly.</p>
+                  <button
+                    type="button"
+                    onClick={() => setFormSubmitted(false)}
+                    className="mt-4 text-xs font-bold underline"
+                  >
+                    Send another message
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold opacity-80 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="John Doe"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                    />
+                  </div>
 
-          <div className="flex items-center gap-3 text-[9px] font-medium text-zinc-500">
-            <button onClick={() => setIsCookieModalOpen(true)} className="hover:text-zinc-800 transition">
-              Manage Cookies
-            </button>
-            <span>&bull;</span>
-            <a href="/privacy" target="_blank" className="hover:text-zinc-800 transition">
-              Privacy Policy
-            </a>
-            <span>&bull;</span>
-            <button onClick={() => setIsReportModalOpen(true)} className="hover:text-zinc-800 transition">
-              Report Profile
-            </button>
+                  <div>
+                    <label className="block text-[11px] font-bold opacity-80 mb-1">
+                      Phone Number {!leadForm.is_phone_required && "(Optional)"}
+                    </label>
+                    <input
+                      type="tel"
+                      required={leadForm.is_phone_required}
+                      placeholder="+1 (555) 000-0000"
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold opacity-80 mb-1">
+                      Email Address {!leadForm.is_email_required && "(Optional)"}
+                    </label>
+                    <input
+                      type="email"
+                      required={leadForm.is_email_required}
+                      placeholder="john@example.com"
+                      value={formEmail}
+                      onChange={(e) => setFormEmail(e.target.value)}
+                      className="w-full rounded-xl border border-zinc-200/80 bg-white/90 px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
+                  >
+                    <Send className="h-3.5 w-3.5" /> Submit
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Footer: Social Icons & Powered By - Strictly at Bottom */}
+            <div className="relative z-10 flex flex-col items-center gap-3 pb-2">
+              {socialLinks.length > 0 && (
+                <div className="flex items-center gap-2 justify-center">
+                  {socialLinks.map(renderSocialIcon)}
+                </div>
+              )}
+
+              {!activeAppearance.hideBranding && (
+                <a
+                  href="https://feedm.ee"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: isDarkBg ? "rgba(255, 255, 255, 0.8)" : "rgba(9, 9, 11, 0.7)" }}
+                  className="flex items-center gap-1 text-[10px] font-bold tracking-wider hover:opacity-100 transition"
+                >
+                  <span>Powered by</span>
+                  <span style={{ color: isDarkBg ? "#FFFFFF" : "#09090b" }} className="font-extrabold">FeedM.ee</span>
+                </a>
+              )}
+
+              <div
+                style={{ color: isDarkBg ? "rgba(255, 255, 255, 0.6)" : "rgba(9, 9, 11, 0.6)" }}
+                className="flex items-center gap-3 text-[9px] font-medium"
+              >
+                <button onClick={() => setIsCookieModalOpen(true)} className="hover:opacity-100 transition cursor-pointer">
+                  Manage Cookies
+                </button>
+                <span>&bull;</span>
+                <a href="/privacy" target="_blank" className="hover:opacity-100 transition">
+                  Privacy Policy
+                </a>
+                <span>&bull;</span>
+                <button onClick={() => setIsReportModalOpen(true)} className="hover:opacity-100 transition cursor-pointer">
+                  Report Profile
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
       <CookieModal open={isCookieModalOpen} onOpenChange={setIsCookieModalOpen} />
       <ReportModal 
