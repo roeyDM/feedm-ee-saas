@@ -895,16 +895,32 @@ export function MobilePreview({
             )}
           </div>
 
-            {/* Bottom Caption & Product Overlay */}
-            <div className="absolute bottom-6 left-4 right-16 z-20 space-y-3.5 text-left">
+            {/* Bottom Left Video Overlay Footer: Avatar + Username + Caption */}
+            <div className="absolute bottom-6 left-4 right-16 z-20 flex flex-col gap-2.5 text-left">
+              {/* Creator Profile Avatar Thumbnail & Handle Badge */}
+              <div className="flex items-center gap-2">
+                <img
+                  src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
+                  alt=""
+                  className="h-8 w-8 rounded-full object-cover border-2 border-white/80 shadow-md shrink-0"
+                />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-black text-white drop-shadow-md tracking-tight">
+                    @{username || "username"}
+                  </span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                </div>
+              </div>
+
               {reel.productTag && (
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-bold text-white shadow-md backdrop-blur-md">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-xs font-bold text-white shadow-md backdrop-blur-md self-start">
                   <Tag className="h-3.5 w-3.5" />
                   <span>{reel.productTag}</span>
                 </div>
               )}
 
-              <p className="text-sm font-medium text-white/90 drop-shadow-md line-clamp-3 leading-snug">
+              {/* Video Caption */}
+              <p className="text-xs font-medium text-white/95 line-clamp-3 leading-snug drop-shadow-md pr-2">
                 {reel.caption}
               </p>
             </div>
