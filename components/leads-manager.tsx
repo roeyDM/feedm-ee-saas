@@ -215,14 +215,11 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
             <div className="h-8 w-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
               <Inbox className="h-4 w-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-extrabold text-zinc-900 tracking-tight">Leads &amp; Contact Submissions</h2>
-                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  {leads.length}
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 font-medium">Manage and export contacts captured from your video feeds.</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-extrabold text-zinc-900 tracking-tight">Leads CRM</h2>
+              <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                {leads.length}
+              </span>
             </div>
           </div>
 

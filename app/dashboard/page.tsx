@@ -743,8 +743,8 @@ function DashboardContent() {
 
         {/* CENTER WORKSPACE */}
         <div className={cn("min-w-0 flex flex-col w-full flex-1", activeTab === "settings" ? "p-0 m-0 border-0" : "px-4 py-6 lg:px-8 gap-6")}>
-          {/* Status Notification Toast Banner */}
-          {saveStatus !== "idle" && (
+          {/* Status Notification Toast Banner - Only shown on editing tabs (Bio, Reels, Design) */}
+          {saveStatus !== "idle" && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
             <div
               className={`flex items-center justify-between rounded-2xl p-4 text-xs font-bold shadow-md transition-all ${
                 saveStatus === "success"
@@ -952,7 +952,7 @@ function DashboardContent() {
               )}
 
               {activeTab === "leads" && (
-                <div className="animate-in fade-in zoom-in-95 duration-200 max-w-4xl mx-auto w-full">
+                <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-7xl mx-auto">
                   <LeadsManager username={username} targetEmail={leadForm.target} />
                 </div>
               )}

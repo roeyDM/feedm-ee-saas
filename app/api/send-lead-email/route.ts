@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // 1. Attempt to save lead entry to Supabase
     try {
       const { supabase } = await import("@/lib/supabase");
-      await supabase.from("leads").insert([
+      const { error: dbErr } = await supabase.from("leads").insert([
         {
           username: cleanHandle || "main",
           feed_id: cleanHandle || "main",
@@ -34,9 +34,24 @@ export async function POST(request: Request) {
           email: email,
           phone: phone,
           created_at: new Date().toISOString(),
+          status: "new",
         },
       ]);
-      console.log("[Supabase Lead Insert]: Successfully logged lead to database");
+
+      if (dbErr) {
+        console.error("[Supabase Lead Insert Error]:", dbErr.message || dbErr);
+        // Fallback insert with essential columns if schema differs
+        await supabase.from("leads").insert([
+          {
+            username: cleanHandle || "main",
+            full_name: fullName,
+            email: email,
+            phone: phone,
+          },
+        ]);
+      } else {
+        console.log("[Supabase Lead Insert]: Successfully logged lead to database");
+      }
     } catch (dbErr) {
       console.warn("[Supabase Lead Insert Note]:", dbErr);
     }
