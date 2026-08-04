@@ -843,7 +843,7 @@ function DashboardContent() {
             )
           )}
 
-          {activeTab !== "settings" && (
+          {activeTab !== "settings" && activeTab !== "leads" && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm max-w-3xl mx-auto w-full">
               <div>
                 <h1 className="text-2xl font-black text-zinc-950 tracking-tight flex items-center gap-2">

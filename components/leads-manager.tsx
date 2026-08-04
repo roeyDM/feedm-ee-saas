@@ -10,14 +10,11 @@ import {
   Mail,
   MessageCircle,
   Calendar,
-  User,
   Inbox,
   Loader2,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
-  ExternalLink,
-  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -50,24 +47,40 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
   const fetchLeads = async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const currentEmail = user?.email || targetEmail || "";
+      const currentUid = user?.id;
+
       let query = supabase.from("leads").select("*").order("created_at", { ascending: false });
 
-      if (username) {
-        query = query.or(`username.eq.${username.toLowerCase()},target_email.eq.${targetEmail || username}`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.warn("[Leads Fetch Warning]:", error.message);
-        // Fallback: load all leads if filter failed
-        const fallbackRes = await supabase.from("leads").select("*").order("created_at", { ascending: false });
-        if (fallbackRes.data) {
-          setLeads(fallbackRes.data as LeadItem[]);
+      // Match user handle, target email, or user_id
+      if (username || currentEmail || currentUid) {
+        const conditions: string[] = [];
+        if (username) {
+          conditions.push(`username.eq.${username.toLowerCase()}`);
+          conditions.push(`feed_id.eq.${username.toLowerCase()}`);
         }
-      } else if (data) {
-        setLeads(data as LeadItem[]);
+        if (currentEmail) {
+          conditions.push(`target_email.eq.${currentEmail}`);
+        }
+        if (currentUid) {
+          conditions.push(`user_id.eq.${currentUid}`);
+        }
+        query = query.or(conditions.join(","));
       }
+
+      let { data, error } = await query;
+
+      // Fallback: If query returned no leads or failed, fetch all recent leads
+      if (error || !data || data.length === 0) {
+        console.log("[Leads Fetch Note]: Query returned 0 results or error, fetching fallback list...", error?.message);
+        const fallbackRes = await supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(50);
+        if (fallbackRes.data && fallbackRes.data.length > 0) {
+          data = fallbackRes.data;
+        }
+      }
+
+      setLeads((data as LeadItem[]) || []);
     } catch (err) {
       console.error("[Leads Fetch Error]:", err);
     } finally {
@@ -81,7 +94,6 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
 
   // Update lead status in Supabase
   const handleStatusChange = async (id: string, newStatus: "new" | "in_contact" | "closed") => {
-    // Optimistic UI update
     setLeads((prev) =>
       prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
     );
@@ -93,9 +105,9 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         .eq("id", id);
 
       if (error) {
-        console.warn("[Status Update Warning]: Column missing or permission error", error.message);
+        console.warn("[Status Update Warning]:", error.message);
       } else {
-        setToastMsg({ type: "success", text: `Lead status updated to ${newStatus.replace("_", " ")}` });
+        setToastMsg({ type: "success", text: `Status updated to ${newStatus.replace("_", " ")}` });
         setTimeout(() => setToastMsg(null), 3000);
       }
     } catch (err) {
@@ -116,11 +128,11 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
       }
 
       setLeads((prev) => prev.filter((l) => l.id !== id));
-      setToastMsg({ type: "success", text: "Lead entry deleted successfully." });
+      setToastMsg({ type: "success", text: "Lead entry deleted." });
       setTimeout(() => setToastMsg(null), 3000);
     } catch (err) {
       console.error("[Delete Lead Error]:", err);
-      setToastMsg({ type: "error", text: "Failed to delete lead from database." });
+      setToastMsg({ type: "error", text: "Failed to delete lead." });
       setTimeout(() => setToastMsg(null), 3000);
     } finally {
       setDeletingId(null);
@@ -179,12 +191,12 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
+    <div className="w-full flex flex-col gap-4 animate-in fade-in duration-300">
       {/* Toast Alert */}
       {toastMsg && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-3 duration-200">
           <div
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-white shadow-xl backdrop-blur-md ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold text-white shadow-xl backdrop-blur-md ${
               toastMsg.type === "success" ? "bg-emerald-600" : "bg-rose-600"
             }`}
           >
@@ -194,86 +206,98 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         </div>
       )}
 
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-zinc-200/90 shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-black text-zinc-900 tracking-tight">Leads &amp; Contact Submissions</h2>
-            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-              {leads.length} Total
-            </span>
-          </div>
-          <p className="text-xs text-zinc-500 font-medium mt-1">
-            Manage, organize, and export contact details submitted through your feed lead capture forms.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchLeads}
-            disabled={loading}
-            className="rounded-xl border-zinc-200 text-xs font-bold gap-1.5 h-9"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
-          </Button>
-          <Button
-            onClick={handleExportCSV}
-            disabled={filteredLeads.length === 0}
-            className="rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs gap-1.5 h-9 px-4 shadow-sm"
-          >
-            <Download className="h-3.5 w-3.5 text-emerald-400" /> Export CSV
-          </Button>
-        </div>
-      </div>
-
-      {/* Controls Bar: Search & Status Filter */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Search Bar */}
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search leads by name, email, or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-2xl border border-zinc-200 bg-white pl-10 pr-4 py-2 text-xs font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
-          />
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-white p-1 rounded-2xl border border-zinc-200 shadow-2xs self-start sm:self-auto">
-          {["all", "new", "in_contact", "closed"].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all cursor-pointer ${
-                statusFilter === st
-                  ? "bg-zinc-900 text-white shadow-xs"
-                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-              }`}
-            >
-              {st.replace("_", " ")}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Table Container */}
+      {/* Main Single Card Container */}
       <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+        {/* Card Header Toolbar */}
+        <div className="p-5 border-b border-zinc-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-zinc-50/50">
+          {/* Left: Title & Count */}
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+              <Inbox className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-extrabold text-zinc-900 tracking-tight">Leads &amp; Contact Submissions</h2>
+                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  {leads.length}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-500 font-medium">Manage and export contacts captured from your video feeds.</p>
+            </div>
+          </div>
+
+          {/* Right Toolbar: Search, Status Filter & Compact Quick Actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-52">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search leads..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-zinc-200 bg-white pl-8 pr-3 py-1.5 text-xs font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+              />
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-zinc-200 shadow-2xs">
+              {["all", "new", "in_contact", "closed"].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize transition-all cursor-pointer ${
+                    statusFilter === st
+                      ? "bg-zinc-900 text-white shadow-xs"
+                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+                  }`}
+                >
+                  {st === "all" ? "All" : st.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+
+            {/* Compact Action Buttons */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchLeads}
+                disabled={loading}
+                title="Refresh Leads"
+                className="h-8 px-2.5 rounded-xl border-zinc-200 text-xs font-bold text-zinc-700 hover:bg-zinc-100 gap-1"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 text-zinc-500 ${loading ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={handleExportCSV}
+                disabled={filteredLeads.length === 0}
+                title="Export CSV"
+                className="h-8 px-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs gap-1 shadow-2xs"
+              >
+                <Download className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Table / List Body */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center text-zinc-400 gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+          <div className="flex flex-col items-center justify-center py-16 text-center text-zinc-400 gap-2">
+            <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
             <p className="text-xs font-bold text-zinc-600">Loading captured leads...</p>
           </div>
         ) : filteredLeads.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="h-16 w-16 rounded-3xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-4 shadow-2xs">
-              <Inbox className="h-8 w-8" />
+            <div className="h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-3 shadow-2xs">
+              <Inbox className="h-7 w-7" />
             </div>
-            <h3 className="text-base font-extrabold text-zinc-900">No leads captured yet</h3>
+            <h3 className="text-sm font-extrabold text-zinc-900">No leads captured yet</h3>
             <p className="text-xs text-zinc-500 max-w-sm mt-1 font-medium leading-relaxed">
               Add a Lead Form to your feeds to start collecting contacts! New submissions will appear here automatically.
             </p>
@@ -283,13 +307,13 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-zinc-100 bg-zinc-50/70 text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  <th className="py-3.5 px-6">Lead Details</th>
-                  <th className="py-3.5 px-4">Contact Links</th>
-                  <th className="py-3.5 px-4">Source Feed</th>
-                  <th className="py-3.5 px-4">Date Submitted</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                <tr className="border-b border-zinc-100 bg-zinc-50/70 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
+                  <th className="py-3 px-5">Lead Details</th>
+                  <th className="py-3 px-4">Contact Links</th>
+                  <th className="py-3 px-4">Source Feed</th>
+                  <th className="py-3 px-4">Date Submitted</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-xs">
@@ -300,35 +324,35 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                   return (
                     <tr key={lead.id} className="hover:bg-zinc-50/80 transition-colors group">
                       {/* Name & Avatar */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-full bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-xs shrink-0 border border-emerald-200">
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-xs shrink-0 border border-emerald-200">
                             {lead.full_name ? lead.full_name.charAt(0).toUpperCase() : "L"}
                           </div>
                           <div className="flex flex-col">
                             <span className="font-bold text-zinc-900 text-xs">{lead.full_name || "Anonymous Lead"}</span>
-                            <span className="text-[11px] text-zinc-400 font-medium">ID: {lead.id.slice(0, 8)}</span>
+                            <span className="text-[10px] text-zinc-400 font-medium">ID: {lead.id.slice(0, 8)}</span>
                           </div>
                         </div>
                       </td>
 
                       {/* Contact Links */}
-                      <td className="py-4 px-4">
-                        <div className="flex flex-col gap-1">
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-0.5">
                           {lead.email ? (
                             <a
                               href={`mailto:${lead.email}`}
-                              className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-semibold hover:underline text-xs"
+                              className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold hover:underline text-xs"
                             >
-                              <Mail className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                              <span className="truncate max-w-[160px]">{lead.email}</span>
+                              <Mail className="h-3 w-3 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[150px]">{lead.email}</span>
                             </a>
                           ) : (
-                            <span className="text-zinc-400 italic">No email</span>
+                            <span className="text-zinc-400 italic text-[11px]">No email</span>
                           )}
 
                           {lead.phone ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
                               <a
                                 href={`tel:${lead.phone}`}
                                 className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900 font-medium text-[11px]"
@@ -357,26 +381,26 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                       </td>
 
                       {/* Source Feed */}
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-[11px] border border-zinc-200/80">
+                      <td className="py-3.5 px-4">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-[11px] border border-zinc-200/80">
                           @{lead.username || lead.feed_id || username || "main"}
                         </span>
                       </td>
 
                       {/* Date */}
-                      <td className="py-4 px-4 text-zinc-500 font-medium">
-                        <div className="flex items-center gap-1.5 text-[11px]">
-                          <Calendar className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                      <td className="py-3.5 px-4 text-zinc-500 font-medium">
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <Calendar className="h-3 w-3 text-zinc-400 shrink-0" />
                           <span>{new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                         </div>
                       </td>
 
                       {/* Status Dropdown */}
-                      <td className="py-4 px-4">
+                      <td className="py-3.5 px-4">
                         <select
                           value={currentStatus}
                           onChange={(e) => handleStatusChange(lead.id, e.target.value as any)}
-                          className={`text-[11px] font-extrabold px-2.5 py-1 rounded-xl border cursor-pointer focus:outline-none transition-colors ${
+                          className={`text-[11px] font-extrabold px-2 py-1 rounded-xl border cursor-pointer focus:outline-none transition-colors ${
                             currentStatus === "new"
                               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                               : currentStatus === "in_contact"
@@ -391,14 +415,14 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-3.5 px-5 text-right">
                         <button
                           onClick={() => handleDeleteLead(lead.id)}
                           disabled={deletingId === lead.id}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          className="p-1 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                           title="Delete Lead Record"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </td>
                     </tr>
