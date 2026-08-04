@@ -479,7 +479,8 @@ export function MobilePreview({
             email: cleanEmail,
             phone: cleanPhone,
             targetEmail,
-            username,
+            feedHandle: username || profileName || "main",
+            username: username || "main",
             isTest: false,
           }),
         });

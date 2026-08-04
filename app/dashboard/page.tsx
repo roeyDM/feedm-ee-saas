@@ -993,6 +993,7 @@ function DashboardContent() {
                       name: leadData.name,
                       email: leadData.email,
                       phone: leadData.phone,
+                      feedHandle: username || name || "main",
                       isTest: true,
                     }),
                   });

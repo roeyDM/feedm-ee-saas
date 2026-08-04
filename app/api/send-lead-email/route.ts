@@ -5,9 +5,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const targetEmail = body.targetEmail || body.target_email || "";
     const fullName = body.fullName || body.name || "";
-    const feedId = body.feedId || body.feedName || body.username || "";
     const email = body.email || "";
     const phone = body.phone || "";
+
+    const rawFeedHandle = body.feedHandle || body.feed_handle || body.username || body.feedId || body.feedName || "";
+    let cleanHandle = typeof rawFeedHandle === "string" ? rawFeedHandle.trim() : "";
+    if (cleanHandle.startsWith("@")) {
+      cleanHandle = cleanHandle.slice(1);
+    }
+    const formattedFeedHandle = cleanHandle ? `@${cleanHandle}` : "@main";
 
     if (!targetEmail || typeof targetEmail !== "string" || !targetEmail.includes("@")) {
       return NextResponse.json(
@@ -21,8 +27,8 @@ export async function POST(request: Request) {
       const { supabase } = await import("@/lib/supabase");
       await supabase.from("leads").insert([
         {
-          username: feedId || "unknown",
-          feed_id: feedId || "unknown",
+          username: cleanHandle || "main",
+          feed_id: cleanHandle || "main",
           target_email: targetEmail,
           full_name: fullName,
           email: email,
@@ -80,7 +86,7 @@ export async function POST(request: Request) {
             </tr>
             <tr>
               <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Feed Handle:</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">@${feedId || "default"}</td>
+              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${formattedFeedHandle}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #6b7280;">Submission Time:</td>
