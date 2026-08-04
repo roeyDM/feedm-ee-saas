@@ -212,6 +212,22 @@ export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFor
   };
 }
 
+export function isDarkColor(colorStr?: string): boolean {
+  if (!colorStr) return false;
+  const clean = colorStr.trim().toLowerCase().replace("#", "");
+  if (clean === "000" || clean === "000000" || clean === "09090b" || clean === "18181b" || clean === "0f172a" || clean === "111827" || clean === "1e1b4b" || clean === "020617" || clean === "050505" || clean === "1c1917") return true;
+  if (clean.length === 6) {
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      return yiq < 148;
+    }
+  }
+  return false;
+}
+
 interface MobilePreviewProps {
   profileName: string;
   username: string;
@@ -703,21 +719,16 @@ export function MobilePreview({
           {/* Scroll Down Prompt with Dynamic Contrast */}
           {(() => {
             const isDarkBg = 
-              activeAppearance.bgColor === "#000000" ||
-              activeAppearance.bgColor === "#09090b" ||
-              activeAppearance.bgColor === "000000" ||
-              activeAppearance.bgColor === "09090b" ||
-              activeAppearance.bgColor === "#18181b" ||
-              activeAppearance.bgColor === "#0f172a" ||
-              activeAppearance.bgColor === "#111827" ||
-              activeAppearance.cardTextColor === "#FFFFFF" ||
-              activeAppearance.cardTextColor === "#ffffff" ||
-              activeAppearance.cardTextColor === "#F8FAFC" ||
-              activeAppearance.cardTextColor === "#f8fafc";
+              isDarkColor(activeAppearance.bgColor) ||
+              isDarkColor(activeAppearance.bgGradientStart) ||
+              (activeAppearance.cardTextColor || "").toLowerCase() === "#ffffff" ||
+              (activeAppearance.cardTextColor || "").toLowerCase() === "#fafafa" ||
+              (activeAppearance.cardTextColor || "").toLowerCase() === "#f8fafc" ||
+              (activeAppearance.headlineColor || "").toLowerCase() === "#ffffff";
 
             return (
               <div 
-                style={{ color: isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090b") }}
+                style={{ color: isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090B") }}
                 className="flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1 drop-shadow-md"
               >
                 <span>Scroll for Reels</span>
@@ -906,20 +917,15 @@ export function MobilePreview({
       {/* ------------------------------------------------------------- */}
       {(() => {
         const isDarkBg = 
-          activeAppearance.bgColor === "#000000" ||
-          activeAppearance.bgColor === "#09090b" ||
-          activeAppearance.bgColor === "000000" ||
-          activeAppearance.bgColor === "09090b" ||
-          activeAppearance.bgColor === "#18181b" ||
-          activeAppearance.bgColor === "#0f172a" ||
-          activeAppearance.bgColor === "#111827" ||
-          activeAppearance.cardTextColor === "#FFFFFF" ||
-          activeAppearance.cardTextColor === "#ffffff" ||
-          activeAppearance.cardTextColor === "#F8FAFC" ||
-          activeAppearance.cardTextColor === "#f8fafc";
+          isDarkColor(activeAppearance.bgColor) ||
+          isDarkColor(activeAppearance.bgGradientStart) ||
+          (activeAppearance.cardTextColor || "").toLowerCase() === "#ffffff" ||
+          (activeAppearance.cardTextColor || "").toLowerCase() === "#fafafa" ||
+          (activeAppearance.cardTextColor || "").toLowerCase() === "#f8fafc" ||
+          (activeAppearance.headlineColor || "").toLowerCase() === "#ffffff";
         
-        const headerTextColor = isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090b");
-        const subtitleTextColor = isDarkBg ? "rgba(255, 255, 255, 0.9)" : (activeAppearance.cardTextColor || "rgba(9, 9, 11, 0.85)");
+        const headerTextColor = isDarkBg ? "#FFFFFF" : (activeAppearance.headlineColor || activeAppearance.cardTextColor || "#09090B");
+        const subtitleTextColor = isDarkBg ? "rgba(255, 255, 255, 0.9)" : (activeAppearance.bioColor || activeAppearance.cardTextColor || "rgba(9, 9, 11, 0.85)");
 
         return (
           <div className="snap-start snap-always relative flex h-full w-full flex-col justify-between p-6 overflow-hidden">
