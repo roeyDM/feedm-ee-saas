@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Shield, Building2, Mail, Send, X } from "lucide-react";
+import { Check, Shield, Building2, Mail, Send, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function PricingPreview() {
@@ -25,53 +25,64 @@ export function PricingPreview() {
   };
 
   return (
-    <div className="w-full bg-zinc-50 text-zinc-900 min-h-screen py-16 px-4 sm:px-6 lg:px-8 font-sans selection:bg-emerald-600 selection:text-white">
-      <div className="max-w-7xl mx-auto relative">
-        {/* Section Header */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold uppercase tracking-wider">
-            Flexible Plans for Every Creator
+    <div className="min-h-screen bg-gradient-to-b from-amber-50/50 via-emerald-50/30 to-sky-50/40 text-zinc-900 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden">
+      {/* Background Pastel Orbs (Exact copy from live pricing page) */}
+      <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[45%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[130px]" />
+      <div className="pointer-events-none absolute top-[20%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#fde68a]/35 blur-[130px]" />
+      <div className="pointer-events-none absolute bottom-[-5%] left-[20%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px]" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+        {/* Hero Header (Exact typography copy from live pricing page) */}
+        <section className="relative mx-auto max-w-4xl px-6 pb-12 text-center">
+          <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 border border-zinc-200/80 shadow-sm px-4 py-1.5 text-xs font-bold text-zinc-800 backdrop-blur-md">
+            <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse" />
+            <span>Simple, Transparent Pricing for Visual Creators</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-zinc-950">
-            Choose the Perfect Plan for <span className="text-emerald-600">Your Feed</span>
+
+          <h1 className="text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl md:text-6xl leading-tight">
+            Supercharge your Bio Reel. <br />
+            <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 bg-clip-text text-transparent">
+              Choose the right plan.
+            </span>
           </h1>
-          <p className="text-zinc-600 text-sm sm:text-base font-medium max-w-xl mx-auto leading-relaxed">
-            Turn your social links into a video powerhouse. Collect leads, track analytics, and grow your audience seamlessly.
+          <p className="mx-auto mt-4 max-w-xl text-base font-medium text-zinc-600 sm:text-lg">
+            Start for free, then upgrade to unlock 3 snap video reels, custom domains, and instant WhatsApp lead forms.
           </p>
 
-          {/* Billing Cycle Toggle */}
-          <div className="pt-6 flex items-center justify-center gap-3">
-            <span className={`text-xs font-bold transition-colors ${billingCycle === "monthly" ? "text-zinc-950 font-black" : "text-zinc-500"}`}>
-              Monthly
-            </span>
-            
+          {/* Annual / Monthly Toggle Container (Exact copy from live page) */}
+          <div className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-white/80 p-1.5 border border-zinc-200/80 shadow-md backdrop-blur-md">
             <button
               type="button"
-              onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
-              className="relative w-14 h-7 rounded-full bg-zinc-200 p-1 transition-colors duration-200 focus:outline-none border border-zinc-300 cursor-pointer"
+              onClick={() => setBillingCycle("monthly")}
+              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                billingCycle === "monthly"
+                  ? "bg-zinc-950 text-white shadow-sm"
+                  : "text-zinc-600 hover:text-zinc-900"
+              }`}
             >
-              <div
-                className={`w-5 h-5 rounded-full bg-emerald-600 transition-transform duration-200 shadow-sm ${
-                  billingCycle === "yearly" ? "translate-x-7" : "translate-x-0"
-                }`}
-              />
+              Monthly Billing
             </button>
-
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-bold transition-colors ${billingCycle === "yearly" ? "text-zinc-950 font-black" : "text-zinc-500"}`}>
-                Yearly
-              </span>
-              <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <button
+              type="button"
+              onClick={() => setBillingCycle("yearly")}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                billingCycle === "yearly"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-zinc-600 hover:text-zinc-900"
+              }`}
+            >
+              <span>Annual Billing</span>
+              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-zinc-950 uppercase tracking-wider">
                 Save ~20%
               </span>
-            </div>
+            </button>
           </div>
-        </div>
+        </section>
 
         {/* 4-Tier Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 items-stretch">
           {/* TIER 1: FREE */}
-          <div className="flex flex-col justify-between bg-white border border-zinc-200/90 rounded-3xl p-6 shadow-2xs hover:shadow-md transition-all duration-300 h-full">
+          <div className="flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
             <div>
               <div className="mb-4">
                 <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Starter</span>
@@ -95,7 +106,7 @@ export function PricingPreview() {
                 <Button className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all">
                   Get Started Free
                 </Button>
-                <div className="h-4" /> {/* Spacer placeholder to align with 7-day trial subtext */}
+                <div className="h-4" /> {/* Spacer placeholder */}
               </div>
 
               {/* Features List */}
@@ -125,7 +136,7 @@ export function PricingPreview() {
           </div>
 
           {/* TIER 2: PERSONAL */}
-          <div className="flex flex-col justify-between bg-white border border-zinc-200/90 rounded-3xl p-6 shadow-2xs hover:shadow-md transition-all duration-300 h-full">
+          <div className="flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
             <div>
               <div className="mb-4">
                 <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider">Creator</span>
@@ -180,7 +191,7 @@ export function PricingPreview() {
           </div>
 
           {/* TIER 3: PRO (HIGHLIGHTED / MOST POPULAR) */}
-          <div className="relative flex flex-col justify-between bg-white border-2 border-emerald-500 rounded-3xl p-6 shadow-xl shadow-emerald-600/10 ring-1 ring-emerald-500/20 transform lg:-translate-y-2 h-full">
+          <div className="relative flex flex-col justify-between bg-white border-2 border-emerald-500 rounded-3xl p-6 shadow-2xl shadow-emerald-600/15 backdrop-blur-md transform lg:-translate-y-2 h-full">
             {/* Top Badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white font-black text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
               MOST POPULAR
@@ -244,7 +255,7 @@ export function PricingPreview() {
           </div>
 
           {/* TIER 4: BUSINESS */}
-          <div className="flex flex-col justify-between bg-white border border-zinc-200/90 rounded-3xl p-6 shadow-2xs hover:shadow-md transition-all duration-300 h-full">
+          <div className="flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
             <div>
               <div className="mb-4">
                 <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Enterprise</span>
@@ -267,12 +278,12 @@ export function PricingPreview() {
                 </p>
               </div>
 
-              {/* CTA Button Positioned Above Features (Get Started Now - No Trial Subtext) */}
+              {/* CTA Button Positioned Above Features (Get Started Now) */}
               <div className="mb-6">
                 <Button className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all">
                   Get Started Now
                 </Button>
-                <div className="h-4" /> {/* Spacer placeholder to align with 7-day trial subtext */}
+                <div className="h-4" /> {/* Spacer placeholder */}
               </div>
 
               {/* Features List */}
@@ -311,8 +322,8 @@ export function PricingPreview() {
           <div>No hidden fees</div>
         </div>
 
-        {/* Custom Enterprise / Agency Banner */}
-        <div className="mt-14 relative overflow-hidden rounded-3xl border border-zinc-800 bg-gradient-to-r from-zinc-900 via-zinc-950 to-slate-900 p-8 sm:p-12 text-white shadow-2xl">
+        {/* Custom Enterprise / Agency Banner (Exact copy from live page) */}
+        <div className="mt-14 relative overflow-hidden rounded-3xl border border-zinc-200/80 bg-gradient-to-r from-zinc-900 via-zinc-950 to-slate-900 p-8 sm:p-12 text-white shadow-2xl">
           <div className="pointer-events-none absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
 
           <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
@@ -330,9 +341,9 @@ export function PricingPreview() {
 
             <Button
               onClick={() => setContactModalOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-12 px-8 rounded-xl shrink-0 shadow-lg shadow-emerald-600/25 transition cursor-pointer flex items-center gap-2"
+              className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-extrabold text-xs h-12 px-8 rounded-xl shrink-0 shadow-lg shadow-emerald-500/25 transition cursor-pointer flex items-center gap-2"
             >
-              <Mail className="h-4 w-4" /> Contact Sales
+              Contact Sales <Mail className="h-4 w-4" />
             </Button>
           </div>
         </div>
