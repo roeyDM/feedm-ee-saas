@@ -12,6 +12,30 @@ export interface LeadFormSettings {
 }
 
 /**
+ * Ensures any color input string is converted into a clean 6-digit HEX format (e.g. #16a34a).
+ * Falls back to default fallback if invalid or modern CSS syntaxes (oklch, color-mix, var) are passed.
+ */
+export function sanitizeHexColor(color?: string | null, fallback = "#BAD1CB"): string {
+  if (!color) return fallback.toUpperCase();
+  let clean = color.trim();
+  if (clean.startsWith("oklch") || clean.startsWith("color-mix") || clean.startsWith("var(")) {
+    return fallback.toUpperCase();
+  }
+  if (!clean.startsWith("#")) {
+    clean = `#${clean}`;
+  }
+  // Expand 3-digit hex like #abc -> #aabbcc
+  if (/^#([0-9a-fA-F]{3})$/.test(clean)) {
+    clean = `#${clean[1]}${clean[1]}${clean[2]}${clean[2]}${clean[3]}${clean[3]}`;
+  }
+  // Check if valid 6-digit hex
+  if (/^#([0-9a-fA-F]{6})$/.test(clean)) {
+    return clean.toUpperCase();
+  }
+  return fallback.toUpperCase();
+}
+
+/**
  * Pure utility to sanitize LeadForm settings.
  * This file is deliberately a server‑safe helper (no React imports, no 'use client').
  */

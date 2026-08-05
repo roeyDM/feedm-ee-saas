@@ -18,10 +18,10 @@ import {
   CustomLink,
   VideoReel,
   LeadFormSettings,
-  sanitizeLeadForm,
   AppearanceSettings,
   DEFAULT_APPEARANCE,
 } from "@/components/mobile-preview";
+import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
@@ -341,13 +341,35 @@ function DashboardContent() {
     setStatusMsg("");
 
     try {
+      const cleanHex = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
+      const sanitizedAppearance: any = appearance
+        ? {
+            ...appearance,
+            bgColor: sanitizeHexColor(appearance.bgColor, "#BAD1CB"),
+            bgGradientStart: sanitizeHexColor(appearance.bgGradientStart, "#FBCFE8"),
+            bgGradientEnd: sanitizeHexColor(appearance.bgGradientEnd, "#E0F2FE"),
+            headlineColor: sanitizeHexColor(appearance.headlineColor, "#09090B"),
+            bioColor: sanitizeHexColor(appearance.bioColor, "#27272A"),
+            cardBgColor: sanitizeHexColor(appearance.cardBgColor, "#FFFFFF"),
+            cardTextColor: sanitizeHexColor(appearance.cardTextColor, "#09090B"),
+            cardBorderColor: sanitizeHexColor(appearance.cardBorderColor, "#E4E4E7"),
+            socialIconBgColor: sanitizeHexColor(appearance.socialIconBgColor, "#FFFFFF"),
+            socialFlatColor: sanitizeHexColor(appearance.socialFlatColor, "#18181B"),
+            avatarBorderColor: sanitizeHexColor(appearance.avatarBorderColor, "#FFFFFF"),
+          }
+        : {};
+
       let payload: any = {
         username: username.toLowerCase().trim(),
         name,
         bio,
         avatar_url: avatarUrl,
-        custom_hex_color: appearance?.bgColor || customHexColor,
-        appearance: appearance ? JSON.parse(JSON.stringify(appearance)) : {},
+        custom_hex_color: cleanHex,
+        theme_color: cleanHex,
+        text_color: sanitizedAppearance.headlineColor || "#09090B",
+        button_color: sanitizedAppearance.cardBgColor || "#FFFFFF",
+        button_text_color: sanitizedAppearance.cardTextColor || "#09090B",
+        appearance: sanitizedAppearance,
         social_links: socialLinks,
         custom_links: customLinks,
         reels: reels,

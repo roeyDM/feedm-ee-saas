@@ -3,7 +3,7 @@
  * Fetches profile data server-side for zero flash, perfect SSR, and strict Supabase theme sync.
  */
 import { createClient } from "@supabase/supabase-js";
-import { sanitizeLeadForm } from "@/lib/sanitizers";
+import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { PublicFeedClient } from "./client";
 
 interface PageProps {
@@ -38,6 +38,27 @@ async function fetchPublicProfile(handleKey: string) {
       ? data.appearance
       : null;
 
+  const rawBgColor = loadedAppearance?.bgColor || data.custom_hex_color || data.theme_color || "#BAD1CB";
+  const cleanBgColor = sanitizeHexColor(rawBgColor, "#BAD1CB");
+
+  const sanitizedAppearance = loadedAppearance
+    ? {
+        ...loadedAppearance,
+        bgColor: sanitizeHexColor(loadedAppearance.bgColor, "#BAD1CB"),
+        bgGradientStart: sanitizeHexColor(loadedAppearance.bgGradientStart, "#FBCFE8"),
+        bgGradientEnd: sanitizeHexColor(loadedAppearance.bgGradientEnd, "#E0F2FE"),
+        headlineColor: sanitizeHexColor(loadedAppearance.headlineColor, "#09090B"),
+        bioColor: sanitizeHexColor(loadedAppearance.bioColor, "#27272A"),
+        cardBgColor: sanitizeHexColor(loadedAppearance.cardBgColor, "#FFFFFF"),
+        cardTextColor: sanitizeHexColor(loadedAppearance.cardTextColor, "#09090B"),
+        cardBorderColor: sanitizeHexColor(loadedAppearance.cardBorderColor, "#E4E4E7"),
+        socialIconBgColor: sanitizeHexColor(loadedAppearance.socialIconBgColor, "#FFFFFF"),
+        socialFlatColor: sanitizeHexColor(loadedAppearance.socialFlatColor, "#18181B"),
+        avatarBorderColor: sanitizeHexColor(loadedAppearance.avatarBorderColor, "#FFFFFF"),
+        hideBranding: isFreeUser ? false : !!loadedAppearance.hideBranding,
+      }
+    : undefined;
+
   // Reels: parse and filter valid entries
   const loadedReels = (Array.isArray(data.reels) ? data.reels : [])
     .map((r: any) => ({
@@ -55,8 +76,11 @@ async function fetchPublicProfile(handleKey: string) {
     avatarUrl:
       data.avatar_url ||
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-    customHexColor:
-      loadedAppearance?.bgColor || data.custom_hex_color || "#BAD1CB",
+    theme_color: cleanBgColor,
+    text_color: sanitizedAppearance?.headlineColor || "#09090B",
+    button_color: sanitizedAppearance?.cardBgColor || "#FFFFFF",
+    button_text_color: sanitizedAppearance?.cardTextColor || "#09090B",
+    customHexColor: cleanBgColor,
     socialLinks: (data.social_links || []).map((l: any) => ({
       ...l,
       id: l.id || crypto.randomUUID(),
@@ -65,12 +89,7 @@ async function fetchPublicProfile(handleKey: string) {
     customLinks: data.custom_links || [],
     reels: loadedReels,
     leadForm: sanitizeLeadForm(data.lead_form),
-    appearance: loadedAppearance
-      ? {
-          ...loadedAppearance,
-          hideBranding: isFreeUser ? false : !!loadedAppearance.hideBranding,
-        }
-      : undefined,
+    appearance: sanitizedAppearance,
     pixels: {
       metaPixelId: data.meta_pixel_id || "",
       tiktokPixelId: data.tiktok_pixel_id || "",

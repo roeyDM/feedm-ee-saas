@@ -21,7 +21,7 @@ import {
 import { CookieModal } from "./cookie-modal";
 import { ReportModal } from "./report-modal";
 import { cn } from "@/lib/utils";
-import { sanitizeLeadForm } from "@/lib/sanitizers";
+import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 
 export interface CustomLink {
   id: string;
@@ -576,12 +576,7 @@ export function MobilePreview({
   useGoogleFont(activeFont);
 
   // Sanitize a color value: ensure it is a valid hex/rgba string, never oklch/color-mix
-  const sanitizeColor = (c?: string, fallback = "#BAD1CB"): string => {
-    if (!c) return fallback;
-    const t = c.trim();
-    if (t.startsWith("oklch") || t.startsWith("color-mix") || t.startsWith("var(")) return fallback;
-    return t.startsWith("#") ? t : `#${t}`;
-  };
+  const sanitizeColor = (c?: string, fallback = "#BAD1CB"): string => sanitizeHexColor(c, fallback);
 
   const hexColor = sanitizeColor(activeAppearance.bgColor);
   const hexGradStart = sanitizeColor(activeAppearance.bgGradientStart, "#FBCFE8");
