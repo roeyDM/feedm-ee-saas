@@ -1276,9 +1276,13 @@ export function MobilePreview({
 
   // Full Screen Mobile / Web Layout
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-100">
-      <div className="w-full max-w-[480px] h-screen sm:h-[90vh] sm:my-6 sm:rounded-[36px] sm:overflow-hidden sm:shadow-2xl sm:border sm:border-zinc-200">
+    <div className="w-full h-screen bg-zinc-100 flex justify-center overflow-hidden">
+      <div className="w-full max-w-[480px] h-full">
         <style jsx global>{`
+          html, body {
+            height: 100%;
+            overflow: hidden;
+          }
           .overflow-y-auto::-webkit-scrollbar {
             display: none;
           }

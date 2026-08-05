@@ -40,7 +40,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans">{children}</body>
+      <body suppressHydrationWarning className="h-full font-sans">{children}</body>
     </html>
   );
 }
