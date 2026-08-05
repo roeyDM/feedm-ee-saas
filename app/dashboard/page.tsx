@@ -10,6 +10,7 @@ import { DesignEditor } from "@/components/design-editor";
 import { BillingEditor } from "@/components/billing-editor";
 import { AccountSettingsEditor } from "@/components/account-settings-editor";
 import { LeadsManager } from "@/components/leads-manager";
+import { AnalyticsManager } from "@/components/analytics-manager";
 import {
   MobilePreview,
   SocialLink,
@@ -73,7 +74,7 @@ function StripeCheckoutStatus({
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads">("bio");
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -637,26 +638,37 @@ function DashboardContent() {
             {/* Accordion 2: Analytics & Insights */}
             <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
-                onClick={() => toggleAccordion("analytics")}
-                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none"
+                onClick={() => {
+                  toggleAccordion("analytics");
+                  setActiveTab("analytics");
+                }}
+                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
-                  <BarChart2 className="h-4 w-4 text-zinc-500" />
+                  <BarChart2 className="h-4 w-4 text-emerald-600" />
                   <span>Analytics / Insights</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-extrabold bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">SOON</span>
+                  <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">Active</span>
                   <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.analytics && "rotate-180")} />
                 </div>
               </button>
 
               {openAccordions.analytics && (
                 <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
-                  <button disabled className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
-                    <span>Traffic Overview</span>
-                  </button>
-                  <button disabled className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
-                    <span>Click Rates &amp; CTR</span>
+                  <button
+                    onClick={() => setActiveTab("analytics")}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                      activeTab === "analytics"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <span>Traffic &amp; Conversion Insights</span>
+                    <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
+                      Live
+                    </span>
                   </button>
                 </div>
               )}
@@ -900,7 +912,7 @@ function DashboardContent() {
 
           {/* Active Form Panel */}
           {activeTab !== "settings" ? (
-            <div className={cn("relative w-full space-y-6 transition-all duration-300", activeTab === "leads" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto", isDirty && "pb-28")}>
+            <div className={cn("relative w-full space-y-6 transition-all duration-300", activeTab === "leads" || activeTab === "analytics" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto", isDirty && "pb-28")}>
               {activeTab === "bio" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
                   <ProfileEditor
@@ -954,6 +966,12 @@ function DashboardContent() {
               {activeTab === "leads" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-none flex-1">
                   <LeadsManager username={username} targetEmail={leadForm.target} />
+                </div>
+              )}
+
+              {activeTab === "analytics" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-none flex-1">
+                  <AnalyticsManager planType={planType} />
                 </div>
               )}
             </div>
