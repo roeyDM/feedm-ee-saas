@@ -35,6 +35,7 @@ export interface CustomLink {
 export interface VideoReel {
   id: string;
   videoUrl: string;
+  url?: string;
   thumbnailUrl?: string;
   posterUrl?: string;
   caption: string;
@@ -319,7 +320,7 @@ export function MobilePreview({
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
 
-  // Appearance settings derivation
+  // Appearance settings derivation: appearance prop takes precedence over default and customHexColor fallback
   const activeAppearance: AppearanceSettings = {
     ...DEFAULT_APPEARANCE,
     ...(customHexColor ? { bgColor: customHexColor } : {}),
@@ -343,11 +344,11 @@ export function MobilePreview({
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Fallback demo reel logic: Filter out legacy mixkit.co URLs and use custom reels if uploaded, otherwise fallback to DEFAULT_DEMO_REELS
+  // Live user reels derivation: Accept all valid reel objects with videoUrl or url
   const validUserReels = (reels || []).filter(
-    (r) => r && r.videoUrl && !r.videoUrl.includes("mixkit.co")
+    (r) => r && (r.videoUrl || r.url)
   );
-  const displayReels = validUserReels.length > 0 ? validUserReels.slice(0, 3) : DEFAULT_DEMO_REELS;
+  const displayReels = validUserReels.length > 0 ? validUserReels.slice(0, 3) : (isDemoMode ? DEFAULT_DEMO_REELS : []);
 
   // Initialize like counts
   useEffect(() => {
