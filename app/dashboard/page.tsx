@@ -1042,7 +1042,7 @@ function DashboardContent() {
 
         {/* RIGHT PANEL: MOBILE PREVIEW (HIDDEN IN ACCOUNT SETTINGS VIEW) */}
         {activeTab !== "settings" && (
-          <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3 px-4 py-6 lg:pr-8">
+          <aside className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3 px-4 py-6 lg:pr-8 overflow-x-hidden justify-center">
             <div className="text-center w-full flex justify-center mb-1">
               <Link href={`/${username}`} target="_blank">
                 <Button
@@ -1055,7 +1055,8 @@ function DashboardContent() {
               </Link>
             </div>
 
-            <MobilePreview
+            <div className="w-full flex justify-center overflow-x-hidden">
+              <MobilePreview
               profileName={name}
               username={username}
               bio={bio}
@@ -1111,6 +1112,7 @@ function DashboardContent() {
                 }
               }}
             />
+            </div>
           </aside>
         )}
       </main>

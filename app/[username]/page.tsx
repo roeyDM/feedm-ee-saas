@@ -22,51 +22,44 @@ async function fetchPublicProfile(handleKey: string) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data, error } = await client
+  const { data: profile, error } = await client
     .from("profiles")
     .select("*")
     .eq("username", handleKey)
     .single();
 
-  if (!data || error) return null;
+  if (!profile || error) return null;
 
-  const isFreeUser = (data.plan_type || "free") === "free";
+  const isFreeUser = (profile.plan_type || "free") === "free";
 
   // Appearance: read strictly from DB record
   const loadedAppearance =
-    data.appearance && Object.keys(data.appearance).length > 0
-      ? data.appearance
+    profile.appearance && Object.keys(profile.appearance).length > 0
+      ? profile.appearance
       : null;
 
-  // Safe color derivation with explicit fallback defaults for profile color columns
-  const themeColor = sanitizeHexColor(
-    data?.theme_color || loadedAppearance?.bgColor || data?.custom_hex_color,
-    "#BAD1CB"
-  );
-  const buttonColor = sanitizeHexColor(
-    data?.button_color || loadedAppearance?.cardBgColor,
-    "#16A34A"
-  );
-  const textColor = sanitizeHexColor(
-    data?.text_color || loadedAppearance?.headlineColor,
-    "#09090B"
-  );
-  const buttonTextColor = sanitizeHexColor(
-    data?.button_text_color || loadedAppearance?.cardTextColor,
-    "#09090B"
-  );
+  // Safe color destructuring with explicit default fallbacks
+  const buttonColor = profile?.button_color || loadedAppearance?.cardBgColor || "#16a34a";
+  const buttonTextColor = profile?.button_text_color || loadedAppearance?.cardTextColor || "#ffffff";
+  const themeColor = profile?.theme_color || loadedAppearance?.bgColor || profile?.custom_hex_color || "#0f172a";
+  const textColor = profile?.text_color || loadedAppearance?.headlineColor || "#ffffff";
+
+  const cleanThemeColor = sanitizeHexColor(themeColor, "#0f172a");
+  const cleanButtonColor = sanitizeHexColor(buttonColor, "#16a34a");
+  const cleanTextColor = sanitizeHexColor(textColor, "#ffffff");
+  const cleanButtonTextColor = sanitizeHexColor(buttonTextColor, "#ffffff");
 
   const sanitizedAppearance = {
     bgType: loadedAppearance?.bgType || "solid",
-    bgColor: themeColor,
+    bgColor: cleanThemeColor,
     bgGradientStart: sanitizeHexColor(loadedAppearance?.bgGradientStart, "#FBCFE8"),
     bgGradientEnd: sanitizeHexColor(loadedAppearance?.bgGradientEnd, "#E0F2FE"),
     bgGradientAngle: loadedAppearance?.bgGradientAngle ?? 135,
     bgImageUrl: loadedAppearance?.bgImageUrl || "",
-    headlineColor: textColor,
+    headlineColor: cleanTextColor,
     bioColor: sanitizeHexColor(loadedAppearance?.bioColor, "#27272A"),
-    cardBgColor: buttonColor,
-    cardTextColor: buttonTextColor,
+    cardBgColor: cleanButtonColor,
+    cardTextColor: cleanButtonTextColor,
     cardBorderColor: sanitizeHexColor(loadedAppearance?.cardBorderColor, "#E4E4E7"),
     socialIconBgColor: sanitizeHexColor(loadedAppearance?.socialIconBgColor, "#FFFFFF"),
     socialFlatColor: sanitizeHexColor(loadedAppearance?.socialFlatColor, "#18181B"),
@@ -77,7 +70,7 @@ async function fetchPublicProfile(handleKey: string) {
   };
 
   // Reels: parse and filter valid entries
-  const loadedReels = (Array.isArray(data.reels) ? data.reels : [])
+  const loadedReels = (Array.isArray(profile.reels) ? profile.reels : [])
     .map((r: any) => ({
       ...r,
       id: r.id || crypto.randomUUID(),
@@ -88,29 +81,29 @@ async function fetchPublicProfile(handleKey: string) {
     .filter((r: any) => r.videoUrl);
 
   return {
-    name: data.name || handleKey,
-    bio: data.bio || "",
+    name: profile.name || handleKey,
+    bio: profile.bio || "",
     avatarUrl:
-      data.avatar_url ||
+      profile.avatar_url ||
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-    theme_color: themeColor,
-    button_color: buttonColor,
-    text_color: textColor,
-    button_text_color: buttonTextColor,
-    customHexColor: themeColor,
-    socialLinks: (data.social_links || []).map((l: any) => ({
+    theme_color: cleanThemeColor,
+    button_color: cleanButtonColor,
+    text_color: cleanTextColor,
+    button_text_color: cleanButtonTextColor,
+    customHexColor: cleanThemeColor,
+    socialLinks: (profile.social_links || []).map((l: any) => ({
       ...l,
       id: l.id || crypto.randomUUID(),
       isActive: l.isActive !== false,
     })),
-    customLinks: data.custom_links || [],
+    customLinks: profile.custom_links || [],
     reels: loadedReels,
-    leadForm: sanitizeLeadForm(data.lead_form),
+    leadForm: sanitizeLeadForm(profile.lead_form),
     appearance: sanitizedAppearance,
     pixels: {
-      metaPixelId: data.meta_pixel_id || "",
-      tiktokPixelId: data.tiktok_pixel_id || "",
-      googleAdsId: data.google_ads_id || data.ga_measurement_id || "",
+      metaPixelId: profile.meta_pixel_id || "",
+      tiktokPixelId: profile.tiktok_pixel_id || "",
+      googleAdsId: profile.google_ads_id || profile.ga_measurement_id || "",
     },
   };
 }
