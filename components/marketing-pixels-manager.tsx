@@ -7,23 +7,12 @@ import {
   Save,
   Loader2,
   HelpCircle,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
 interface MarketingPixelsManagerProps {
   username?: string;
-}
-
-// Official Meta Infinity Logo SVG
-function MetaLogoSvg({ className = "h-6 w-6" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 4.5C7.2 4.5 3.5 7.6 3.5 12C3.5 16.4 7.2 19.5 12 19.5C14.8 19.5 17.3 18.2 18.9 16.2L16.7 14.5C15.6 16 13.9 17 12 17C8.7 17 6 14.8 6 12C6 9.2 8.7 7 12 7C14 7 15.7 8.1 16.8 9.7L18.9 8C17.3 5.9 14.8 4.5 12 4.5Z" />
-      <path d="M16.5 12C16.5 10.9 17.4 10 18.5 10C19.6 10 20.5 10.9 20.5 12C20.5 13.1 19.6 14 18.5 14C17.4 14 16.5 13.1 16.5 12Z" />
-    </svg>
-  );
 }
 
 // Official Meta Full Brand SVG Icon
@@ -47,16 +36,19 @@ function OfficialTikTokLogo({ className = "h-6 w-6" }: { className?: string }) {
   );
 }
 
-// Official Google Analytics Logo SVG
-function OfficialGALogo({ className = "h-6 w-6" }: { className?: string }) {
+// Official Google Ads Logo SVG
+function OfficialGoogleAdsLogo({ className = "h-6 w-6" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M22.5 19.5V17.25C22.5 16.0074 21.4926 15 20.25 15H17.25C16.0074 15 15 16.0074 15 17.25V19.5H22.5Z" fill="#F9AB00" />
-      <path d="M13.5 19.5V9.75C13.5 8.50736 12.4926 7.5 11.25 7.5H8.25C7.00736 7.5 6 8.50736 6 9.75V19.5H13.5Z" fill="#E37400" />
-      <path d="M4.5 19.5V2.25C4.5 1.00736 3.49264 0 2.25 0H1.5V19.5H4.5Z" fill="#E37400" />
-      <circle cx="3" cy="21" r="3" fill="#F9AB00" />
-      <circle cx="12" cy="21" r="3" fill="#E37400" />
-      <circle cx="21" cy="21" r="3" fill="#F9AB00" />
+      <path
+        d="M3.77 15.83L9.5 5.91C10.27 4.58 11.97 4.12 13.3 4.89L15.3 6.05C16.63 6.82 17.09 8.52 16.32 9.85L10.59 19.77C9.82 21.1 8.12 21.56 6.79 20.79L4.79 19.63C3.46 18.86 3 17.16 3.77 15.83Z"
+        fill="#F9BC05"
+      />
+      <path
+        d="M20.23 15.83L14.5 5.91C13.73 4.58 12.03 4.12 10.7 4.89L8.7 6.05C7.37 6.82 6.91 8.52 7.68 9.85L13.41 19.77C14.18 21.1 15.88 21.56 17.21 20.79L19.21 19.63C20.54 18.86 21 17.16 20.23 15.83Z"
+        fill="#4285F4"
+      />
+      <circle cx="6.5" cy="18.5" r="3.5" fill="#34A853" />
     </svg>
   );
 }
@@ -64,15 +56,15 @@ function OfficialGALogo({ className = "h-6 w-6" }: { className?: string }) {
 export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps) {
   const [metaPixelId, setMetaPixelId] = useState("");
   const [tiktokPixelId, setTiktokPixelId] = useState("");
-  const [gaMeasurementId, setGaMeasurementId] = useState("");
+  const [googleAdsId, setGoogleAdsId] = useState("");
 
   const [savedMetaId, setSavedMetaId] = useState("");
   const [savedTiktokId, setSavedTiktokId] = useState("");
-  const [savedGaId, setSavedGaId] = useState("");
+  const [savedGoogleAdsId, setSavedGoogleAdsId] = useState("");
 
   const [savingMeta, setSavingMeta] = useState(false);
   const [savingTiktok, setSavingTiktok] = useState(false);
-  const [savingGa, setSavingGa] = useState(false);
+  const [savingGoogleAds, setSavingGoogleAds] = useState(false);
 
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -82,9 +74,9 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
       try {
         let meta = "";
         let tiktok = "";
-        let ga = "";
+        let gads = "";
 
-        // 1. Try local storage first
+        // 1. Try local storage first for immediate client feedback
         if (typeof window !== "undefined") {
           const cached = localStorage.getItem("feedmee_marketing_pixels");
           if (cached) {
@@ -92,7 +84,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
               const parsed = JSON.parse(cached);
               meta = parsed.metaPixelId || "";
               tiktok = parsed.tiktokPixelId || "";
-              ga = parsed.gaMeasurementId || "";
+              gads = parsed.googleAdsId || parsed.gaMeasurementId || "";
             } catch (e) {}
           }
         }
@@ -102,14 +94,14 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         if (user) {
           const { data, error } = await supabase
             .from("profiles")
-            .select("meta_pixel_id, tiktok_pixel_id, ga_measurement_id")
+            .select("meta_pixel_id, tiktok_pixel_id, google_ads_id")
             .eq("id", user.id)
             .single();
 
           if (data && !error) {
-            if (data.meta_pixel_id !== undefined) meta = data.meta_pixel_id || "";
-            if (data.tiktok_pixel_id !== undefined) tiktok = data.tiktok_pixel_id || "";
-            if (data.ga_measurement_id !== undefined) ga = data.ga_measurement_id || "";
+            if (data.meta_pixel_id !== undefined && data.meta_pixel_id !== null) meta = data.meta_pixel_id;
+            if (data.tiktok_pixel_id !== undefined && data.tiktok_pixel_id !== null) tiktok = data.tiktok_pixel_id;
+            if (data.google_ads_id !== undefined && data.google_ads_id !== null) gads = data.google_ads_id;
           }
         }
 
@@ -119,8 +111,8 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         setTiktokPixelId(tiktok);
         setSavedTiktokId(tiktok);
 
-        setGaMeasurementId(ga);
-        setSavedGaId(ga);
+        setGoogleAdsId(gads);
+        setSavedGoogleAdsId(gads);
       } catch (err) {
         console.error("[Pixels Load Error]:", err);
       }
@@ -130,14 +122,14 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
   }, [username]);
 
   // Helper to sync local cache
-  const updateLocalCache = (meta: string, tiktok: string, ga: string) => {
+  const updateLocalCache = (meta: string, tiktok: string, gads: string) => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
         "feedmee_marketing_pixels",
         JSON.stringify({
           metaPixelId: meta,
           tiktokPixelId: tiktok,
-          gaMeasurementId: ga,
+          googleAdsId: gads,
         })
       );
     }
@@ -150,7 +142,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     const cleanMeta = metaPixelId.trim();
 
     try {
-      updateLocalCache(cleanMeta, savedTiktokId, savedGaId);
+      updateLocalCache(cleanMeta, savedTiktokId, savedGoogleAdsId);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -181,7 +173,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     const cleanTiktok = tiktokPixelId.trim();
 
     try {
-      updateLocalCache(savedMetaId, cleanTiktok, savedGaId);
+      updateLocalCache(savedMetaId, cleanTiktok, savedGoogleAdsId);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -205,34 +197,34 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     }
   };
 
-  // 3. Save GA4 Measurement ID
-  const handleSaveGa = async () => {
-    setSavingGa(true);
+  // 3. Save Google Ads Pixel
+  const handleSaveGoogleAds = async () => {
+    setSavingGoogleAds(true);
     setToastMsg(null);
-    const cleanGa = gaMeasurementId.trim();
+    const cleanGads = googleAdsId.trim();
 
     try {
-      updateLocalCache(savedMetaId, savedTiktokId, cleanGa);
+      updateLocalCache(savedMetaId, savedTiktokId, cleanGads);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase
           .from("profiles")
-          .update({ ga_measurement_id: cleanGa || null })
+          .update({ google_ads_id: cleanGads || null })
           .eq("id", user.id);
       }
 
-      setSavedGaId(cleanGa);
+      setSavedGoogleAdsId(cleanGads);
       setToastMsg({
         type: "success",
-        text: cleanGa ? "Google Analytics 4 ID saved and active!" : "GA4 ID removed.",
+        text: cleanGads ? "Google Ads Pixel saved and active!" : "Google Ads Pixel removed.",
       });
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err) {
-      console.error("[GA4 Save Error]:", err);
-      setToastMsg({ type: "error", text: "Failed to save GA4 ID." });
+      console.error("[Google Ads Save Error]:", err);
+      setToastMsg({ type: "error", text: "Failed to save Google Ads Pixel." });
     } finally {
-      setSavingGa(false);
+      setSavingGoogleAds(false);
     }
   };
 
@@ -254,7 +246,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         </div>
       )}
 
-      {/* Main Container Card (100% Full Width matching CRM & Analytics) */}
+      {/* Main Container Card (Identical layout container width & padding as CRM & Analytics) */}
       <div className="w-full bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
         {/* Top Header Banner */}
         <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -276,7 +268,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           </div>
         </div>
 
-        {/* Content Body: 3 Structured Cards with Individual Save Buttons & Dynamic Status Badges */}
+        {/* Content Body: 3 Cards */}
         <div className="p-6 space-y-6">
           {/* ======================================================== */}
           {/* CARD 1: Meta (Facebook & Instagram) Pixel */}
@@ -395,21 +387,21 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           </div>
 
           {/* ======================================================== */}
-          {/* CARD 3: Google Analytics 4 (GA4) */}
+          {/* CARD 3: Google Ads Pixel */}
           {/* ======================================================== */}
           <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
               <div className="flex items-center gap-3">
                 <div className="h-11 w-11 rounded-2xl bg-amber-50/80 border border-amber-100 flex items-center justify-center shrink-0 shadow-2xs">
-                  <OfficialGALogo className="h-6 w-6" />
+                  <OfficialGoogleAdsLogo className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-zinc-950">Google Analytics 4 (GA4)</h3>
-                  <p className="text-xs text-zinc-500 font-medium">Stream real visitor demographics, device types, and custom events</p>
+                  <h3 className="text-sm font-black text-zinc-950">Google Ads Pixel</h3>
+                  <p className="text-xs text-zinc-500 font-medium">Track Search &amp; Display campaign conversions and remarketing lists</p>
                 </div>
               </div>
               <div>
-                {savedGaId.trim() ? (
+                {savedGoogleAdsId.trim() ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white font-extrabold text-xs shadow-xs">
                     <span className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
                     Tracking Active
@@ -423,31 +415,31 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-extrabold text-zinc-800 uppercase tracking-wider">GA4 Measurement ID</label>
+              <label className="text-xs font-extrabold text-zinc-800 uppercase tracking-wider">Google Ads Conversion ID</label>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <input
                   type="text"
-                  value={gaMeasurementId}
-                  onChange={(e) => setGaMeasurementId(e.target.value)}
-                  placeholder="e.g. G-XXXXXXXXXX"
+                  value={googleAdsId}
+                  onChange={(e) => setGoogleAdsId(e.target.value)}
+                  placeholder="e.g. AW-123456789"
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
                 <Button
-                  onClick={handleSaveGa}
-                  disabled={savingGa}
+                  onClick={handleSaveGoogleAds}
+                  disabled={savingGoogleAds}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
                 >
-                  {savingGa ? (
+                  {savingGoogleAds ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
                   ) : (
                     <Save className="h-3.5 w-3.5 text-white" />
                   )}
-                  <span>Save GA4 ID</span>
+                  <span>Save Google Ads Pixel</span>
                 </Button>
               </div>
               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1">
                 <HelpCircle className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                <span>Where to find it: Google Analytics Admin ➔ Data Streams ➔ Measurement ID.</span>
+                <span>Where to find it: Google Ads ➔ Goals ➔ Conversions ➔ Summary ➔ Tag Setup (Conversion ID).</span>
               </p>
             </div>
           </div>

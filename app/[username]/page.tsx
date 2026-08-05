@@ -24,6 +24,7 @@ export default function UserProfilePage({ params }: PageProps) {
   const [pixels, setPixels] = useState<{
     metaPixelId?: string;
     tiktokPixelId?: string;
+    googleAdsId?: string;
     gaMeasurementId?: string;
   }>({});
 
@@ -67,17 +68,17 @@ export default function UserProfilePage({ params }: PageProps) {
           // Extract Marketing Pixels
           let metaId = data.meta_pixel_id || "";
           let tiktokId = data.tiktok_pixel_id || "";
-          let gaId = data.ga_measurement_id || "";
+          let gadsId = data.google_ads_id || data.ga_measurement_id || "";
 
           // Fallback to local storage cache if viewing locally
-          if (typeof window !== "undefined" && (!metaId && !tiktokId && !gaId)) {
+          if (typeof window !== "undefined" && (!metaId && !tiktokId && !gadsId)) {
             const cachedPixels = localStorage.getItem("feedmee_marketing_pixels");
             if (cachedPixels) {
               try {
                 const parsed = JSON.parse(cachedPixels);
                 metaId = parsed.metaPixelId || metaId;
                 tiktokId = parsed.tiktokPixelId || tiktokId;
-                gaId = parsed.gaMeasurementId || gaId;
+                gadsId = parsed.googleAdsId || parsed.gaMeasurementId || gadsId;
               } catch (e) {}
             }
           }
@@ -85,7 +86,8 @@ export default function UserProfilePage({ params }: PageProps) {
           setPixels({
             metaPixelId: metaId,
             tiktokPixelId: tiktokId,
-            gaMeasurementId: gaId,
+            googleAdsId: gadsId,
+            gaMeasurementId: gadsId,
           });
 
           setProfile({
@@ -141,14 +143,25 @@ export default function UserProfilePage({ params }: PageProps) {
     appearance: undefined,
   };
 
+  // Format Google Ads ID (ensure AW- prefix if omitted)
+  const rawGads = pixels.googleAdsId || pixels.gaMeasurementId || "";
+  const cleanGadsId = rawGads.trim()
+    ? rawGads.toUpperCase().startsWith("AW-") || rawGads.toUpperCase().startsWith("G-")
+      ? rawGads.trim()
+      : `AW-${rawGads.trim()}`
+    : "";
+
   // Global Conversion Event Trigger Handler
   const handleLeadSubmitEvent = async () => {
     if (typeof window !== "undefined") {
       try {
         if ((window as any).fbq) (window as any).fbq("track", "Lead");
         if ((window as any).ttq) (window as any).ttq.track("CompleteRegistration");
-        if ((window as any).gtag) (window as any).gtag("event", "generate_lead");
-        console.log("[Pixel Event Fired]: Lead Conversion");
+        if ((window as any).gtag && cleanGadsId) {
+          (window as any).gtag("event", "conversion", { send_to: cleanGadsId });
+          (window as any).gtag("event", "generate_lead");
+        }
+        console.log("[Pixel Event Fired]: Lead Conversion & Google Ads Event");
       } catch (e) {
         console.warn("Pixel event error:", e);
       }
@@ -200,22 +213,22 @@ export default function UserProfilePage({ params }: PageProps) {
         />
       )}
 
-      {/* 3. Google Analytics 4 (GA4) */}
-      {pixels.gaMeasurementId && (
+      {/* 3. Google Ads Pixel */}
+      {cleanGadsId && (
         <>
           <Script
             strategy="afterInteractive"
-            src={`https://www.googletagmanager.com/gtag/js?id=${pixels.gaMeasurementId}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${cleanGadsId}`}
           />
           <Script
-            id="ga4-script"
+            id="google-ads-script"
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${pixels.gaMeasurementId}');
+                gtag('config', '${cleanGadsId}');
               `,
             }}
           />
