@@ -107,7 +107,7 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         }
       }
 
-      console.log('Leads fetched:', data?.length || 0);
+      console.log("Fetched leads count:", data?.length || 0);
       setLeads(data || []);
     } catch (err) {
       console.error("[Leads Fetch Error]:", err);
