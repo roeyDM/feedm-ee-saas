@@ -318,7 +318,7 @@ export function AccountSettingsEditor({
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80">
                     <div className="relative shrink-0">
                       <img
-                        src={accountAvatarUrl}
+                        src={accountAvatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
                         alt={name}
                         className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-md"
                       />

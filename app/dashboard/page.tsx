@@ -483,7 +483,7 @@ function DashboardContent() {
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <img
-                  src={avatarUrl}
+                  src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
                   alt={name}
                   className="w-9 h-9 rounded-full object-cover border border-zinc-200 shrink-0"
                 />

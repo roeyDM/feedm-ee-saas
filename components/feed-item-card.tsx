@@ -52,27 +52,31 @@ export function FeedItemCard({ item, onClick, className }: FeedItemCardProps) {
       )}
     >
       {/* Thumbnail Image */}
-      <img
-        src={item.thumbnailUrl}
-        alt={item.title}
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
-          isHovered ? "opacity-0" : "opacity-100"
-        )}
-      />
+      {item.thumbnailUrl?.trim() ? (
+        <img
+          src={item.thumbnailUrl}
+          alt={item.title}
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover transition-opacity duration-500",
+            isHovered ? "opacity-0" : "opacity-100"
+          )}
+        />
+      ) : null}
 
       {/* Video Element (Plays on hover) */}
-      <video
-        ref={videoRef}
-        src={item.videoUrl}
-        loop
-        muted
-        playsInline
-        className={cn(
-          "absolute inset-0 h-full w-full object-cover transition-opacity duration-500 bg-black",
-          isHovered ? "opacity-100" : "opacity-0"
-        )}
-      />
+      {item.videoUrl?.trim() ? (
+        <video
+          ref={videoRef}
+          src={item.videoUrl}
+          loop
+          muted
+          playsInline
+          className={cn(
+            "absolute inset-0 h-full w-full object-cover transition-opacity duration-500 bg-black",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+        />
+      ) : null}
 
       {/* Overlay Gradients */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80" />

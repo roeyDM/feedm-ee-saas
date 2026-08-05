@@ -139,14 +139,16 @@ export function VideoPlayerModal({
 
         {/* Video Wrapper */}
         <div className="relative h-full w-full cursor-pointer bg-black" onClick={togglePlay}>
-          <video
-            ref={videoRef}
-            src={currentItem.videoUrl}
-            loop
-            playsInline
-            onTimeUpdate={handleTimeUpdate}
-            className="h-full w-full object-cover"
-          />
+          {currentItem.videoUrl?.trim() ? (
+            <video
+              ref={videoRef}
+              src={currentItem.videoUrl}
+              loop
+              playsInline
+              onTimeUpdate={handleTimeUpdate}
+              className="h-full w-full object-cover"
+            />
+          ) : null}
 
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
@@ -155,7 +157,7 @@ export function VideoPlayerModal({
           <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-30">
             {/* Creator Badge */}
             <div className="flex items-center gap-2.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-md border border-white/10">
-              {creatorAvatar ? (
+              {creatorAvatar?.trim() ? (
                 <img src={creatorAvatar} alt={creatorName} className="h-6 w-6 rounded-full object-cover border border-white/20" />
               ) : (
                 <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-black uppercase">

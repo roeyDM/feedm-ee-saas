@@ -467,7 +467,7 @@ export function ProfileEditor({
                 className="relative h-16 w-16 shrink-0 rounded-full overflow-hidden border border-zinc-200 bg-zinc-100 cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
               >
-                {avatarUrl ? (
+                {avatarUrl?.trim() ? (
                   <img src={avatarUrl} alt="Avatar Preview" className="h-full w-full object-cover" />
                 ) : (
                   <User className="h-8 w-8 m-auto mt-4 text-zinc-400" />
@@ -795,11 +795,11 @@ export function ProfileEditor({
                       >
                         <GripVertical className="h-5 w-5" />
                       </div>
-                      {link.thumbnailUrl && (
+                      {link.thumbnailUrl?.trim() ? (
                         <div className="flex-shrink-0 h-8 w-8 overflow-hidden rounded-md border border-zinc-200 bg-zinc-100">
                           <img src={link.thumbnailUrl} alt={link.title} className="h-full w-full object-cover" />
                         </div>
-                      )}
+                      ) : null}
                       <div className="min-w-0">
                         <p className={cn("text-xs font-bold leading-tight line-clamp-2 break-words", link.isActive === false ? "text-zinc-400 line-through" : "text-zinc-900")}>
                           {link.title}

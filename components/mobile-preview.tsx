@@ -778,11 +778,11 @@ export function MobilePreview({
               )}
 
               <div className="flex items-center gap-3 min-w-0 pr-2">
-                {link.thumbnailUrl && (
+                {link.thumbnailUrl?.trim() ? (
                   <div className="flex-shrink-0 h-10 w-10 overflow-hidden rounded-lg border border-zinc-200/40">
                     <img src={link.thumbnailUrl} alt={link.title} className="h-full w-full object-cover" />
                   </div>
-                )}
+                ) : null}
                 <div className="flex flex-col min-w-0">
                   <span 
                     style={{ color: activeAppearance.cardTextColor || "#09090b" }}
