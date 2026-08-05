@@ -60,17 +60,15 @@ export async function POST(request: Request) {
     try {
       const leadPayload: any = {
         user_id: feedOwnerUserId || null,
-        feed_id: cleanHandle || body.feedId || null,
+        feed_id: body.feedId || body.feed_id || cleanHandle || null,
         feed_handle: formattedFeedHandle || "@default",
-        username: cleanHandle || "main",
-        target_email: targetEmail,
         full_name: fullName,
         email: email,
         phone: phone,
         status: "new",
       };
 
-      console.log("📝 SUBMITTING LEAD PAYLOAD TO SUPABASE:", leadPayload);
+      console.log("📝 SUBMITTING SANITIZED LEAD PAYLOAD TO SUPABASE:", leadPayload);
 
       const { data: insertedLead, error: insertError } = await dbAdmin
         .from("leads")
@@ -85,11 +83,10 @@ export async function POST(request: Request) {
           .from("leads")
           .insert([
             {
-              username: cleanHandle || "main",
-              target_email: targetEmail,
               full_name: fullName,
               email: email,
               phone: phone,
+              status: "new",
             },
           ])
           .select();
