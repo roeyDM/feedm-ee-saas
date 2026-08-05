@@ -54,12 +54,12 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
 
       let data: LeadItem[] | null = null;
 
-      // 1. Direct query by authenticated user_id
+      // 1. Direct query by authenticated user_id OR null user_id
       if (currentUid) {
         const uidRes = await supabase
           .from("leads")
           .select("*")
-          .eq("user_id", currentUid)
+          .or(`user_id.eq.${currentUid},user_id.is.null`)
           .order("created_at", { ascending: false });
 
         if (uidRes.data && uidRes.data.length > 0) {
@@ -71,7 +71,6 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
       if (!data || data.length === 0) {
         const conditions: string[] = [];
         if (currentHandle) {
-          conditions.push(`username.eq.${currentHandle}`);
           conditions.push(`feed_id.eq.${currentHandle}`);
         }
         if (currentEmail) {
@@ -107,7 +106,7 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         }
       }
 
-      console.log("Fetched leads count:", data?.length || 0);
+      console.log("CRM Loaded leads:", data);
       setLeads(data || []);
     } catch (err) {
       console.error("[Leads Fetch Error]:", err);
