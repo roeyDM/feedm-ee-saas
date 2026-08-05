@@ -234,7 +234,7 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
       )}
 
       {/* Main Single Card Container */}
-      <div className="bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+      <div className="w-full max-w-none flex-1 bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
         {/* Card Header Toolbar */}
         <div className="p-5 border-b border-zinc-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-zinc-50/50">
           {/* Left: Title & Count */}
@@ -253,14 +253,14 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
           {/* Right Toolbar: Search, Status Filter & Compact Quick Actions */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Search Input */}
-            <div className="relative w-full sm:w-52">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+            <div className="relative w-full sm:w-60">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
               <input
                 type="text"
                 placeholder="Search leads..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-zinc-200 bg-white pl-8 pr-3 py-1.5 text-xs font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
+                className="w-full rounded-xl border border-zinc-200 bg-white pl-9 pr-3 py-1.5 text-xs font-medium text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-2xs"
               />
             </div>
 
@@ -270,7 +270,7 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-[11px] font-bold capitalize transition-all cursor-pointer ${
                     statusFilter === st
                       ? "bg-zinc-900 text-white shadow-xs"
                       : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
@@ -328,16 +328,16 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
           </div>
         ) : (
           /* Data Table */
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-full text-left border-collapse table-auto">
               <thead>
-                <tr className="border-b border-zinc-100 bg-zinc-50/70 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  <th className="py-3 px-5">Lead Details</th>
-                  <th className="py-3 px-4">Contact Links</th>
-                  <th className="py-3 px-4">Source Feed</th>
-                  <th className="py-3 px-4">Date Submitted</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-5 text-right">Actions</th>
+                <tr className="border-b border-zinc-100 bg-zinc-50/70 text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
+                  <th className="py-4 px-6 w-[20%]">Lead Details</th>
+                  <th className="py-4 px-6 w-[30%]">Contact Links</th>
+                  <th className="py-4 px-6 w-[15%]">Source Feed</th>
+                  <th className="py-4 px-6 w-[15%]">Date Submitted</th>
+                  <th className="py-4 px-6 w-[12%]">Status</th>
+                  <th className="py-4 px-6 w-[8%] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-xs">
@@ -348,9 +348,9 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                   return (
                     <tr key={lead.id} className="hover:bg-zinc-50/80 transition-colors group">
                       {/* Name & Avatar */}
-                      <td className="py-3.5 px-5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-xs shrink-0 border border-emerald-200">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-xs shrink-0 border border-emerald-200">
                             {lead.full_name ? lead.full_name.charAt(0).toUpperCase() : "L"}
                           </div>
                           <div className="flex flex-col">
@@ -361,22 +361,22 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                       </td>
 
                       {/* Contact Links */}
-                      <td className="py-3.5 px-4">
-                        <div className="flex flex-col gap-0.5">
+                      <td className="py-4 px-6">
+                        <div className="flex flex-col gap-1">
                           {lead.email ? (
                             <a
                               href={`mailto:${lead.email}`}
                               className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 font-semibold hover:underline text-xs"
                             >
-                              <Mail className="h-3 w-3 text-emerald-600 shrink-0" />
-                              <span className="truncate max-w-[150px]">{lead.email}</span>
+                              <Mail className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                              <span className="truncate max-w-[220px]">{lead.email}</span>
                             </a>
                           ) : (
                             <span className="text-zinc-400 italic text-[11px]">No email</span>
                           )}
 
                           {lead.phone ? (
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
                               <a
                                 href={`tel:${lead.phone}`}
                                 className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900 font-medium text-[11px]"
@@ -405,26 +405,26 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                       </td>
 
                       {/* Source Feed */}
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-[11px] border border-zinc-200/80">
+                      <td className="py-4 px-6">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-[11px] border border-zinc-200/80">
                           @{lead.username || lead.feed_id || username || "main"}
                         </span>
                       </td>
 
                       {/* Date */}
-                      <td className="py-3.5 px-4 text-zinc-500 font-medium">
-                        <div className="flex items-center gap-1 text-[11px]">
-                          <Calendar className="h-3 w-3 text-zinc-400 shrink-0" />
+                      <td className="py-4 px-6 text-zinc-500 font-medium">
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                          <Calendar className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                           <span>{new Date(lead.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
                         </div>
                       </td>
 
                       {/* Status Dropdown */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-6">
                         <select
                           value={currentStatus}
                           onChange={(e) => handleStatusChange(lead.id, e.target.value as any)}
-                          className={`text-[11px] font-extrabold px-2 py-1 rounded-xl border cursor-pointer focus:outline-none transition-colors ${
+                          className={`text-[11px] font-extrabold px-2.5 py-1 rounded-xl border cursor-pointer focus:outline-none transition-colors ${
                             currentStatus === "new"
                               ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                               : currentStatus === "in_contact"
@@ -439,14 +439,14 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-5 text-right">
+                      <td className="py-4 px-6 text-right">
                         <button
                           onClick={() => handleDeleteLead(lead.id)}
                           disabled={deletingId === lead.id}
-                          className="p-1 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                           title="Delete Lead Record"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </td>
                     </tr>

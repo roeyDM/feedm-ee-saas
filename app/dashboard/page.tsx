@@ -952,7 +952,7 @@ function DashboardContent() {
               )}
 
               {activeTab === "leads" && (
-                <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-7xl mx-auto">
+                <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-none flex-1">
                   <LeadsManager username={username} targetEmail={leadForm.target} />
                 </div>
               )}
