@@ -52,11 +52,6 @@ export default function UserProfilePage({ params }: PageProps) {
         if (data && !error) {
           const userPlan = data.plan_type || "free";
           const isFreeUser = userPlan === "free";
-          const hasConfiguredReels = Array.isArray(data.reels) && data.reels.length > 0;
-
-          // Smart Readiness Check: Render reels/lead form ONLY if Pro AND has at least 1 reel
-          const shouldRenderReels = !isFreeUser && hasConfiguredReels;
-
           let loadedAppearance = data.appearance;
           if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
             const localApp = localStorage.getItem(`feedmee_appearance_${handleKey.toLowerCase()}`);
@@ -70,7 +65,6 @@ export default function UserProfilePage({ params }: PageProps) {
           let tiktokId = data.tiktok_pixel_id || "";
           let gadsId = data.google_ads_id || data.ga_measurement_id || "";
 
-          // Fallback to local storage cache if viewing locally
           if (typeof window !== "undefined" && (!metaId && !tiktokId && !gadsId)) {
             const cachedPixels = localStorage.getItem("feedmee_marketing_pixels");
             if (cachedPixels) {
@@ -90,6 +84,17 @@ export default function UserProfilePage({ params }: PageProps) {
             gaMeasurementId: gadsId,
           });
 
+          // Parse video reels & lead form from database record
+          const loadedReels = (Array.isArray(data.reels) ? data.reels : [])
+            .map((r: any) => ({
+              ...r,
+              id: r.id || crypto.randomUUID(),
+              videoUrl: r.videoUrl || r.url || "",
+              caption: r.caption || "",
+              likes: r.likes || 142,
+            }))
+            .filter((r: any) => r.videoUrl);
+
           setProfile({
             name: data.name || handleKey,
             bio: data.bio || "",
@@ -103,8 +108,8 @@ export default function UserProfilePage({ params }: PageProps) {
               isActive: l.isActive !== false
             })),
             customLinks: data.custom_links || [],
-            reels: shouldRenderReels ? data.reels : [],
-            leadForm: shouldRenderReels ? sanitizeLeadForm(data.lead_form) : sanitizeLeadForm(null),
+            reels: loadedReels,
+            leadForm: sanitizeLeadForm(data.lead_form),
             appearance: {
               ...(loadedAppearance || {}),
               hideBranding: isFreeUser ? false : !!loadedAppearance?.hideBranding,
