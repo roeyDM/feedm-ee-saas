@@ -22,6 +22,7 @@ async function fetchPublicProfile(handleKey: string) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  // Always use .select("*") — never restrict columns; missing cols return undefined, never throw
   const { data: profile, error } = await client
     .from("profiles")
     .select("*")
@@ -38,72 +39,98 @@ async function fetchPublicProfile(handleKey: string) {
       ? profile.appearance
       : null;
 
-  // Safe color destructuring with explicit default fallbacks
-  const buttonColor = profile?.button_color || loadedAppearance?.cardBgColor || "#16a34a";
-  const buttonTextColor = profile?.button_text_color || loadedAppearance?.cardTextColor || "#ffffff";
-  const themeColor = profile?.theme_color || loadedAppearance?.bgColor || profile?.custom_hex_color || "#0f172a";
-  const textColor = profile?.text_color || loadedAppearance?.headlineColor || "#ffffff";
+  // Safe color destructuring with explicit default fallbacks for ALL profile color columns.
+  // Priority order: new dedicated columns → appearance JSONB → hardcoded sensible default
+  const buttonColor      = profile?.button_color      || loadedAppearance?.cardBgColor   || "#16a34a";
+  const buttonTextColor  = profile?.button_text_color || loadedAppearance?.cardTextColor || "#ffffff";
+  const themeColor       = profile?.theme_color       || loadedAppearance?.bgColor       || profile?.custom_hex_color || "#0f172a";
+  const textColor        = profile?.text_color        || loadedAppearance?.headlineColor || "#ffffff";
 
-  const cleanThemeColor = sanitizeHexColor(themeColor, "#0f172a");
-  const cleanButtonColor = sanitizeHexColor(buttonColor, "#16a34a");
-  const cleanTextColor = sanitizeHexColor(textColor, "#ffffff");
+  const cleanThemeColor      = sanitizeHexColor(themeColor,      "#0f172a");
+  const cleanButtonColor     = sanitizeHexColor(buttonColor,     "#16a34a");
+  const cleanTextColor       = sanitizeHexColor(textColor,       "#ffffff");
   const cleanButtonTextColor = sanitizeHexColor(buttonTextColor, "#ffffff");
 
+  // bioColor: use the saved value if present, otherwise inherit from text_color so bio
+  // is always legible regardless of background darkness. Never default to #27272A when
+  // the user has a dark-themed feed (it becomes invisible against dark backgrounds).
+  const rawBioColor = loadedAppearance?.bioColor;
+  const cleanBioColor = rawBioColor
+    ? sanitizeHexColor(rawBioColor, cleanTextColor)
+    : cleanTextColor;
+
+  // socialIconBgColor: use saved value if set; else fall back to button_color so themed
+  // feeds show accent-colored icon buttons matching the simulator exactly
+  const rawSocialIconBg = loadedAppearance?.socialIconBgColor;
+  const cleanSocialIconBg = rawSocialIconBg
+    ? sanitizeHexColor(rawSocialIconBg, cleanButtonColor)
+    : cleanButtonColor;
+
+  // socialFlatColor: use saved value, else button_text_color for contrast on icon bg
+  const rawSocialFlatColor = loadedAppearance?.socialFlatColor;
+  const cleanSocialFlatColor = rawSocialFlatColor
+    ? sanitizeHexColor(rawSocialFlatColor, cleanButtonTextColor)
+    : cleanButtonTextColor;
+
   const sanitizedAppearance = {
-    bgType: loadedAppearance?.bgType || "solid",
-    bgColor: cleanThemeColor,
-    bgGradientStart: sanitizeHexColor(loadedAppearance?.bgGradientStart, "#FBCFE8"),
-    bgGradientEnd: sanitizeHexColor(loadedAppearance?.bgGradientEnd, "#E0F2FE"),
-    bgGradientAngle: loadedAppearance?.bgGradientAngle ?? 135,
-    bgImageUrl: loadedAppearance?.bgImageUrl || "",
-    headlineColor: cleanTextColor,
-    bioColor: sanitizeHexColor(loadedAppearance?.bioColor, "#27272A"),
-    cardBgColor: cleanButtonColor,
-    cardTextColor: cleanButtonTextColor,
-    cardBorderColor: sanitizeHexColor(loadedAppearance?.cardBorderColor, "#E4E4E7"),
-    socialIconBgColor: sanitizeHexColor(loadedAppearance?.socialIconBgColor, "#FFFFFF"),
-    socialFlatColor: sanitizeHexColor(loadedAppearance?.socialFlatColor, "#18181B"),
+    bgType:           loadedAppearance?.bgType           || "solid",
+    bgColor:          cleanThemeColor,
+    bgGradientStart:  sanitizeHexColor(loadedAppearance?.bgGradientStart, "#FBCFE8"),
+    bgGradientEnd:    sanitizeHexColor(loadedAppearance?.bgGradientEnd,   "#E0F2FE"),
+    bgGradientAngle:  loadedAppearance?.bgGradientAngle  ?? 135,
+    bgImageUrl:       loadedAppearance?.bgImageUrl        || "",
+    headlineColor:    cleanTextColor,
+    bioColor:         cleanBioColor,          // ← inherited from text_color when not set
+    cardBgColor:      cleanButtonColor,
+    cardTextColor:    cleanButtonTextColor,
+    cardBorderColor:  sanitizeHexColor(loadedAppearance?.cardBorderColor, "#E4E4E7"),
+    // Social icons: preserve saved mode, default to "flat" with themed colors
+    socialLogoMode:   (loadedAppearance?.socialLogoMode as "brand" | "flat") || "flat",
+    socialIconBgColor: cleanSocialIconBg,     // ← themed from button_color when not set
+    socialFlatColor:   cleanSocialFlatColor,  // ← themed from button_text_color when not set
     avatarBorderColor: sanitizeHexColor(loadedAppearance?.avatarBorderColor, "#FFFFFF"),
-    buttonShape: loadedAppearance?.buttonShape || "rounded",
-    fontFamily: loadedAppearance?.fontFamily || "Inter",
-    hideBranding: isFreeUser ? false : !!loadedAppearance?.hideBranding,
+    avatarBorderEnabled: loadedAppearance?.avatarBorderEnabled !== false,
+    avatarBorderWidth: loadedAppearance?.avatarBorderWidth ?? 4,
+    buttonShape:      loadedAppearance?.buttonShape       || "rounded",
+    fontFamily:       loadedAppearance?.fontFamily         || "Inter",
+    hideBranding:     isFreeUser ? false : !!loadedAppearance?.hideBranding,
   };
 
   // Reels: parse and filter valid entries
   const loadedReels = (Array.isArray(profile.reels) ? profile.reels : [])
     .map((r: any) => ({
       ...r,
-      id: r.id || crypto.randomUUID(),
+      id:       r.id       || crypto.randomUUID(),
       videoUrl: r.videoUrl || r.url || "",
-      caption: r.caption || "",
-      likes: r.likes || 142,
+      caption:  r.caption  || "",
+      likes:    r.likes    || 142,
     }))
     .filter((r: any) => r.videoUrl);
 
   return {
-    name: profile.name || handleKey,
-    bio: profile.bio || "",
+    name:     profile.name || handleKey,
+    bio:      profile.bio  || "",
     avatarUrl:
       profile.avatar_url ||
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-    theme_color: cleanThemeColor,
-    button_color: cleanButtonColor,
-    text_color: cleanTextColor,
+    theme_color:       cleanThemeColor,
+    button_color:      cleanButtonColor,
+    text_color:        cleanTextColor,
     button_text_color: cleanButtonTextColor,
-    customHexColor: cleanThemeColor,
+    customHexColor:    cleanThemeColor,
     socialLinks: (profile.social_links || []).map((l: any) => ({
       ...l,
-      id: l.id || crypto.randomUUID(),
+      id:       l.id || crypto.randomUUID(),
       isActive: l.isActive !== false,
     })),
     customLinks: profile.custom_links || [],
-    reels: loadedReels,
-    leadForm: sanitizeLeadForm(profile.lead_form),
-    appearance: sanitizedAppearance,
+    reels:       loadedReels,
+    leadForm:    sanitizeLeadForm(profile.lead_form),
+    appearance:  sanitizedAppearance,
     pixels: {
-      metaPixelId: profile.meta_pixel_id || "",
+      metaPixelId:  profile.meta_pixel_id  || "",
       tiktokPixelId: profile.tiktok_pixel_id || "",
-      googleAdsId: profile.google_ads_id || profile.ga_measurement_id || "",
+      googleAdsId:  profile.google_ads_id  || profile.ga_measurement_id || "",
     },
   };
 }
