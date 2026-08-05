@@ -900,7 +900,7 @@ function DashboardContent() {
 
           {/* Active Form Panel */}
           {activeTab !== "settings" ? (
-            <div className={cn("relative max-w-3xl mx-auto w-full space-y-6 transition-all duration-300", isDirty && "pb-28")}>
+            <div className={cn("relative w-full space-y-6 transition-all duration-300", activeTab === "leads" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto", isDirty && "pb-28")}>
               {activeTab === "bio" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
                   <ProfileEditor
