@@ -59,31 +59,29 @@ export async function POST(request: Request) {
     // 2. Perform DB Insertion via Supabase Admin / Service Role
     try {
       const leadPayload: any = {
-        feed_id: cleanHandle || "main",
-        feed_handle: formattedFeedHandle,
+        user_id: feedOwnerUserId || null,
+        feed_id: cleanHandle || body.feedId || null,
+        feed_handle: formattedFeedHandle || "@default",
         username: cleanHandle || "main",
         target_email: targetEmail,
         full_name: fullName,
         email: email,
         phone: phone,
         status: "new",
-        created_at: new Date().toISOString(),
       };
 
-      if (feedOwnerUserId) {
-        leadPayload.user_id = feedOwnerUserId;
-      }
+      console.log("📝 SUBMITTING LEAD PAYLOAD TO SUPABASE:", leadPayload);
 
-      const { data: leadData, error: dbError } = await dbAdmin
+      const { data: insertedLead, error: insertError } = await dbAdmin
         .from("leads")
         .insert([leadPayload])
-        .select()
-        .maybeSingle();
+        .select();
 
-      if (dbError) {
-        console.error("[Supabase Lead Insert Error]: Primary insert failed:", dbError.message || dbError);
-        // Fallback insert with essential columns if user_id/feed_handle column is missing
-        const { error: fallbackErr } = await dbAdmin
+      if (insertError) {
+        console.error("❌ SUPABASE LEAD INSERT ERROR:", JSON.stringify(insertError, null, 2));
+
+        // Fallback insert with essential columns if schema is minimal
+        const { data: fallbackLead, error: fallbackErr } = await dbAdmin
           .from("leads")
           .insert([
             {
@@ -93,17 +91,19 @@ export async function POST(request: Request) {
               email: email,
               phone: phone,
             },
-          ]);
+          ])
+          .select();
+
         if (fallbackErr) {
-          console.error("[Supabase Lead Insert Error]: Fallback insert also failed:", fallbackErr.message || fallbackErr);
+          console.error("❌ SUPABASE FALLBACK LEAD INSERT ERROR:", JSON.stringify(fallbackErr, null, 2));
         } else {
-          console.log("[Supabase Lead Insert]: Fallback record saved successfully");
+          console.log("✅ SUPABASE FALLBACK LEAD INSERT SUCCESS:", fallbackLead);
         }
       } else {
-        console.log("[Supabase Lead Insert]: Lead record inserted successfully:", leadData?.id || "OK");
+        console.log("✅ SUPABASE LEAD INSERT SUCCESS:", insertedLead);
       }
     } catch (dbErr) {
-      console.error("[Supabase Lead Insert Exception]:", dbErr);
+      console.error("❌ SUPABASE LEAD INSERT EXCEPTION:", dbErr);
     }
 
     // 3. Dispatch Email via Resend API
