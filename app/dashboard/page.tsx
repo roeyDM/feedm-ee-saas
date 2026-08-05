@@ -11,6 +11,7 @@ import { BillingEditor } from "@/components/billing-editor";
 import { AccountSettingsEditor } from "@/components/account-settings-editor";
 import { LeadsManager } from "@/components/leads-manager";
 import { AnalyticsManager } from "@/components/analytics-manager";
+import { MarketingPixelsManager } from "@/components/marketing-pixels-manager";
 import {
   MobilePreview,
   SocialLink,
@@ -24,7 +25,7 @@ import {
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -74,7 +75,7 @@ function StripeCheckoutStatus({
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics">("bio");
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
   const [analyticsTier, setAnalyticsTier] = useState<"free" | "personal" | "pro">("free");
@@ -728,6 +729,24 @@ function DashboardContent() {
                     </span>
                   </button>
 
+                  <button
+                    onClick={() => setActiveTab("pixels")}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                      activeTab === "pixels"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>Marketing Pixels</span>
+                    </div>
+                    <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
+                      New
+                    </span>
+                  </button>
+
                   <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
                     <span>Custom Domain</span>
                     <Lock className="h-3.5 w-3.5 text-amber-500" />
@@ -964,6 +983,12 @@ function DashboardContent() {
                     activeTier={analyticsTier}
                     onTierChange={setAnalyticsTier}
                   />
+                </div>
+              )}
+
+              {activeTab === "pixels" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-none flex-1">
+                  <MarketingPixelsManager username={username} />
                 </div>
               )}
             </div>
