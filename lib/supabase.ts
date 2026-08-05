@@ -5,6 +5,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publish
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+export function getSupabaseAdmin() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (serviceKey) {
+    return createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+  }
+  return supabase;
+}
+
 export type PlanType = "free" | "pro" | "business";
 
 export interface HandleValidationResult {

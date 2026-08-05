@@ -1,1 +1,1 @@
-export { POST } from "../leads/submit/route";
+export { POST } from "@/app/api/send-lead-email/route";

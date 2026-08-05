@@ -48,17 +48,31 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const currentEmail = user?.email || targetEmail || "";
+      const currentEmail = (user?.email || targetEmail || "").toLowerCase().trim();
       const currentUid = user?.id;
+      const currentHandle = (username || "").toLowerCase().trim();
 
-      let query = supabase.from("leads").select("*").order("created_at", { ascending: false });
+      let data: LeadItem[] | null = null;
 
-      // Match user handle, target email, or user_id
-      if (username || currentEmail || currentUid) {
+      // 1. Direct query by authenticated user_id
+      if (currentUid) {
+        const uidRes = await supabase
+          .from("leads")
+          .select("*")
+          .eq("user_id", currentUid)
+          .order("created_at", { ascending: false });
+
+        if (uidRes.data && uidRes.data.length > 0) {
+          data = uidRes.data as LeadItem[];
+        }
+      }
+
+      // 2. Query by feed_id / username / target_email
+      if (!data || data.length === 0) {
         const conditions: string[] = [];
-        if (username) {
-          conditions.push(`username.eq.${username.toLowerCase()}`);
-          conditions.push(`feed_id.eq.${username.toLowerCase()}`);
+        if (currentHandle) {
+          conditions.push(`username.eq.${currentHandle}`);
+          conditions.push(`feed_id.eq.${currentHandle}`);
         }
         if (currentEmail) {
           conditions.push(`target_email.eq.${currentEmail}`);
@@ -66,21 +80,34 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         if (currentUid) {
           conditions.push(`user_id.eq.${currentUid}`);
         }
-        query = query.or(conditions.join(","));
-      }
 
-      let { data, error } = await query;
+        if (conditions.length > 0) {
+          const queryRes = await supabase
+            .from("leads")
+            .select("*")
+            .or(conditions.join(","))
+            .order("created_at", { ascending: false });
 
-      // Fallback: If query returned no leads or failed, fetch all recent leads
-      if (error || !data || data.length === 0) {
-        console.log("[Leads Fetch Note]: Query returned 0 results or error, fetching fallback list...", error?.message);
-        const fallbackRes = await supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(50);
-        if (fallbackRes.data && fallbackRes.data.length > 0) {
-          data = fallbackRes.data;
+          if (queryRes.data && queryRes.data.length > 0) {
+            data = queryRes.data as LeadItem[];
+          }
         }
       }
 
-      setLeads((data as LeadItem[]) || []);
+      // 3. Absolute Fallback: Fetch all recent rows from leads table
+      if (!data || data.length === 0) {
+        const fallbackRes = await supabase
+          .from("leads")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (fallbackRes.data && fallbackRes.data.length > 0) {
+          data = fallbackRes.data as LeadItem[];
+        }
+      }
+
+      setLeads(data || []);
     } catch (err) {
       console.error("[Leads Fetch Error]:", err);
     } finally {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -22,41 +23,77 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Attempt to save lead entry to Supabase
-    try {
-      const { supabase } = await import("@/lib/supabase");
-      const { error: dbErr } = await supabase.from("leads").insert([
-        {
-          username: cleanHandle || "main",
-          feed_id: cleanHandle || "main",
-          target_email: targetEmail,
-          full_name: fullName,
-          email: email,
-          phone: phone,
-          created_at: new Date().toISOString(),
-          status: "new",
-        },
-      ]);
+    // 1. Resolve Feed Owner's user_id from profiles table
+    const dbAdmin = getSupabaseAdmin();
+    let feedOwnerUserId: string | null = null;
 
-      if (dbErr) {
-        console.error("[Supabase Lead Insert Error]:", dbErr.message || dbErr);
-        // Fallback insert with essential columns if schema differs
-        await supabase.from("leads").insert([
-          {
-            username: cleanHandle || "main",
-            full_name: fullName,
-            email: email,
-            phone: phone,
-          },
-        ]);
-      } else {
-        console.log("[Supabase Lead Insert]: Successfully logged lead to database");
+    try {
+      if (cleanHandle) {
+        const { data: profile } = await dbAdmin
+          .from("profiles")
+          .select("id, username")
+          .eq("username", cleanHandle.toLowerCase())
+          .maybeSingle();
+
+        if (profile?.id) {
+          feedOwnerUserId = profile.id;
+        }
       }
-    } catch (dbErr) {
-      console.warn("[Supabase Lead Insert Note]:", dbErr);
+    } catch (resolveErr) {
+      console.warn("[Lead Resolver Note]: Could not resolve user_id for handle:", cleanHandle, resolveErr);
     }
 
-    // 2. Read Server API Key with hardened fallback (process.env.RESEND_API_KEY -> process.env.NEXT_PUBLIC_RESEND_API_KEY -> process.env.LEAD_EMAIL_API_KEY)
+    // 2. Perform DB Insertion via Supabase Admin / Service Role
+    try {
+      const leadPayload: any = {
+        feed_id: cleanHandle || "main",
+        feed_handle: formattedFeedHandle,
+        username: cleanHandle || "main",
+        target_email: targetEmail,
+        full_name: fullName,
+        email: email,
+        phone: phone,
+        status: "new",
+        created_at: new Date().toISOString(),
+      };
+
+      if (feedOwnerUserId) {
+        leadPayload.user_id = feedOwnerUserId;
+      }
+
+      const { data: leadData, error: dbError } = await dbAdmin
+        .from("leads")
+        .insert([leadPayload])
+        .select()
+        .maybeSingle();
+
+      if (dbError) {
+        console.error("[Supabase Lead Insert Error]: Primary insert failed:", dbError.message || dbError);
+        // Fallback insert with essential columns if user_id/feed_handle column is missing
+        const { error: fallbackErr } = await dbAdmin
+          .from("leads")
+          .insert([
+            {
+              username: cleanHandle || "main",
+              target_email: targetEmail,
+              full_name: fullName,
+              email: email,
+              phone: phone,
+            },
+          ]);
+        if (fallbackErr) {
+          console.error("[Supabase Lead Insert Error]: Fallback insert also failed:", fallbackErr.message || fallbackErr);
+        } else {
+          console.log("[Supabase Lead Insert]: Fallback record saved successfully");
+        }
+      } else {
+        console.log("[Supabase Lead Insert]: Lead record inserted successfully:", leadData?.id || "OK");
+      }
+    } catch (dbErr) {
+      console.error("[Supabase Lead Insert Exception]:", dbErr);
+    }
+
+    // 3. Dispatch Email via Resend API
     const apiKey =
       process.env.RESEND_API_KEY ||
       process.env.NEXT_PUBLIC_RESEND_API_KEY ||
@@ -65,7 +102,7 @@ export async function POST(request: Request) {
     console.log("[Resend Key Status]:", !!apiKey, apiKey ? `Key length: ${apiKey.length}` : "No key found");
 
     if (!apiKey) {
-      console.error("[Email Error]: RESEND_API_KEY environment variable is not configured in Netlify settings.");
+      console.error("[Email Error]: RESEND_API_KEY environment variable is not configured on server.");
       return NextResponse.json({
         success: true,
         warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify settings.",
@@ -111,7 +148,7 @@ export async function POST(request: Request) {
         </div>
 
         <div style="text-align: center; margin: 24px 0 12px 0;">
-          <a href="${BASE_URL}/dashboard" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 12px 28px; border-radius: 10px; font-weight: 800; font-size: 13px; text-decoration: none; shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <a href="${BASE_URL}/dashboard" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 12px 28px; border-radius: 10px; font-weight: 800; font-size: 13px; text-decoration: none;">
             View Leads in Dashboard &rarr;
           </a>
         </div>
