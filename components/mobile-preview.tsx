@@ -79,13 +79,42 @@ export const DEFAULT_DEMO_REELS: VideoReel[] = [
     caption: "Build your video bio link in under 60 seconds! Connect, upload your top Reels, and add direct conversion links. ⚡",
     likes: 429,
     promoEnabled: true,
-    promoTitle: "60-Second Setup",
-    promoCta: "Launch Your Feed",
     promoUrl: "/pricing",
   },
 ];
 
 export const DEFAULT_DEMO_REEL: VideoReel = DEFAULT_DEMO_REELS[0];
+
+export function parseVideoEmbedUrl(url?: string): { isIframe: boolean; embedUrl: string } {
+  if (!url) return { isIframe: false, embedUrl: "" };
+
+  const clean = url.trim();
+
+  // YouTube Shorts, Watch, or Shortlink
+  const ytMatch = clean.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    const videoId = ytMatch[1];
+    return {
+      isIframe: true,
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&playsinline=1`,
+    };
+  }
+
+  // Vimeo
+  const vimeoMatch = clean.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return {
+      isIframe: true,
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1&loop=1&autopause=0`,
+    };
+  }
+
+  // Standard Direct Video File (.mp4, .mov, blob:, data:)
+  return {
+    isIframe: false,
+    embedUrl: clean,
+  };
+}
 
 export interface SocialLink {
   id: string;
@@ -847,32 +876,54 @@ export function MobilePreview({
           }}
           className="snap-start snap-always relative h-full w-full overflow-hidden bg-black text-white cursor-pointer select-none"
         >
-          {/* Full Screen Video Element */}
-          <video
-            key={reel.videoUrl}
-            ref={(el) => {
-              if (el) {
-                const isReelSectionActive = activePageIndex >= 1 && activePageIndex <= displayReels.length;
-                const isVideoActive = isReelSectionActive && idx === currentReelIndex && isPlaying;
-                const shouldBeMuted = !isReelSectionActive || idx !== currentReelIndex || isMuted;
+          {/* Full Screen Video / Embed Element */}
+          {(() => {
+            const rawUrl = reel.videoUrl || reel.url || "";
+            const parsed = parseVideoEmbedUrl(rawUrl);
 
-                el.muted = shouldBeMuted;
-                if (isVideoActive) {
-                  el.play().catch((err) => console.error("Play error:", err));
-                } else {
-                  el.pause();
-                }
-              }
-            }}
-            src={reel.videoUrl}
-            autoPlay={activePageIndex >= 1 && activePageIndex <= displayReels.length && idx === currentReelIndex && isPlaying}
-            loop
-            muted={!(activePageIndex >= 1 && activePageIndex <= displayReels.length) || idx !== currentReelIndex || isMuted}
-            playsInline
-            preload="auto"
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-            className="absolute inset-0 h-full w-full object-cover object-center z-0 cursor-pointer"
-          />
+            if (parsed.isIframe && parsed.embedUrl) {
+              return (
+                <div className="absolute inset-0 h-full w-full bg-black z-0 pointer-events-none">
+                  <iframe
+                    src={parsed.embedUrl}
+                    title={reel.caption || `Video Reel ${idx + 1}`}
+                    className="h-full w-full object-cover border-0"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              );
+            }
+
+            return (
+              <video
+                key={rawUrl}
+                ref={(el) => {
+                  if (el) {
+                    const isReelSectionActive = activePageIndex >= 1 && activePageIndex <= displayReels.length;
+                    const isVideoActive = isReelSectionActive && idx === currentReelIndex && isPlaying;
+                    const shouldBeMuted = !isReelSectionActive || idx !== currentReelIndex || isMuted;
+
+                    el.muted = shouldBeMuted;
+                    if (isVideoActive) {
+                      el.play().catch((err) => console.error("Play error:", err));
+                    } else {
+                      el.pause();
+                    }
+                  }
+                }}
+                src={rawUrl || "/demo-video-1.mp4"}
+                poster={reel.thumbnailUrl || reel.posterUrl}
+                autoPlay={activePageIndex >= 1 && activePageIndex <= displayReels.length && idx === currentReelIndex && isPlaying}
+                loop
+                muted={!(activePageIndex >= 1 && activePageIndex <= displayReels.length) || idx !== currentReelIndex || isMuted}
+                playsInline
+                preload="auto"
+                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                className="absolute inset-0 h-full w-full object-cover object-center z-0 cursor-pointer"
+              />
+            );
+          })()}
 
           {/* Video Overlay Tint */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 pointer-events-none" />
@@ -1196,14 +1247,14 @@ export function MobilePreview({
     </div>
   );
 
-  // If in demo mode inside dashboard, render inside physical iPhone chassis
+  // If in demo mode inside dashboard, render inside physical smartphone chassis
   if (isDemoMode) {
     return (
-      <div className="relative mx-auto flex h-[760px] w-[360px] flex-col overflow-hidden rounded-[48px] bg-zinc-950 border-[10px] border-zinc-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] ring-1 ring-black/10">
-        {/* Dynamic iPhone Notch */}
-        <div className="absolute top-0 left-1/2 z-40 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-zinc-900">
-          <div className="absolute top-1.5 left-1/2 flex -translate-x-1/2 items-center gap-2">
-            <div className="h-1 w-8 rounded-full bg-zinc-800" />
+      <div className="relative mx-auto flex h-[740px] w-[375px] shrink-0 flex-col overflow-hidden rounded-[48px] bg-zinc-950 border-[12px] border-zinc-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.35)] ring-1 ring-black/10">
+        {/* Dynamic Island / Speaker Notch */}
+        <div className="absolute top-0 left-1/2 z-40 h-5 w-28 -translate-x-1/2 rounded-b-2xl bg-zinc-950 border-b border-x border-zinc-800/80 shadow-inner flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-7 rounded-full bg-zinc-800" />
             <div className="h-1.5 w-1.5 rounded-full bg-zinc-800" />
           </div>
         </div>
