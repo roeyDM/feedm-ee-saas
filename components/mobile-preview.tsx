@@ -21,6 +21,7 @@ import {
 import { CookieModal } from "./cookie-modal";
 import { ReportModal } from "./report-modal";
 import { cn } from "@/lib/utils";
+import { sanitizeLeadForm } from "@/lib/sanitizers";
 
 export interface CustomLink {
   id: string;
@@ -207,41 +208,6 @@ export function useGoogleFont(fontFamily?: string) {
   }, [fontFamily]);
 }
 
-export function sanitizeLeadForm(lf?: Partial<LeadFormSettings> | null): LeadFormSettings {
-  const DEFAULT_TITLE = "Get in Touch";
-  const DEFAULT_SUBTITLE = "Leave your details below and we'll get back to you shortly.";
-
-  const rawTitle = lf?.title?.trim() || "";
-  const rawSubtitle = lf?.subtitle?.trim() || "";
-
-  const isOldHebrewTitle =
-    !rawTitle ||
-    rawTitle.includes("רוצים להיות חלק") ||
-    rawTitle.includes("לפניות עסקיות");
-
-  const isOldHebrewSubtitle =
-    !rawSubtitle ||
-    rawSubtitle.includes("השאירו פרטים") ||
-    rawSubtitle.includes("נחזור אליכם");
-
-  const rawTarget = lf?.target?.trim() || "";
-  const isInvalidEmailTarget = /^\d+$/.test(rawTarget) || (!rawTarget.includes("@") && rawTarget.length > 0);
-  const cleanTarget = isInvalidEmailTarget ? "" : rawTarget;
-
-  return {
-    title: isOldHebrewTitle ? DEFAULT_TITLE : rawTitle,
-    subtitle: isOldHebrewSubtitle ? DEFAULT_SUBTITLE : rawSubtitle,
-    routeType: lf?.routeType || "email",
-    target: cleanTarget,
-    is_phone_required: lf?.is_phone_required,
-    is_email_required: lf?.is_email_required,
-    phoneCountryCode: lf?.phoneCountryCode || "1",
-    phoneTarget: lf?.phoneTarget || "",
-    showWhatsappButton: lf?.showWhatsappButton,
-    showCallButton: lf?.showCallButton,
-  };
-}
-
 export function isDarkColor(colorStr?: string): boolean {
   if (!colorStr) return false;
   const clean = colorStr.trim().toLowerCase().replace("#", "");
@@ -257,6 +223,9 @@ export function isDarkColor(colorStr?: string): boolean {
   }
   return false;
 }
+
+export { sanitizeLeadForm } from "@/lib/sanitizers";
+
 
 interface MobilePreviewProps {
   profileName: string;

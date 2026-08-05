@@ -3,7 +3,7 @@
  * Fetches profile data server-side for zero flash, perfect SSR, and strict Supabase theme sync.
  */
 import { createClient } from "@supabase/supabase-js";
-import { sanitizeLeadForm } from "@/components/mobile-preview";
+import { sanitizeLeadForm } from "@/lib/sanitizers";
 import { PublicFeedClient } from "./client";
 
 interface PageProps {
