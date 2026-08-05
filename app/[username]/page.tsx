@@ -38,26 +38,43 @@ async function fetchPublicProfile(handleKey: string) {
       ? data.appearance
       : null;
 
-  const rawBgColor = loadedAppearance?.bgColor || data.custom_hex_color || data.theme_color || "#BAD1CB";
-  const cleanBgColor = sanitizeHexColor(rawBgColor, "#BAD1CB");
+  // Safe color derivation with explicit fallback defaults for profile color columns
+  const themeColor = sanitizeHexColor(
+    data?.theme_color || loadedAppearance?.bgColor || data?.custom_hex_color,
+    "#BAD1CB"
+  );
+  const buttonColor = sanitizeHexColor(
+    data?.button_color || loadedAppearance?.cardBgColor,
+    "#16A34A"
+  );
+  const textColor = sanitizeHexColor(
+    data?.text_color || loadedAppearance?.headlineColor,
+    "#09090B"
+  );
+  const buttonTextColor = sanitizeHexColor(
+    data?.button_text_color || loadedAppearance?.cardTextColor,
+    "#09090B"
+  );
 
-  const sanitizedAppearance = loadedAppearance
-    ? {
-        ...loadedAppearance,
-        bgColor: sanitizeHexColor(loadedAppearance.bgColor, "#BAD1CB"),
-        bgGradientStart: sanitizeHexColor(loadedAppearance.bgGradientStart, "#FBCFE8"),
-        bgGradientEnd: sanitizeHexColor(loadedAppearance.bgGradientEnd, "#E0F2FE"),
-        headlineColor: sanitizeHexColor(loadedAppearance.headlineColor, "#09090B"),
-        bioColor: sanitizeHexColor(loadedAppearance.bioColor, "#27272A"),
-        cardBgColor: sanitizeHexColor(loadedAppearance.cardBgColor, "#FFFFFF"),
-        cardTextColor: sanitizeHexColor(loadedAppearance.cardTextColor, "#09090B"),
-        cardBorderColor: sanitizeHexColor(loadedAppearance.cardBorderColor, "#E4E4E7"),
-        socialIconBgColor: sanitizeHexColor(loadedAppearance.socialIconBgColor, "#FFFFFF"),
-        socialFlatColor: sanitizeHexColor(loadedAppearance.socialFlatColor, "#18181B"),
-        avatarBorderColor: sanitizeHexColor(loadedAppearance.avatarBorderColor, "#FFFFFF"),
-        hideBranding: isFreeUser ? false : !!loadedAppearance.hideBranding,
-      }
-    : undefined;
+  const sanitizedAppearance = {
+    bgType: loadedAppearance?.bgType || "solid",
+    bgColor: themeColor,
+    bgGradientStart: sanitizeHexColor(loadedAppearance?.bgGradientStart, "#FBCFE8"),
+    bgGradientEnd: sanitizeHexColor(loadedAppearance?.bgGradientEnd, "#E0F2FE"),
+    bgGradientAngle: loadedAppearance?.bgGradientAngle ?? 135,
+    bgImageUrl: loadedAppearance?.bgImageUrl || "",
+    headlineColor: textColor,
+    bioColor: sanitizeHexColor(loadedAppearance?.bioColor, "#27272A"),
+    cardBgColor: buttonColor,
+    cardTextColor: buttonTextColor,
+    cardBorderColor: sanitizeHexColor(loadedAppearance?.cardBorderColor, "#E4E4E7"),
+    socialIconBgColor: sanitizeHexColor(loadedAppearance?.socialIconBgColor, "#FFFFFF"),
+    socialFlatColor: sanitizeHexColor(loadedAppearance?.socialFlatColor, "#18181B"),
+    avatarBorderColor: sanitizeHexColor(loadedAppearance?.avatarBorderColor, "#FFFFFF"),
+    buttonShape: loadedAppearance?.buttonShape || "rounded",
+    fontFamily: loadedAppearance?.fontFamily || "Inter",
+    hideBranding: isFreeUser ? false : !!loadedAppearance?.hideBranding,
+  };
 
   // Reels: parse and filter valid entries
   const loadedReels = (Array.isArray(data.reels) ? data.reels : [])
@@ -76,11 +93,11 @@ async function fetchPublicProfile(handleKey: string) {
     avatarUrl:
       data.avatar_url ||
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-    theme_color: cleanBgColor,
-    text_color: sanitizedAppearance?.headlineColor || "#09090B",
-    button_color: sanitizedAppearance?.cardBgColor || "#FFFFFF",
-    button_text_color: sanitizedAppearance?.cardTextColor || "#09090B",
-    customHexColor: cleanBgColor,
+    theme_color: themeColor,
+    button_color: buttonColor,
+    text_color: textColor,
+    button_text_color: buttonTextColor,
+    customHexColor: themeColor,
     socialLinks: (data.social_links || []).map((l: any) => ({
       ...l,
       id: l.id || crypto.randomUUID(),

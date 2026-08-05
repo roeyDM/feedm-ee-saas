@@ -341,17 +341,21 @@ function DashboardContent() {
     setStatusMsg("");
 
     try {
-      const cleanHex = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
+      const cleanThemeColor = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
+      const cleanButtonColor = sanitizeHexColor(appearance?.cardBgColor, "#16A34A");
+      const cleanTextColor = sanitizeHexColor(appearance?.headlineColor, "#09090B");
+      const cleanButtonTextColor = sanitizeHexColor(appearance?.cardTextColor, "#09090B");
+
       const sanitizedAppearance: any = appearance
         ? {
             ...appearance,
-            bgColor: sanitizeHexColor(appearance.bgColor, "#BAD1CB"),
+            bgColor: cleanThemeColor,
             bgGradientStart: sanitizeHexColor(appearance.bgGradientStart, "#FBCFE8"),
             bgGradientEnd: sanitizeHexColor(appearance.bgGradientEnd, "#E0F2FE"),
-            headlineColor: sanitizeHexColor(appearance.headlineColor, "#09090B"),
+            headlineColor: cleanTextColor,
             bioColor: sanitizeHexColor(appearance.bioColor, "#27272A"),
-            cardBgColor: sanitizeHexColor(appearance.cardBgColor, "#FFFFFF"),
-            cardTextColor: sanitizeHexColor(appearance.cardTextColor, "#09090B"),
+            cardBgColor: cleanButtonColor,
+            cardTextColor: cleanButtonTextColor,
             cardBorderColor: sanitizeHexColor(appearance.cardBorderColor, "#E4E4E7"),
             socialIconBgColor: sanitizeHexColor(appearance.socialIconBgColor, "#FFFFFF"),
             socialFlatColor: sanitizeHexColor(appearance.socialFlatColor, "#18181B"),
@@ -364,11 +368,11 @@ function DashboardContent() {
         name,
         bio,
         avatar_url: avatarUrl,
-        custom_hex_color: cleanHex,
-        theme_color: cleanHex,
-        text_color: sanitizedAppearance.headlineColor || "#09090B",
-        button_color: sanitizedAppearance.cardBgColor || "#FFFFFF",
-        button_text_color: sanitizedAppearance.cardTextColor || "#09090B",
+        custom_hex_color: cleanThemeColor,
+        theme_color: cleanThemeColor,
+        button_color: cleanButtonColor,
+        text_color: cleanTextColor,
+        button_text_color: cleanButtonTextColor,
         appearance: sanitizedAppearance,
         social_links: socialLinks,
         custom_links: customLinks,
