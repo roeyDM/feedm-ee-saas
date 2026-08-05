@@ -26,17 +26,30 @@ import { Button } from "@/components/ui/button";
 
 interface AnalyticsManagerProps {
   planType?: "free" | "personal" | "pro" | "business";
+  activeTier?: "free" | "personal" | "pro";
+  onTierChange?: (tier: "free" | "personal" | "pro") => void;
 }
 
-export function AnalyticsManager({ planType: initialPlan = "free" }: AnalyticsManagerProps) {
+export function AnalyticsManager({
+  planType: initialPlan = "free",
+  activeTier: controlledTier,
+  onTierChange,
+}: AnalyticsManagerProps) {
   // Local state for draft tier switcher preview
-  const [activeTier, setActiveTier] = useState<"free" | "personal" | "pro">(
+  const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">(
     initialPlan === "pro" || initialPlan === "business"
       ? "pro"
       : initialPlan === "personal"
       ? "personal"
       : "free"
   );
+
+  const activeTier = controlledTier || internalTier;
+
+  const handleTierChange = (tier: "free" | "personal" | "pro") => {
+    setInternalTier(tier);
+    if (onTierChange) onTierChange(tier);
+  };
 
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d">("30d");
 
@@ -135,7 +148,7 @@ export function AnalyticsManager({ planType: initialPlan = "free" }: AnalyticsMa
             <div className="flex items-center gap-1 bg-amber-50/80 p-1 rounded-xl border border-amber-200 text-xs font-bold">
               <span className="text-[10px] text-amber-800 font-black px-2 uppercase tracking-wider">Preview Tier:</span>
               <button
-                onClick={() => setActiveTier("free")}
+                onClick={() => handleTierChange("free")}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                   activeTier === "free" ? "bg-amber-500 text-white shadow-xs" : "text-amber-900 hover:bg-amber-100"
                 }`}
@@ -143,7 +156,7 @@ export function AnalyticsManager({ planType: initialPlan = "free" }: AnalyticsMa
                 Free
               </button>
               <button
-                onClick={() => setActiveTier("personal")}
+                onClick={() => handleTierChange("personal")}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                   activeTier === "personal" ? "bg-amber-500 text-white shadow-xs" : "text-amber-900 hover:bg-amber-100"
                 }`}
@@ -151,7 +164,7 @@ export function AnalyticsManager({ planType: initialPlan = "free" }: AnalyticsMa
                 Personal
               </button>
               <button
-                onClick={() => setActiveTier("pro")}
+                onClick={() => handleTierChange("pro")}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                   activeTier === "pro" ? "bg-amber-500 text-white shadow-xs" : "text-amber-900 hover:bg-amber-100"
                 }`}
@@ -311,7 +324,7 @@ export function AnalyticsManager({ planType: initialPlan = "free" }: AnalyticsMa
                 </p>
               </div>
               <Button
-                onClick={() => setActiveTier("personal")}
+                onClick={() => handleTierChange("personal")}
                 className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-black text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg cursor-pointer"
               >
                 Upgrade Plan 🚀
@@ -386,7 +399,7 @@ export function AnalyticsManager({ planType: initialPlan = "free" }: AnalyticsMa
                 </p>
               </div>
               <Button
-                onClick={() => setActiveTier("pro")}
+                onClick={() => handleTierChange("pro")}
                 className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-black text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg cursor-pointer"
               >
                 Go Pro ⭐

@@ -77,6 +77,7 @@ function DashboardContent() {
   const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
+  const [analyticsTier, setAnalyticsTier] = useState<"free" | "personal" | "pro">("free");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Restore saved offline trial tier state on mount
@@ -971,7 +972,11 @@ function DashboardContent() {
 
               {activeTab === "analytics" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-none flex-1">
-                  <AnalyticsManager planType={planType} />
+                  <AnalyticsManager 
+                    planType={planType} 
+                    activeTier={analyticsTier}
+                    onTierChange={setAnalyticsTier}
+                  />
                 </div>
               )}
             </div>
@@ -1026,6 +1031,15 @@ function DashboardContent() {
               fontFamily={appearance?.fontFamily}
               isDemoMode={true}
               activeTab={activeTab}
+              analyticsOverlayMode={
+                activeTab === "analytics"
+                  ? analyticsTier === "free"
+                    ? "bubbles"
+                    : analyticsTier === "personal"
+                    ? "reels"
+                    : "heatmap"
+                  : null
+              }
               onTestLeadSubmit={async (targetEmail, leadData) => {
                 try {
                   const res = await fetch("/api/send-lead-email", {
