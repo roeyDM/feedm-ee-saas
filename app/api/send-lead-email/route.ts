@@ -23,16 +23,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Resolve Feed Owner's user_id from profiles table
+    // 1. Resolve Feed Owner's user_id from feeds OR profiles table
     const dbAdmin = getSupabaseAdmin();
     let feedOwnerUserId: string | null = null;
 
     try {
-      if (cleanHandle) {
+      const feedIdParam = body.feedId || body.feed_id || cleanHandle;
+      if (feedIdParam) {
+        const { data: feed } = await dbAdmin
+          .from("feeds")
+          .select("user_id, handle, id")
+          .or(`id.eq.${feedIdParam},handle.eq.${feedIdParam.toLowerCase()}`)
+          .maybeSingle();
+
+        if (feed?.user_id) {
+          feedOwnerUserId = feed.user_id;
+        }
+      }
+
+      if (!feedOwnerUserId && cleanHandle) {
         const { data: profile } = await dbAdmin
           .from("profiles")
           .select("id, username")
-          .eq("username", cleanHandle.toLowerCase())
+          .or(`username.eq.${cleanHandle.toLowerCase()},id.eq.${cleanHandle}`)
           .maybeSingle();
 
         if (profile?.id) {
@@ -40,7 +53,7 @@ export async function POST(request: Request) {
         }
       }
     } catch (resolveErr) {
-      console.warn("[Lead Resolver Note]: Could not resolve user_id for handle:", cleanHandle, resolveErr);
+      console.warn("[Lead Resolver Note]: Could not resolve user_id for handle/feed:", cleanHandle, resolveErr);
     }
 
     // 2. Perform DB Insertion via Supabase Admin / Service Role
