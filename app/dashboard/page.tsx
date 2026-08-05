@@ -1045,8 +1045,8 @@ function DashboardContent() {
         )}
       </main>
 
-      {/* Floating Unsaved Changes Reminder Toast Bar */}
-      {isDirty && (
+      {/* Floating Unsaved Changes Reminder Toast Bar - STRICTLY SCOPED to Builder Tabs (Bio, Reels, Design) */}
+      {isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
           <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
             <span>Hey there! You made some magic ✨ Don't forget to save your changes!</span>
