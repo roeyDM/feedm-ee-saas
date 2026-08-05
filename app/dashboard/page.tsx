@@ -636,43 +636,30 @@ function DashboardContent() {
               )}
             </div>
 
-            {/* Accordion 2: Analytics & Insights */}
+            {/* Top-Level Menu: Analytics & Insights (Flattened) */}
             <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
-                onClick={() => {
-                  toggleAccordion("analytics");
-                  setActiveTab("analytics");
-                }}
-                className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-zinc-900 hover:bg-zinc-50 transition-colors text-left select-none cursor-pointer"
+                onClick={() => setActiveTab("analytics")}
+                className={cn(
+                  "w-full flex items-center justify-between px-3.5 py-3 text-xs font-black transition-all text-left select-none cursor-pointer",
+                  activeTab === "analytics"
+                    ? "bg-zinc-950 text-white shadow-sm"
+                    : "text-zinc-900 hover:bg-zinc-50"
+                )}
               >
                 <div className="flex items-center gap-2.5">
-                  <BarChart2 className="h-4 w-4 text-emerald-600" />
+                  <BarChart2 className={cn("h-4 w-4", activeTab === "analytics" ? "text-emerald-400" : "text-emerald-600")} />
                   <span>Analytics / Insights</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">Active</span>
-                  <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.analytics && "rotate-180")} />
-                </div>
+                <span className={cn(
+                  "text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase",
+                  activeTab === "analytics"
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                    : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                )}>
+                  Active
+                </span>
               </button>
-
-              {openAccordions.analytics && (
-                <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
-                  <button
-                    onClick={() => setActiveTab("analytics")}
-                    className={cn(
-                      "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                      activeTab === "analytics"
-                        ? "bg-zinc-950 text-white shadow-sm"
-                        : "text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-900"
-                    )}
-                  >
-                    <span>Traffic &amp; Conversion Insights</span>
-                    <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
-                      Live
-                    </span>
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Accordion 3: Monetization */}
