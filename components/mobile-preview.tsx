@@ -606,12 +606,22 @@ export function MobilePreview({
   // Dynamic font loading
   useGoogleFont(activeFont);
 
-  const hexColor = activeAppearance.bgColor.startsWith("#")
-    ? activeAppearance.bgColor
-    : `#${activeAppearance.bgColor}`;
+  // Sanitize a color value: ensure it is a valid hex/rgba string, never oklch/color-mix
+  const sanitizeColor = (c?: string, fallback = "#BAD1CB"): string => {
+    if (!c) return fallback;
+    const t = c.trim();
+    if (t.startsWith("oklch") || t.startsWith("color-mix") || t.startsWith("var(")) return fallback;
+    return t.startsWith("#") ? t : `#${t}`;
+  };
+
+  const hexColor = sanitizeColor(activeAppearance.bgColor);
+  const hexGradStart = sanitizeColor(activeAppearance.bgGradientStart, "#FBCFE8");
+  const hexGradEnd = sanitizeColor(activeAppearance.bgGradientEnd, "#E0F2FE");
 
   let mainContainerStyle: React.CSSProperties = {
     fontFamily: `'${activeFont}', sans-serif`,
+    colorScheme: "light" as any,
+    forcedColorAdjust: "none" as any,
     ["--selected-profile-font" as any]: `'${activeFont}', sans-serif`,
     ["--user-font-family" as any]: `'${activeFont}', sans-serif`,
     ["--client-font-family" as any]: `'${activeFont}', sans-serif`,
@@ -619,7 +629,7 @@ export function MobilePreview({
   };
 
   if (activeAppearance.bgType === "gradient") {
-    mainContainerStyle.background = `linear-gradient(${activeAppearance.bgGradientAngle}deg, ${activeAppearance.bgGradientStart}, ${activeAppearance.bgGradientEnd})`;
+    mainContainerStyle.background = `linear-gradient(${activeAppearance.bgGradientAngle}deg, ${hexGradStart}, ${hexGradEnd})`;
   } else if (activeAppearance.bgType === "image" && activeAppearance.bgImageUrl) {
     mainContainerStyle.backgroundImage = `url(${activeAppearance.bgImageUrl})`;
     mainContainerStyle.backgroundSize = "cover";
@@ -648,12 +658,19 @@ export function MobilePreview({
       id="simulator-root"
       onScroll={handleSimulatorScroll}
       style={mainContainerStyle}
+      data-color-scheme="light"
       className="client-page-root relative h-full w-full overflow-y-auto snap-y snap-mandatory scroll-smooth text-zinc-900 selection:bg-zinc-900 selection:text-white"
     >
       <style>{`
+        /* ─── Force light color rendering — prevent system/browser dark mode overrides ─── */
+        #simulator-root {
+          color-scheme: light !important;
+          forced-color-adjust: none !important;
+        }
         .client-page-root, 
         .client-page-root * {
           font-family: var(--client-font-family), sans-serif !important;
+          forced-color-adjust: none;
         }
         #simulator-root h1,
         #simulator-root h2,
