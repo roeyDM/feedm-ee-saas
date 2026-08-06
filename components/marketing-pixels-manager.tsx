@@ -140,55 +140,94 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     }
   };
 
+  // Unified function to save pixels to Supabase
+  const savePixelsToSupabase = async (meta: string, tiktok: string, gads: string) => {
+    const cleanMeta = meta.trim();
+    const cleanTiktok = tiktok.trim();
+    const cleanGads = gads.trim();
+
+    updateLocalCache(cleanMeta, cleanTiktok, cleanGads);
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.warn("[Supabase Auth Notice]:", authError.message);
+    }
+
+    const userId = user?.id;
+    console.log("Updating profiles for user ID:", userId || "N/A", "handle:", username, "meta_pixel_id:", cleanMeta);
+
+    const updatePayload: any = {
+      meta_pixel_id: cleanMeta || null,
+      tiktok_pixel_id: cleanTiktok || null,
+      google_ads_id: cleanGads || null,
+      ga_measurement_id: cleanGads || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    let res: any = null;
+
+    // 1. Try update by user.id if logged in
+    if (userId) {
+      res = await supabase
+        .from("profiles")
+        .update(updatePayload)
+        .eq("id", userId)
+        .select();
+    }
+
+    // 2. If no user.id or update matched 0 rows, try update by username
+    if ((!userId || res?.error || !res?.data || res.data.length === 0) && username) {
+      res = await supabase
+        .from("profiles")
+        .update(updatePayload)
+        .eq("username", username.toLowerCase().trim())
+        .select();
+    }
+
+    // 3. Fallback: upsert by username if row doesn't exist
+    if ((!res?.data || res.data.length === 0) && username) {
+      res = await supabase
+        .from("profiles")
+        .upsert({ username: username.toLowerCase().trim(), ...updatePayload }, { onConflict: "username" })
+        .select();
+    }
+
+    if (res?.error) {
+      console.error("Supabase Update Error:", res.error);
+      if (res.error.code === "42501" || res.error.code === "PGRST301" || res.error.message?.includes("policy")) {
+        console.error("RLS Policy Error: Please ensure UPDATE policy on profiles is enabled for auth.uid() = id or anon role");
+      }
+      alert(`Supabase Error (${res.error.code || "UNKNOWN"}): ${res.error.message}`);
+      throw res.error;
+    }
+
+    if (!res?.data || res.data.length === 0) {
+      console.warn("Supabase Warning: Update succeeded but 0 rows returned.");
+    } else {
+      console.log("Update successful:", res.data);
+    }
+
+    setSavedMetaId(cleanMeta);
+    setSavedTiktokId(cleanTiktok);
+    setSavedGoogleAdsId(cleanGads);
+
+    return res?.data;
+  };
+
   // 1. Save Meta Pixel
   const handleSaveMeta = async () => {
     setSavingMeta(true);
     setToastMsg(null);
-    const cleanMeta = metaPixelId.trim();
-
     try {
-      updateLocalCache(cleanMeta, savedTiktokId, savedGoogleAdsId);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      let res: any = null;
-      const updateData = { meta_pixel_id: cleanMeta || null };
-
-      if (user?.id) {
-        res = await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("id", user.id)
-          .select();
-      }
-
-      if ((!user?.id || res?.error || !res?.data || res.data.length === 0) && username) {
-        res = await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("username", username.toLowerCase().trim())
-          .select();
-      }
-
-      if ((!res?.data || res.data.length === 0) && username) {
-        res = await supabase
-          .from("profiles")
-          .upsert({ username: username.toLowerCase().trim(), ...updateData }, { onConflict: "username" })
-          .select();
-      }
-
-      if (res?.error) {
-        throw res.error;
-      }
-
-      setSavedMetaId(cleanMeta);
+      await savePixelsToSupabase(metaPixelId, savedTiktokId, savedGoogleAdsId);
       setToastMsg({
         type: "success",
-        text: cleanMeta ? "Meta Pixel saved to database and active!" : "Meta Pixel removed.",
+        text: metaPixelId.trim() ? "Meta Pixel saved successfully!" : "Meta Pixel removed.",
       });
+      alert(metaPixelId.trim() ? "Meta Pixel saved successfully!" : "Meta Pixel removed.");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
-      console.error("[Meta Save Error]:", err);
-      setToastMsg({ type: "error", text: `Failed to save Meta Pixel: ${err?.message || "Error"}` });
+      console.error("Unexpected error during Meta Pixel save:", err);
     } finally {
       setSavingMeta(false);
     }
@@ -198,51 +237,16 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
   const handleSaveTiktok = async () => {
     setSavingTiktok(true);
     setToastMsg(null);
-    const cleanTiktok = tiktokPixelId.trim();
-
     try {
-      updateLocalCache(savedMetaId, cleanTiktok, savedGoogleAdsId);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      let res: any = null;
-      const updateData = { tiktok_pixel_id: cleanTiktok || null };
-
-      if (user?.id) {
-        res = await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("id", user.id)
-          .select();
-      }
-
-      if ((!user?.id || res?.error || !res?.data || res.data.length === 0) && username) {
-        res = await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("username", username.toLowerCase().trim())
-          .select();
-      }
-
-      if ((!res?.data || res.data.length === 0) && username) {
-        res = await supabase
-          .from("profiles")
-          .upsert({ username: username.toLowerCase().trim(), ...updateData }, { onConflict: "username" })
-          .select();
-      }
-
-      if (res?.error) {
-        throw res.error;
-      }
-
-      setSavedTiktokId(cleanTiktok);
+      await savePixelsToSupabase(savedMetaId, tiktokPixelId, savedGoogleAdsId);
       setToastMsg({
         type: "success",
-        text: cleanTiktok ? "TikTok Pixel saved to database and active!" : "TikTok Pixel removed.",
+        text: tiktokPixelId.trim() ? "TikTok Pixel saved successfully!" : "TikTok Pixel removed.",
       });
+      alert(tiktokPixelId.trim() ? "TikTok Pixel saved successfully!" : "TikTok Pixel removed.");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
-      console.error("[TikTok Save Error]:", err);
-      setToastMsg({ type: "error", text: `Failed to save TikTok Pixel: ${err?.message || "Error"}` });
+      console.error("Unexpected error during TikTok Pixel save:", err);
     } finally {
       setSavingTiktok(false);
     }
@@ -252,52 +256,40 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
   const handleSaveGoogleAds = async () => {
     setSavingGoogleAds(true);
     setToastMsg(null);
-    const cleanGads = googleAdsId.trim();
-
     try {
-      updateLocalCache(savedMetaId, savedTiktokId, cleanGads);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      let res: any = null;
-      const updateData = { google_ads_id: cleanGads || null, ga_measurement_id: cleanGads || null };
-
-      if (user?.id) {
-        res = await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("id", user.id)
-          .select();
-      }
-
-      if ((!user?.id || res?.error || !res?.data || res.data.length === 0) && username) {
-        res = await supabase
-          .from("profiles")
-          .update(updateData)
-          .eq("username", username.toLowerCase().trim())
-          .select();
-      }
-
-      if ((!res?.data || res.data.length === 0) && username) {
-        res = await supabase
-          .from("profiles")
-          .upsert({ username: username.toLowerCase().trim(), ...updateData }, { onConflict: "username" })
-          .select();
-      }
-
-      if (res?.error) {
-        throw res.error;
-      }
-
-      setSavedGoogleAdsId(cleanGads);
+      await savePixelsToSupabase(savedMetaId, savedTiktokId, googleAdsId);
       setToastMsg({
         type: "success",
-        text: cleanGads ? "Google Ads Pixel saved to database and active!" : "Google Ads Pixel removed.",
+        text: googleAdsId.trim() ? "Google Ads Pixel saved successfully!" : "Google Ads Pixel removed.",
       });
+      alert(googleAdsId.trim() ? "Google Ads Pixel saved successfully!" : "Google Ads Pixel removed.");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
-      console.error("[Google Ads Save Error]:", err);
-      setToastMsg({ type: "error", text: `Failed to save Google Ads Pixel: ${err?.message || "Error"}` });
+      console.error("Unexpected error during Google Ads save:", err);
     } finally {
+      setSavingGoogleAds(false);
+    }
+  };
+
+  // 4. Save All Pixels
+  const handleSaveAllPixels = async () => {
+    setSavingMeta(true);
+    setSavingTiktok(true);
+    setSavingGoogleAds(true);
+    setToastMsg(null);
+    try {
+      await savePixelsToSupabase(metaPixelId, tiktokPixelId, googleAdsId);
+      setToastMsg({
+        type: "success",
+        text: "All marketing pixels saved successfully!",
+      });
+      alert("All marketing pixels saved successfully!");
+      setTimeout(() => setToastMsg(null), 3500);
+    } catch (err: any) {
+      console.error("Unexpected error during Save All Pixels:", err);
+    } finally {
+      setSavingMeta(false);
+      setSavingTiktok(false);
       setSavingGoogleAds(false);
     }
   };
@@ -320,7 +312,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         </div>
       )}
 
-      {/* Main Container Card (Identical layout container width & padding as CRM & Analytics) */}
+      {/* Main Container Card */}
       <div className="w-full bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
         {/* Top Header Banner */}
         <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -340,6 +332,20 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
               </p>
             </div>
           </div>
+
+          <Button
+            type="button"
+            onClick={handleSaveAllPixels}
+            disabled={savingMeta || savingTiktok || savingGoogleAds}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
+          >
+            {savingMeta || savingTiktok || savingGoogleAds ? (
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
+            ) : (
+              <Save className="h-4 w-4 text-white" />
+            )}
+            <span>Save All Pixels</span>
+          </Button>
         </div>
 
         {/* Content Body: 3 Cards */}
@@ -383,6 +389,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
                 <Button
+                  type="button"
                   onClick={handleSaveMeta}
                   disabled={savingMeta}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
@@ -441,6 +448,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
                 <Button
+                  type="button"
                   onClick={handleSaveTiktok}
                   disabled={savingTiktok}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
@@ -499,6 +507,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
                 <Button
+                  type="button"
                   onClick={handleSaveGoogleAds}
                   disabled={savingGoogleAds}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
