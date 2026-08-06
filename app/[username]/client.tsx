@@ -8,8 +8,8 @@ import {
   CustomLink,
   VideoReel,
   LeadFormSettings,
-  sanitizeLeadForm,
 } from "@/components/mobile-preview";
+import { sanitizeLeadForm } from "@/lib/sanitizers";
 
 interface ProfileData {
   name: string;

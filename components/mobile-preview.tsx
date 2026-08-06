@@ -176,7 +176,7 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   fontFamily: "Inter",
 
   avatarBorderEnabled: true,
-  avatarBorderColor: "#FFFFFF",
+  avatarBorderColor: undefined,
   avatarBorderWidth: 4,
 
   headlineColor: "#09090B",
@@ -186,7 +186,7 @@ export const DEFAULT_APPEARANCE: AppearanceSettings = {
   cardTextColor: "#09090B",
   cardBorderColor: "#E4E4E7",
 
-  socialIconBgColor: "#FFFFFF",
+  socialIconBgColor: undefined,
   socialLogoMode: "brand",
   socialFlatColor: "#18181B",
 };
@@ -543,9 +543,9 @@ export function MobilePreview({
     };
 
     const isFlat = activeAppearance.socialLogoMode === "flat";
-    const customIconBg = activeAppearance.socialIconBgColor || "#FFFFFF";
+    const customIconBg = activeAppearance.socialIconBgColor || activeAppearance.cardBgColor || customHexColor || "#16a34a";
     const customIconColor = isFlat
-      ? (activeAppearance.socialFlatColor || "#18181b")
+      ? (activeAppearance.socialFlatColor || activeAppearance.cardTextColor || "#18181b")
       : (BRAND_COLORS[link.platform] || "#18181b");
 
     const iconClass =
@@ -710,7 +710,8 @@ export function MobilePreview({
             <div 
               className="h-24 w-24 rounded-full p-1 shadow-xl overflow-hidden"
               style={{
-                backgroundColor: activeAppearance.avatarBorderEnabled ? (activeAppearance.avatarBorderColor || "#ffffff") : "transparent",
+                backgroundColor: activeAppearance.avatarBorderEnabled ? (activeAppearance.avatarBorderColor || activeAppearance.cardBgColor || customHexColor || "#16a34a") : "transparent",
+                borderColor: activeAppearance.avatarBorderEnabled ? (activeAppearance.avatarBorderColor || activeAppearance.cardBgColor || customHexColor || "#16a34a") : "transparent",
                 padding: activeAppearance.avatarBorderEnabled ? `${activeAppearance.avatarBorderWidth || 4}px` : "0px",
               }}
             >

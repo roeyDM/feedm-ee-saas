@@ -59,18 +59,17 @@ async function fetchPublicProfile(handleKey: string) {
     ? sanitizeHexColor(rawBioColor, cleanTextColor)
     : cleanTextColor;
 
-  // socialIconBgColor: use saved value if set; else fall back to button_color so themed
-  // feeds show accent-colored icon buttons matching the simulator exactly
-  const rawSocialIconBg = loadedAppearance?.socialIconBgColor;
-  const cleanSocialIconBg = rawSocialIconBg
-    ? sanitizeHexColor(rawSocialIconBg, cleanButtonColor)
-    : cleanButtonColor;
+  // socialIconBgColor: check profile.social_pill_color or appearance.socialIconBgColor; fall back to button_color
+  const socialPillColor = profile?.social_pill_color || loadedAppearance?.socialIconBgColor || buttonColor;
+  const cleanSocialIconBg = sanitizeHexColor(socialPillColor, cleanButtonColor);
 
   // socialFlatColor: use saved value, else button_text_color for contrast on icon bg
   const rawSocialFlatColor = loadedAppearance?.socialFlatColor;
   const cleanSocialFlatColor = rawSocialFlatColor
     ? sanitizeHexColor(rawSocialFlatColor, cleanButtonTextColor)
     : cleanButtonTextColor;
+
+  const socialIconMode = profile?.social_icon_mode || loadedAppearance?.socialLogoMode || "brand";
 
   const sanitizedAppearance = {
     bgType:           loadedAppearance?.bgType           || "solid",
@@ -84,11 +83,11 @@ async function fetchPublicProfile(handleKey: string) {
     cardBgColor:      cleanButtonColor,
     cardTextColor:    cleanButtonTextColor,
     cardBorderColor:  sanitizeHexColor(loadedAppearance?.cardBorderColor, "#E4E4E7"),
-    // Social icons: preserve saved mode, default to "flat" with themed colors
-    socialLogoMode:   (loadedAppearance?.socialLogoMode as "brand" | "flat") || "flat",
+    // Social icons: preserve saved mode, default to "brand" with themed colors
+    socialLogoMode:   (socialIconMode as "brand" | "flat"),
     socialIconBgColor: cleanSocialIconBg,     // ← themed from button_color when not set
     socialFlatColor:   cleanSocialFlatColor,  // ← themed from button_text_color when not set
-    avatarBorderColor: sanitizeHexColor(loadedAppearance?.avatarBorderColor, "#FFFFFF"),
+    avatarBorderColor: sanitizeHexColor(loadedAppearance?.avatarBorderColor || profile?.button_color, cleanButtonColor),
     avatarBorderEnabled: loadedAppearance?.avatarBorderEnabled !== false,
     avatarBorderWidth: loadedAppearance?.avatarBorderWidth ?? 4,
     buttonShape:      loadedAppearance?.buttonShape       || "rounded",
