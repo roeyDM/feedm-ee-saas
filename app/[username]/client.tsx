@@ -86,7 +86,7 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
       {pixels.metaPixelId && (
         <>
           <Script
-            id="meta-pixel-script"
+            id="meta-pixel-init"
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
@@ -98,7 +98,7 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
                 t.src=v;s=b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t,s)}(window, document,'script',
                 'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '${pixels.metaPixelId}');
+                fbq('init', '${pixels.metaPixelId.trim()}');
                 fbq('track', 'PageView');
               `,
             }}

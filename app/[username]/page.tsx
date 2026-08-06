@@ -31,6 +31,8 @@ async function fetchPublicProfile(handleKey: string) {
 
   if (!profile || error) return null;
 
+  console.log("Fetched meta_pixel_id for handle", handleKey, ":", profile?.meta_pixel_id || profile?.appearance?.meta_pixel_id);
+
   const isFreeUser = (profile.plan_type || "free") === "free";
 
   // Appearance: read strictly from DB record
@@ -127,9 +129,9 @@ async function fetchPublicProfile(handleKey: string) {
     leadForm:    sanitizeLeadForm(profile.lead_form),
     appearance:  sanitizedAppearance,
     pixels: {
-      metaPixelId:  profile.meta_pixel_id  || "",
-      tiktokPixelId: profile.tiktok_pixel_id || "",
-      googleAdsId:  profile.google_ads_id  || profile.ga_measurement_id || "",
+      metaPixelId:   (profile.meta_pixel_id   || profile.appearance?.meta_pixel_id   || "").toString().trim(),
+      tiktokPixelId: (profile.tiktok_pixel_id || profile.appearance?.tiktok_pixel_id || "").toString().trim(),
+      googleAdsId:   (profile.google_ads_id   || profile.ga_measurement_id || profile.appearance?.google_ads_id || "").toString().trim(),
     },
   };
 }
