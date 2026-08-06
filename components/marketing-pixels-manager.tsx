@@ -7,6 +7,8 @@ import {
   Save,
   Loader2,
   HelpCircle,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -65,6 +67,9 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
   const [savingMeta, setSavingMeta] = useState(false);
   const [savingTiktok, setSavingTiktok] = useState(false);
   const [savingGoogleAds, setSavingGoogleAds] = useState(false);
+
+  const [confirmDisconnectPlatform, setConfirmDisconnectPlatform] = useState<"meta" | "tiktok" | "google" | null>(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -224,7 +229,6 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         type: "success",
         text: metaPixelId.trim() ? "Meta Pixel saved successfully!" : "Meta Pixel removed.",
       });
-      alert(metaPixelId.trim() ? "Meta Pixel saved successfully!" : "Meta Pixel removed.");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
       console.error("Unexpected error during Meta Pixel save:", err);
@@ -243,7 +247,6 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         type: "success",
         text: tiktokPixelId.trim() ? "TikTok Pixel saved successfully!" : "TikTok Pixel removed.",
       });
-      alert(tiktokPixelId.trim() ? "TikTok Pixel saved successfully!" : "TikTok Pixel removed.");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
       console.error("Unexpected error during TikTok Pixel save:", err);
@@ -262,7 +265,6 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         type: "success",
         text: googleAdsId.trim() ? "Google Ads Pixel saved successfully!" : "Google Ads Pixel removed.",
       });
-      alert(googleAdsId.trim() ? "Google Ads Pixel saved successfully!" : "Google Ads Pixel removed.");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
       console.error("Unexpected error during Google Ads save:", err);
@@ -271,26 +273,33 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     }
   };
 
-  // 4. Save All Pixels
-  const handleSaveAllPixels = async () => {
-    setSavingMeta(true);
-    setSavingTiktok(true);
-    setSavingGoogleAds(true);
+  // Safe Disconnect Handler
+  const handleDisconnectPixel = async (platform: "meta" | "tiktok" | "google") => {
+    setIsDisconnecting(true);
     setToastMsg(null);
+
+    const newMeta = platform === "meta" ? "" : savedMetaId;
+    const newTiktok = platform === "tiktok" ? "" : savedTiktokId;
+    const newGads = platform === "google" ? "" : savedGoogleAdsId;
+
     try {
-      await savePixelsToSupabase(metaPixelId, tiktokPixelId, googleAdsId);
+      await savePixelsToSupabase(newMeta, newTiktok, newGads);
+
+      if (platform === "meta") setMetaPixelId("");
+      if (platform === "tiktok") setTiktokPixelId("");
+      if (platform === "google") setGoogleAdsId("");
+
+      setConfirmDisconnectPlatform(null);
       setToastMsg({
         type: "success",
-        text: "All marketing pixels saved successfully!",
+        text: "Pixel removed successfully",
       });
-      alert("All marketing pixels saved successfully!");
       setTimeout(() => setToastMsg(null), 3500);
     } catch (err: any) {
-      console.error("Unexpected error during Save All Pixels:", err);
+      console.error(`[${platform} Disconnect Error]:`, err);
+      alert(`Failed to disconnect pixel: ${err?.message || "Error"}`);
     } finally {
-      setSavingMeta(false);
-      setSavingTiktok(false);
-      setSavingGoogleAds(false);
+      setIsDisconnecting(false);
     }
   };
 
@@ -314,7 +323,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
       {/* Main Container Card */}
       <div className="w-full bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
-        {/* Top Header Banner */}
+        {/* Top Header Banner (Clean Header - No Top Summary Save Button) */}
         <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="h-11 w-11 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0 shadow-2xs">
@@ -332,20 +341,6 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
               </p>
             </div>
           </div>
-
-          <Button
-            type="button"
-            onClick={handleSaveAllPixels}
-            disabled={savingMeta || savingTiktok || savingGoogleAds}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
-          >
-            {savingMeta || savingTiktok || savingGoogleAds ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
-            ) : (
-              <Save className="h-4 w-4 text-white" />
-            )}
-            <span>Save All Pixels</span>
-          </Button>
         </div>
 
         {/* Content Body: 3 Cards */}
@@ -388,20 +383,64 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   placeholder="e.g. 123456789012345"
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
-                <Button
-                  type="button"
-                  onClick={handleSaveMeta}
-                  disabled={savingMeta}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
-                >
-                  {savingMeta ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
-                  ) : (
-                    <Save className="h-3.5 w-3.5 text-white" />
-                  )}
-                  <span>Save Meta Pixel</span>
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {savedMetaId.trim() ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setConfirmDisconnectPlatform(confirmDisconnectPlatform === "meta" ? null : "meta")}
+                      className="h-10 px-3 border-zinc-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 text-xs font-extrabold rounded-xl gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Remove</span>
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    onClick={handleSaveMeta}
+                    disabled={savingMeta}
+                    className="w-32 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5 flex items-center justify-center"
+                  >
+                    {savingMeta ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5 text-white" />
+                    )}
+                    <span>Save Pixel</span>
+                  </Button>
+                </div>
               </div>
+
+              {/* Inline Confirm Disconnect Popup */}
+              {confirmDisconnectPlatform === "meta" && (
+                <div className="p-3.5 rounded-xl bg-rose-50/90 border border-rose-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+                  <span className="font-extrabold text-rose-950 flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                    Are you sure you want to disconnect Meta Pixel?
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDisconnectPlatform(null)}
+                      className="h-8 px-3 text-xs font-bold text-zinc-700 bg-white border-zinc-200 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleDisconnectPixel("meta")}
+                      disabled={isDisconnecting}
+                      className="h-8 px-3 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer gap-1"
+                    >
+                      {isDisconnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Yes, Disconnect"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1">
                 <HelpCircle className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                 <span>Where to find it: Meta Events Manager ➔ Data Sources ➔ Pixel ID.</span>
@@ -447,20 +486,64 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   placeholder="e.g. C1234567890ABCDEF"
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
-                <Button
-                  type="button"
-                  onClick={handleSaveTiktok}
-                  disabled={savingTiktok}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
-                >
-                  {savingTiktok ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
-                  ) : (
-                    <Save className="h-3.5 w-3.5 text-white" />
-                  )}
-                  <span>Save TikTok Pixel</span>
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {savedTiktokId.trim() ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setConfirmDisconnectPlatform(confirmDisconnectPlatform === "tiktok" ? null : "tiktok")}
+                      className="h-10 px-3 border-zinc-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 text-xs font-extrabold rounded-xl gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Remove</span>
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    onClick={handleSaveTiktok}
+                    disabled={savingTiktok}
+                    className="w-32 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5 flex items-center justify-center"
+                  >
+                    {savingTiktok ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5 text-white" />
+                    )}
+                    <span>Save Pixel</span>
+                  </Button>
+                </div>
               </div>
+
+              {/* Inline Confirm Disconnect Popup */}
+              {confirmDisconnectPlatform === "tiktok" && (
+                <div className="p-3.5 rounded-xl bg-rose-50/90 border border-rose-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+                  <span className="font-extrabold text-rose-950 flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                    Are you sure you want to disconnect TikTok Pixel?
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDisconnectPlatform(null)}
+                      className="h-8 px-3 text-xs font-bold text-zinc-700 bg-white border-zinc-200 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleDisconnectPixel("tiktok")}
+                      disabled={isDisconnecting}
+                      className="h-8 px-3 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer gap-1"
+                    >
+                      {isDisconnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Yes, Disconnect"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1">
                 <HelpCircle className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                 <span>Where to find it: TikTok Ads Manager ➔ Assets ➔ Events ➔ Web Events.</span>
@@ -506,20 +589,64 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   placeholder="e.g. AW-123456789"
                   className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                 />
-                <Button
-                  type="button"
-                  onClick={handleSaveGoogleAds}
-                  disabled={savingGoogleAds}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5"
-                >
-                  {savingGoogleAds ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
-                  ) : (
-                    <Save className="h-3.5 w-3.5 text-white" />
-                  )}
-                  <span>Save Google Ads Pixel</span>
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {savedGoogleAdsId.trim() ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setConfirmDisconnectPlatform(confirmDisconnectPlatform === "google" ? null : "google")}
+                      className="h-10 px-3 border-zinc-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 text-xs font-extrabold rounded-xl gap-1 shrink-0 cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Remove</span>
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    onClick={handleSaveGoogleAds}
+                    disabled={savingGoogleAds}
+                    className="w-32 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 rounded-xl shadow-xs shrink-0 cursor-pointer gap-1.5 flex items-center justify-center"
+                  >
+                    {savingGoogleAds ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5 text-white" />
+                    )}
+                    <span>Save Pixel</span>
+                  </Button>
+                </div>
               </div>
+
+              {/* Inline Confirm Disconnect Popup */}
+              {confirmDisconnectPlatform === "google" && (
+                <div className="p-3.5 rounded-xl bg-rose-50/90 border border-rose-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+                  <span className="font-extrabold text-rose-950 flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                    Are you sure you want to disconnect Google Ads Pixel?
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDisconnectPlatform(null)}
+                      className="h-8 px-3 text-xs font-bold text-zinc-700 bg-white border-zinc-200 hover:bg-zinc-100 rounded-lg cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleDisconnectPixel("google")}
+                      disabled={isDisconnecting}
+                      className="h-8 px-3 text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs cursor-pointer gap-1"
+                    >
+                      {isDisconnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Yes, Disconnect"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1">
                 <HelpCircle className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                 <span>Where to find it: Google Ads ➔ Goals ➔ Conversions ➔ Summary ➔ Tag Setup (Conversion ID).</span>
