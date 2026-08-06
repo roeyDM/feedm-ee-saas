@@ -151,19 +151,29 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
       const { data: { user } } = await supabase.auth.getUser();
       let res: any = null;
+      const updateData = { meta_pixel_id: cleanMeta || null };
 
       if (user?.id) {
         res = await supabase
           .from("profiles")
-          .update({ meta_pixel_id: cleanMeta || null })
-          .eq("id", user.id);
+          .update(updateData)
+          .eq("id", user.id)
+          .select();
       }
 
-      if ((!user?.id || res?.error) && username) {
+      if ((!user?.id || res?.error || !res?.data || res.data.length === 0) && username) {
         res = await supabase
           .from("profiles")
-          .update({ meta_pixel_id: cleanMeta || null })
-          .eq("username", username.toLowerCase().trim());
+          .update(updateData)
+          .eq("username", username.toLowerCase().trim())
+          .select();
+      }
+
+      if ((!res?.data || res.data.length === 0) && username) {
+        res = await supabase
+          .from("profiles")
+          .upsert({ username: username.toLowerCase().trim(), ...updateData }, { onConflict: "username" })
+          .select();
       }
 
       if (res?.error) {
@@ -195,19 +205,29 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
       const { data: { user } } = await supabase.auth.getUser();
       let res: any = null;
+      const updateData = { tiktok_pixel_id: cleanTiktok || null };
 
       if (user?.id) {
         res = await supabase
           .from("profiles")
-          .update({ tiktok_pixel_id: cleanTiktok || null })
-          .eq("id", user.id);
+          .update(updateData)
+          .eq("id", user.id)
+          .select();
       }
 
-      if ((!user?.id || res?.error) && username) {
+      if ((!user?.id || res?.error || !res?.data || res.data.length === 0) && username) {
         res = await supabase
           .from("profiles")
-          .update({ tiktok_pixel_id: cleanTiktok || null })
-          .eq("username", username.toLowerCase().trim());
+          .update(updateData)
+          .eq("username", username.toLowerCase().trim())
+          .select();
+      }
+
+      if ((!res?.data || res.data.length === 0) && username) {
+        res = await supabase
+          .from("profiles")
+          .upsert({ username: username.toLowerCase().trim(), ...updateData }, { onConflict: "username" })
+          .select();
       }
 
       if (res?.error) {
@@ -239,19 +259,29 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
       const { data: { user } } = await supabase.auth.getUser();
       let res: any = null;
+      const updateData = { google_ads_id: cleanGads || null, ga_measurement_id: cleanGads || null };
 
       if (user?.id) {
         res = await supabase
           .from("profiles")
-          .update({ google_ads_id: cleanGads || null, ga_measurement_id: cleanGads || null })
-          .eq("id", user.id);
+          .update(updateData)
+          .eq("id", user.id)
+          .select();
       }
 
-      if ((!user?.id || res?.error) && username) {
+      if ((!user?.id || res?.error || !res?.data || res.data.length === 0) && username) {
         res = await supabase
           .from("profiles")
-          .update({ google_ads_id: cleanGads || null, ga_measurement_id: cleanGads || null })
-          .eq("username", username.toLowerCase().trim());
+          .update(updateData)
+          .eq("username", username.toLowerCase().trim())
+          .select();
+      }
+
+      if ((!res?.data || res.data.length === 0) && username) {
+        res = await supabase
+          .from("profiles")
+          .upsert({ username: username.toLowerCase().trim(), ...updateData }, { onConflict: "username" })
+          .select();
       }
 
       if (res?.error) {
