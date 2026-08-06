@@ -91,18 +91,23 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
         // 2. Fetch from Supabase profiles table
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("meta_pixel_id, tiktok_pixel_id, google_ads_id")
-            .eq("id", user.id)
-            .single();
+        let query = supabase
+          .from("profiles")
+          .select("meta_pixel_id, tiktok_pixel_id, google_ads_id, ga_measurement_id");
 
-          if (data && !error) {
-            if (data.meta_pixel_id !== undefined && data.meta_pixel_id !== null) meta = data.meta_pixel_id;
-            if (data.tiktok_pixel_id !== undefined && data.tiktok_pixel_id !== null) tiktok = data.tiktok_pixel_id;
-            if (data.google_ads_id !== undefined && data.google_ads_id !== null) gads = data.google_ads_id;
-          }
+        if (user?.id) {
+          query = query.eq("id", user.id);
+        } else if (username) {
+          query = query.eq("username", username.toLowerCase().trim());
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (data && !error) {
+          if (data.meta_pixel_id) meta = data.meta_pixel_id;
+          if (data.tiktok_pixel_id) tiktok = data.tiktok_pixel_id;
+          if (data.google_ads_id) gads = data.google_ads_id;
+          else if (data.ga_measurement_id) gads = data.ga_measurement_id;
         }
 
         setMetaPixelId(meta);
@@ -145,22 +150,35 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
       updateLocalCache(cleanMeta, savedTiktokId, savedGoogleAdsId);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
+      let res: any = null;
+
+      if (user?.id) {
+        res = await supabase
           .from("profiles")
           .update({ meta_pixel_id: cleanMeta || null })
           .eq("id", user.id);
       }
 
+      if ((!user?.id || res?.error) && username) {
+        res = await supabase
+          .from("profiles")
+          .update({ meta_pixel_id: cleanMeta || null })
+          .eq("username", username.toLowerCase().trim());
+      }
+
+      if (res?.error) {
+        throw res.error;
+      }
+
       setSavedMetaId(cleanMeta);
       setToastMsg({
         type: "success",
-        text: cleanMeta ? "Meta Pixel saved and active!" : "Meta Pixel removed.",
+        text: cleanMeta ? "Meta Pixel saved to database and active!" : "Meta Pixel removed.",
       });
       setTimeout(() => setToastMsg(null), 3500);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[Meta Save Error]:", err);
-      setToastMsg({ type: "error", text: "Failed to save Meta Pixel." });
+      setToastMsg({ type: "error", text: `Failed to save Meta Pixel: ${err?.message || "Error"}` });
     } finally {
       setSavingMeta(false);
     }
@@ -176,22 +194,35 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
       updateLocalCache(savedMetaId, cleanTiktok, savedGoogleAdsId);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
+      let res: any = null;
+
+      if (user?.id) {
+        res = await supabase
           .from("profiles")
           .update({ tiktok_pixel_id: cleanTiktok || null })
           .eq("id", user.id);
       }
 
+      if ((!user?.id || res?.error) && username) {
+        res = await supabase
+          .from("profiles")
+          .update({ tiktok_pixel_id: cleanTiktok || null })
+          .eq("username", username.toLowerCase().trim());
+      }
+
+      if (res?.error) {
+        throw res.error;
+      }
+
       setSavedTiktokId(cleanTiktok);
       setToastMsg({
         type: "success",
-        text: cleanTiktok ? "TikTok Pixel saved and active!" : "TikTok Pixel removed.",
+        text: cleanTiktok ? "TikTok Pixel saved to database and active!" : "TikTok Pixel removed.",
       });
       setTimeout(() => setToastMsg(null), 3500);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[TikTok Save Error]:", err);
-      setToastMsg({ type: "error", text: "Failed to save TikTok Pixel." });
+      setToastMsg({ type: "error", text: `Failed to save TikTok Pixel: ${err?.message || "Error"}` });
     } finally {
       setSavingTiktok(false);
     }
@@ -207,22 +238,35 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
       updateLocalCache(savedMetaId, savedTiktokId, cleanGads);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
+      let res: any = null;
+
+      if (user?.id) {
+        res = await supabase
           .from("profiles")
-          .update({ google_ads_id: cleanGads || null })
+          .update({ google_ads_id: cleanGads || null, ga_measurement_id: cleanGads || null })
           .eq("id", user.id);
+      }
+
+      if ((!user?.id || res?.error) && username) {
+        res = await supabase
+          .from("profiles")
+          .update({ google_ads_id: cleanGads || null, ga_measurement_id: cleanGads || null })
+          .eq("username", username.toLowerCase().trim());
+      }
+
+      if (res?.error) {
+        throw res.error;
       }
 
       setSavedGoogleAdsId(cleanGads);
       setToastMsg({
         type: "success",
-        text: cleanGads ? "Google Ads Pixel saved and active!" : "Google Ads Pixel removed.",
+        text: cleanGads ? "Google Ads Pixel saved to database and active!" : "Google Ads Pixel removed.",
       });
       setTimeout(() => setToastMsg(null), 3500);
-    } catch (err) {
+    } catch (err: any) {
       console.error("[Google Ads Save Error]:", err);
-      setToastMsg({ type: "error", text: "Failed to save Google Ads Pixel." });
+      setToastMsg({ type: "error", text: `Failed to save Google Ads Pixel: ${err?.message || "Error"}` });
     } finally {
       setSavingGoogleAds(false);
     }
