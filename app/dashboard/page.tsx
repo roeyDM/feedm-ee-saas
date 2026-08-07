@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard-header";
@@ -292,8 +292,17 @@ function DashboardContent() {
     loadAuthUserSession();
   }, [searchParams]);
 
+  // Sync snapshot right after hydration completes to ensure no false-positive isDirty on refresh
+  const isHydratedRef = useRef(false);
+  useEffect(() => {
+    if (!isProfileLoading && !isHydratedRef.current) {
+      setSavedSnapshot(getCurrentStateJSON());
+      isHydratedRef.current = true;
+    }
+  }, [isProfileLoading, name, bio, avatarUrl, customHexColor, planType, socialLinks, customLinks, reels, leadForm, appearance]);
+
   // Dirty State calculation & Browser Navigation Protection
-  const isDirty = savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
+  const isDirty = !isProfileLoading && savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -559,9 +568,11 @@ function DashboardContent() {
           >
             <div className="space-y-4">
               
-              {/* DRAWER TOP BAR WITH CLOSE BUTTON (X) */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800/80">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Navigation Menu</span>
+              {/* DRAWER TOP BAR WITH LOGO BRANDING & CLOSE BUTTON */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+                <Link href="/dashboard" onClick={() => setMobileDrawerOpen(false)} className="flex items-center">
+                  <Logo showText={true} wordmarkClassName="text-base text-white" />
+                </Link>
                 <button
                   type="button"
                   onClick={() => setMobileDrawerOpen(false)}
@@ -1656,30 +1667,58 @@ function DashboardContent() {
 
       {/* Floating Unsaved Changes Reminder Toast Bar - STRICTLY SCOPED to Builder Tabs (Bio, Reels, Design) */}
       {isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300">
-          <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
-            <span>Hey there! You made some magic ✨ Don't forget to save your changes!</span>
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
+        <>
+          {/* Mobile Compact Single-Line Strip */}
+          <div className="fixed bottom-16 left-4 right-4 z-[90] bg-slate-900/95 border border-slate-700 p-2.5 rounded-full flex items-center justify-between shadow-2xl backdrop-blur-md block md:hidden animate-in slide-in-from-bottom-4 duration-200">
+            <div className="flex items-center gap-1.5 pl-1.5 min-w-0">
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse shrink-0" />
+              <span className="text-xs font-extrabold text-white truncate">Unsaved changes</span>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
                 type="button"
                 onClick={handleDiscardChanges}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 h-8 px-3 text-xs font-semibold cursor-pointer"
+                className="px-2.5 py-1 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600/80 rounded-full transition-colors cursor-pointer"
               >
                 Discard
-              </Button>
-              <Button
-                size="sm"
+              </button>
+              <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-8 px-4 text-xs shadow-md cursor-pointer"
+                className="px-3.5 py-1 text-[11px] font-extrabold text-white bg-emerald-600 hover:bg-emerald-500 rounded-full shadow-sm transition-colors cursor-pointer"
               >
-                Save Now 🚀
-              </Button>
+                {isSaving ? "Saving..." : "Save"}
+              </button>
             </div>
           </div>
-        </div>
+
+          {/* Desktop Floating Toast Bar (100% Untouched) */}
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 hidden md:block">
+            <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
+              <span>Hey there! You made some magic ✨ Don't forget to save your changes!</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={handleDiscardChanges}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 h-8 px-3 text-xs font-semibold cursor-pointer"
+                >
+                  Discard
+                </Button>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-8 px-4 text-xs shadow-md cursor-pointer"
+                >
+                  Save Now 🚀
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
       {/* In-App Upgrade Modal */}
       <UpgradeModal

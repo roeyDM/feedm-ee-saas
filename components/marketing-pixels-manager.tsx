@@ -332,11 +332,11 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-zinc-950 tracking-tight flex items-center gap-1.5">
-                  Marketing &amp; Tracking Pixels
+                <h2 className="text-base sm:text-lg font-black text-zinc-950 tracking-tight flex items-center gap-1.5 whitespace-nowrap">
+                  MARKETING PIXELS
                   <SectionHelp text="Connect your advertising accounts to track visitor actions, build custom audiences, and measure ad performance automatically." />
                 </h2>
-                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
                   Live Engine
                 </span>
               </div>
@@ -354,13 +354,13 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           {/* ======================================================== */}
           <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="h-11 w-11 rounded-2xl bg-blue-50/80 border border-blue-100 flex items-center justify-center shrink-0 shadow-2xs">
                   <OfficialMetaLogo className="h-6 w-6" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-zinc-950">Meta (Facebook &amp; Instagram) Pixel</h3>
-                  <p className="text-xs text-zinc-500 font-medium">Track page views, lead submissions, and contact link clicks</p>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-zinc-950 truncate whitespace-nowrap">Meta (Facebook &amp; Instagram) Pixel</h3>
+                  <p className="text-xs text-zinc-500 font-medium hidden md:block">Track page views, lead submissions, and contact link clicks</p>
                 </div>
               </div>
               <div>
@@ -457,13 +457,13 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           {/* ======================================================== */}
           <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="h-11 w-11 rounded-2xl bg-zinc-950 text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <OfficialTikTokLogo className="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-zinc-950">TikTok Pixel</h3>
-                  <p className="text-xs text-zinc-500 font-medium">Capture video bio conversions and TikTok ad event data</p>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-zinc-950 truncate whitespace-nowrap">TikTok Pixel</h3>
+                  <p className="text-xs text-zinc-500 font-medium hidden md:block">Capture video bio conversions and TikTok ad event data</p>
                 </div>
               </div>
               <div>
@@ -560,13 +560,13 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           {/* ======================================================== */}
           <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="h-11 w-11 rounded-2xl bg-amber-50/80 border border-amber-100 flex items-center justify-center shrink-0 shadow-2xs">
                   <OfficialGoogleAdsLogo className="h-6 w-6" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-zinc-950">Google Ads Pixel</h3>
-                  <p className="text-xs text-zinc-500 font-medium">Track Search &amp; Display campaign conversions and remarketing lists</p>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-zinc-950 truncate whitespace-nowrap">Google Ads Pixel</h3>
+                  <p className="text-xs text-zinc-500 font-medium hidden md:block">Track Search &amp; Display campaign conversions and remarketing lists</p>
                 </div>
               </div>
               <div>
