@@ -9,6 +9,7 @@ import { FeedItemEditor } from "@/components/feed-item-editor";
 import { DesignEditor } from "@/components/design-editor";
 import { BillingEditor } from "@/components/billing-editor";
 import { AccountSettingsEditor } from "@/components/account-settings-editor";
+import { Logo } from "@/components/logo";
 import { LeadsManager } from "@/components/leads-manager";
 import { AnalyticsManager } from "@/components/analytics-manager";
 import { MarketingPixelsManager } from "@/components/marketing-pixels-manager";
@@ -82,6 +83,10 @@ function DashboardContent() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showMobilePreviewModal, setShowMobilePreviewModal] = useState(false);
+  const [mobileAccordions, setMobileAccordions] = useState<Record<string, boolean>>({
+    myFeed: true,
+    marketing: true,
+  });
 
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -502,17 +507,22 @@ function DashboardContent() {
 
       {/* MOBILE STICKY TOP BAR & DRAWER (Visible on mobile only) */}
       <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between block md:hidden">
-        {/* Left: FeedM.ee Brand Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-sm shadow-md">
-            F
-          </div>
-          <span className="font-black text-base text-white tracking-tight">
-            FeedM<span className="text-emerald-400">.ee</span>
-          </span>
-        </Link>
+        {/* Left: Hamburger Button & FeedM.ee Brand Logo */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMobileDrawerOpen(true)}
+            className="p-1.5 rounded-xl bg-slate-800/80 text-slate-200 hover:text-white border border-slate-700/80 cursor-pointer"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-slate-200" />
+          </button>
+          <Link href="/dashboard" className="flex items-center">
+            <Logo showText={true} wordmarkClassName="text-base text-white" />
+          </Link>
+        </div>
 
-        {/* Center: Plan Badge (No emojis, Flat SVG Icon) */}
+        {/* Right: Plan Badge */}
         {planType === "pro" ? (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase">
             <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
@@ -528,165 +538,246 @@ function DashboardContent() {
             <span>FREE TIER</span>
           </button>
         )}
-
-        {/* Right: Hamburger Menu SVG Icon */}
-        <button
-          type="button"
-          onClick={() => setMobileDrawerOpen(true)}
-          className="p-1.5 rounded-xl bg-slate-800/80 text-slate-200 hover:text-white border border-slate-700/80 cursor-pointer"
-          aria-label="Open Navigation Menu"
-        >
-          <Menu className="w-6 h-6 text-slate-200" />
-        </button>
       </header>
 
-      {/* MOBILE HAMBURGER DRAWER OVERLAY */}
+      {/* MOBILE HAMBURGER DRAWER OVERLAY (SLIDING FROM LEFT) */}
       {mobileDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex justify-end block md:hidden animate-in fade-in duration-200">
-          <div className="w-72 bg-slate-900 h-full border-l border-slate-800 p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300">
-            <div className="space-y-6">
-              {/* Drawer Top Row */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-xs">
-                    F
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex justify-start block md:hidden animate-in fade-in duration-200">
+          <div className="w-80 max-w-[85vw] bg-slate-900 h-full border-r border-slate-800 p-4 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 overflow-y-auto">
+            <div className="space-y-4">
+              
+              {/* TOP OF DRAWER: USER PROFILE CARD (1:1 Desktop Parity) */}
+              <div className="bg-slate-800/90 rounded-2xl p-3 border border-slate-700/80 shadow-sm flex items-center justify-between min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img
+                    src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
+                    alt={name}
+                    className="w-9 h-9 rounded-full object-cover border border-slate-600 shrink-0"
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-xs font-black text-white truncate">{name || "User"}</span>
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase shrink-0">
+                        {planType}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 truncate font-medium">@{username || "username"}</span>
                   </div>
-                  <span className="font-black text-sm text-white">
-                    FeedM<span className="text-emerald-400">.ee</span>
-                  </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMobileDrawerOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors shrink-0 ml-1 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Mobile Drawer Navigation Links */}
-              <nav className="flex flex-col gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("bio");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "bio" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  )}
-                >
-                  <User className="w-4 h-4 text-emerald-400" />
-                  <span>Bio &amp; Links</span>
-                </button>
+              {/* ACCURATE MOBILE DRAWER NAVIGATION STRUCTURE (1:1 DESKTOP PARITY) */}
+              <nav className="flex flex-col gap-2.5">
+                
+                {/* 1. MY FEED (Collapsible Group) */}
+                <div className="flex flex-col rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/60 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setMobileAccordions(prev => ({ ...prev, myFeed: !prev.myFeed }))}
+                    className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-white hover:bg-slate-800/60 transition-colors text-left select-none cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Layers className="h-4 w-4 text-emerald-400" />
+                      <span>MY FEED</span>
+                    </div>
+                    <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", mobileAccordions.myFeed && "rotate-180")} />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("reels");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "reels" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  )}
-                >
-                  <Video className="w-4 h-4 text-emerald-400" />
-                  <span>Videos &amp; Reels</span>
-                </button>
+                  {mobileAccordions.myFeed && (
+                    <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-slate-800/80 animate-in fade-in duration-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("bio");
+                          setMobileDrawerOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                          activeTab === "bio"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                      >
+                        <User className="h-4 w-4 shrink-0 text-emerald-400" />
+                        <span>Bio &amp; Links</span>
+                      </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("design");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "design" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  )}
-                >
-                  <Palette className="w-4 h-4 text-emerald-400" />
-                  <span>Design &amp; Themes</span>
-                </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("reels");
+                          setMobileDrawerOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                          activeTab === "reels"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                      >
+                        <Film className="h-4 w-4 shrink-0 text-emerald-400" />
+                        <span>Videos &amp; Reels</span>
+                        {planType === "free" && (
+                          <Lock className="h-3.5 w-3.5 ml-auto text-amber-400" />
+                        )}
+                      </button>
 
-                <div className="my-2 border-t border-slate-800" />
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("analytics");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "analytics" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("design");
+                          setMobileDrawerOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                          activeTab === "design"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                      >
+                        <Palette className="h-4 w-4 shrink-0 text-emerald-400" />
+                        <span>Design &amp; Themes</span>
+                      </button>
+                    </div>
                   )}
-                >
-                  <BarChart3 className="w-4 h-4 text-emerald-400" />
-                  <span>Analytics &amp; Insights</span>
-                </button>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("leads");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "leads" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  )}
-                >
-                  <DollarSign className="w-4 h-4 text-emerald-400" />
-                  <span>Monetization &amp; Leads</span>
-                </button>
+                {/* 2. ANALYTICS / INSIGHTS (Direct Flattened Category) */}
+                <div className="flex flex-col rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/60 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab("analytics");
+                      setMobileDrawerOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3.5 py-3 text-xs font-black transition-all text-left select-none cursor-pointer",
+                      activeTab === "analytics"
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-white hover:bg-slate-800/60"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <BarChart3 className={cn("h-4 w-4", activeTab === "analytics" ? "text-white" : "text-emerald-400")} />
+                      <span>ANALYTICS / INSIGHTS</span>
+                    </div>
+                    <span className={cn(
+                      "text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase",
+                      activeTab === "analytics"
+                        ? "bg-white/20 text-white border-white/30"
+                        : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    )}>
+                      Active
+                    </span>
+                  </button>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("pixels");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "pixels" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                  )}
-                >
-                  <Target className="w-4 h-4 text-emerald-400" />
-                  <span>Marketing Tools &amp; Pixels</span>
-                </button>
+                {/* 3. MARKETING TOOLS (Collapsible Group) */}
+                <div className="flex flex-col rounded-2xl overflow-hidden border border-slate-800 bg-slate-950/60 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setMobileAccordions(prev => ({ ...prev, marketing: !prev.marketing }))}
+                    className="w-full flex items-center justify-between px-3.5 py-3 text-xs font-black text-white hover:bg-slate-800/60 transition-colors text-left select-none cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Target className="h-4 w-4 text-emerald-400" />
+                      <span>MARKETING TOOLS</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-extrabold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">Active</span>
+                      <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", mobileAccordions.marketing && "rotate-180")} />
+                    </div>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("settings");
-                    setMobileDrawerOpen(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
-                    activeTab === "settings" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  {mobileAccordions.marketing && (
+                    <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-slate-800/80 animate-in fade-in duration-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("leads");
+                          setMobileDrawerOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                          activeTab === "leads"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Inbox className="h-4 w-4 shrink-0 text-emerald-400" />
+                          <span>Leads CRM</span>
+                        </div>
+                        <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
+                          New
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab("pixels");
+                          setMobileDrawerOpen(false);
+                        }}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                          activeTab === "pixels"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4 shrink-0 text-emerald-400" />
+                          <span>Marketing Pixels</span>
+                        </div>
+                        <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
+                          New
+                        </span>
+                      </button>
+                    </div>
                   )}
-                >
-                  <Settings className="w-4 h-4 text-emerald-400" />
-                  <span>Account Settings</span>
-                </button>
+                </div>
+
               </nav>
             </div>
 
-            {/* Logout Button in Drawer */}
-            <button
-              type="button"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                if (typeof window !== "undefined") window.location.href = "/";
-              }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-colors w-full cursor-pointer mt-auto"
-            >
-              <LogOut className="w-4 h-4 text-rose-400" />
-              <span>Log Out</span>
-            </button>
+            {/* BOTTOM ACCOUNT ACTIONS IN DRAWER */}
+            <div className="pt-4 border-t border-slate-800 space-y-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("settings");
+                  setMobileDrawerOpen(false);
+                }}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left w-full cursor-pointer",
+                  activeTab === "settings" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <Settings className="w-4 h-4 text-slate-400" />
+                <span>Account Settings</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  if (typeof window !== "undefined") window.location.href = "/";
+                }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-colors w-full cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-rose-400" />
+                <span>Log Out</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}
