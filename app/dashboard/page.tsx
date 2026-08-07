@@ -25,7 +25,7 @@ import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -80,6 +80,15 @@ function DashboardContent() {
   const [planType, setPlanType] = useState<PlanType>("free");
   const [analyticsTier, setAnalyticsTier] = useState<"free" | "personal" | "pro">("free");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [showMobilePreviewModal, setShowMobilePreviewModal] = useState(false);
+
+  const scrollToSection = (sectionId: string) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   // Restore saved offline trial tier state on mount
   useEffect(() => {
@@ -480,13 +489,252 @@ function DashboardContent() {
         </div>
       )}
 
-      <DashboardHeader
-        username={username}
-        planType={planType}
-        onSave={handleSave}
-        isSaving={isSaving}
-        onUpgradeClick={() => setShowUpgradeModal(true)}
-      />
+      {/* DESKTOP HEADER (Hidden on mobile) */}
+      <div className="hidden md:block">
+        <DashboardHeader
+          username={username}
+          planType={planType}
+          onSave={handleSave}
+          isSaving={isSaving}
+          onUpgradeClick={() => setShowUpgradeModal(true)}
+        />
+      </div>
+
+      {/* MOBILE STICKY TOP BAR & DRAWER (Visible on mobile only) */}
+      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between block md:hidden">
+        {/* Left: FeedM.ee Brand Logo */}
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-sm shadow-md">
+            F
+          </div>
+          <span className="font-black text-base text-white tracking-tight">
+            FeedM<span className="text-emerald-400">.ee</span>
+          </span>
+        </Link>
+
+        {/* Center: Plan Badge (No emojis, Flat SVG Icon) */}
+        {planType === "pro" ? (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase">
+            <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
+            <span>PRO TRIAL ACTIVE</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowUpgradeModal(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase cursor-pointer"
+          >
+            <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+            <span>FREE TIER</span>
+          </button>
+        )}
+
+        {/* Right: Hamburger Menu SVG Icon */}
+        <button
+          type="button"
+          onClick={() => setMobileDrawerOpen(true)}
+          className="p-1.5 rounded-xl bg-slate-800/80 text-slate-200 hover:text-white border border-slate-700/80 cursor-pointer"
+          aria-label="Open Navigation Menu"
+        >
+          <Menu className="w-6 h-6 text-slate-200" />
+        </button>
+      </header>
+
+      {/* MOBILE HAMBURGER DRAWER OVERLAY */}
+      {mobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex justify-end block md:hidden animate-in fade-in duration-200">
+          <div className="w-72 bg-slate-900 h-full border-l border-slate-800 p-5 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300">
+            <div className="space-y-6">
+              {/* Drawer Top Row */}
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-xs">
+                    F
+                  </div>
+                  <span className="font-black text-sm text-white">
+                    FeedM<span className="text-emerald-400">.ee</span>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Mobile Drawer Navigation Links */}
+              <nav className="flex flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("bio");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "bio" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <User className="w-4 h-4 text-emerald-400" />
+                  <span>Bio &amp; Links</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("reels");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "reels" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <Video className="w-4 h-4 text-emerald-400" />
+                  <span>Videos &amp; Reels</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("design");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "design" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <Palette className="w-4 h-4 text-emerald-400" />
+                  <span>Design &amp; Themes</span>
+                </button>
+
+                <div className="my-2 border-t border-slate-800" />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("analytics");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "analytics" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <BarChart3 className="w-4 h-4 text-emerald-400" />
+                  <span>Analytics &amp; Insights</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("leads");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "leads" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
+                  <span>Monetization &amp; Leads</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("pixels");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "pixels" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <Target className="w-4 h-4 text-emerald-400" />
+                  <span>Marketing Tools &amp; Pixels</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("settings");
+                    setMobileDrawerOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    activeTab === "settings" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  )}
+                >
+                  <Settings className="w-4 h-4 text-emerald-400" />
+                  <span>Account Settings</span>
+                </button>
+              </nav>
+            </div>
+
+            {/* Logout Button in Drawer */}
+            <button
+              type="button"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                if (typeof window !== "undefined") window.location.href = "/";
+              }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-colors w-full cursor-pointer mt-auto"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span>Log Out</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CORE SECTION SWITCHER (SUB-HEADER) */}
+      <div className="sticky top-[57px] z-30 bg-slate-900 border-b border-slate-800 px-3 py-2 block md:hidden">
+        <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button
+            type="button"
+            onClick={() => setActiveTab("bio")}
+            className={cn(
+              "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+              activeTab === "bio"
+                ? "bg-emerald-600 text-white shadow-sm font-extrabold"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>Bio &amp; Links</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("reels")}
+            className={cn(
+              "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+              activeTab === "reels"
+                ? "bg-emerald-600 text-white shadow-sm font-extrabold"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            <Video className="w-3.5 h-3.5" />
+            <span>Videos &amp; Reels</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("design")}
+            className={cn(
+              "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+              activeTab === "design"
+                ? "bg-emerald-600 text-white shadow-sm font-extrabold"
+                : "text-slate-400 hover:text-slate-200"
+            )}
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>Design &amp; Themes</span>
+          </button>
+        </div>
+      </div>
 
       <Suspense fallback={null}>
         <StripeCheckoutStatus 
@@ -499,8 +747,8 @@ function DashboardContent() {
 
       <main className="flex-1 w-full flex flex-col lg:flex-row items-start">
         
-        {/* LEFT SIDEBAR */}
-        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-4 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] overflow-y-auto self-start z-10 bg-zinc-100/80 border-r border-zinc-200 px-4 py-5 lg:px-5 pb-8">
+        {/* LEFT SIDEBAR (Desktop only) */}
+        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-4 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] overflow-y-auto self-start z-10 bg-zinc-100/80 border-r border-zinc-200 px-4 py-5 lg:px-5 pb-8 hidden lg:flex">
           {/* Consolidated Profile & Feed Switcher */}
           <div className="relative">
             <div 
@@ -945,7 +1193,7 @@ function DashboardContent() {
 
           {/* Active Form Panel */}
           {activeTab !== "settings" ? (
-            <div className={cn("relative w-full space-y-6 transition-all duration-300", activeTab === "leads" || activeTab === "analytics" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto", isDirty && "pb-28")}>
+            <div className={cn("relative w-full space-y-6 transition-all duration-300 pb-28 md:pb-0", activeTab === "leads" || activeTab === "analytics" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto")}>
               {activeTab === "bio" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
                   <ProfileEditor
@@ -1019,7 +1267,7 @@ function DashboardContent() {
               )}
             </div>
           ) : (
-            <div className="w-full flex-1 animate-in fade-in duration-200">
+            <div className="w-full flex-1 animate-in fade-in duration-200 pb-28 md:pb-0">
               <AccountSettingsEditor
                 name={name}
                 setName={setName}
@@ -1040,9 +1288,9 @@ function DashboardContent() {
           )}
         </div>
 
-        {/* RIGHT PANEL: MOBILE PREVIEW (HIDDEN IN ACCOUNT SETTINGS VIEW) */}
+        {/* RIGHT PANEL: MOBILE PREVIEW (Desktop only, hidden on mobile) */}
         {activeTab !== "settings" && (
-          <aside className="w-full lg:w-[410px] shrink-0 lg:sticky lg:top-24 flex flex-col items-center gap-3 px-2 py-6 overflow-visible justify-center">
+          <aside className="w-full lg:w-[410px] shrink-0 lg:sticky lg:top-24 flex-col items-center gap-3 px-2 py-6 overflow-visible justify-center hidden lg:flex">
             <div className="text-center w-full flex justify-center mb-1">
               <Link href={`/${username}`} target="_blank">
                 <Button
@@ -1116,6 +1364,189 @@ function DashboardContent() {
           </aside>
         )}
       </main>
+
+      {/* DYNAMIC CONTEXTUAL BOTTOM TOOLBAR (Mobile Only) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-2 flex items-center justify-around shadow-2xl block md:hidden">
+        {activeTab === "bio" && (
+          <>
+            <button
+              type="button"
+              onClick={() => scrollToSection("profile-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <User className="w-4 h-4 text-emerald-400" />
+              <span>Profile</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("links-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Link2 className="w-4 h-4 text-emerald-400" />
+              <span>Links</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("socials-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Share2 className="w-4 h-4 text-emerald-400" />
+              <span>Socials</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobilePreviewModal(true)}
+              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4 text-emerald-400" />
+              <span>Live Preview</span>
+            </button>
+          </>
+        )}
+
+        {activeTab === "reels" && (
+          <>
+            <button
+              type="button"
+              onClick={() => scrollToSection("reels-list-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Video className="w-4 h-4 text-emerald-400" />
+              <span>My Reels</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("add-reel-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-emerald-400" />
+              <span>Add Reel</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("reel-settings-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Sliders className="w-4 h-4 text-emerald-400" />
+              <span>Settings</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobilePreviewModal(true)}
+              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4 text-emerald-400" />
+              <span>Live Preview</span>
+            </button>
+          </>
+        )}
+
+        {activeTab === "design" && (
+          <>
+            <button
+              type="button"
+              onClick={() => scrollToSection("preset-themes-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <LayoutTemplate className="w-4 h-4 text-emerald-400" />
+              <span>Themes</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("color-picker-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Palette className="w-4 h-4 text-emerald-400" />
+              <span>Colors</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection("button-style-section")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <MousePointerClick className="w-4 h-4 text-emerald-400" />
+              <span>Buttons</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobilePreviewModal(true)}
+              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4 text-emerald-400" />
+              <span>Live Preview</span>
+            </button>
+          </>
+        )}
+
+        {(activeTab === "analytics" || activeTab === "leads" || activeTab === "pixels" || activeTab === "settings") && (
+          <>
+            <button
+              type="button"
+              onClick={() => setActiveTab("bio")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <User className="w-4 h-4 text-emerald-400" />
+              <span>Builder</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("reels")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Video className="w-4 h-4 text-emerald-400" />
+              <span>Reels</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("design")}
+              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Palette className="w-4 h-4 text-emerald-400" />
+              <span>Design</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobilePreviewModal(true)}
+              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
+            >
+              <Eye className="w-4 h-4 text-emerald-400" />
+              <span>Live Preview</span>
+            </button>
+          </>
+        )}
+      </nav>
+
+      {/* FULL-SCREEN MOBILE LIVE PREVIEW OVERLAY */}
+      {showMobilePreviewModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-3 h-[100dvh] overflow-y-auto block md:hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full h-full max-w-[390px] mx-auto flex items-center justify-center">
+            <MobilePreview
+              profileName={name}
+              username={username}
+              bio={bio}
+              avatarUrl={avatarUrl}
+              customHexColor={customHexColor}
+              socialLinks={socialLinks}
+              customLinks={customLinks}
+              reels={reels}
+              leadForm={leadForm}
+              appearance={appearance}
+              fontFamily={appearance?.fontFamily}
+              isDemoMode={true}
+              activeTab={activeTab}
+            />
+          </div>
+
+          <Button
+            type="button"
+            onClick={() => setShowMobilePreviewModal(false)}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] bg-slate-900/90 backdrop-blur-md border border-slate-700 text-white font-extrabold text-xs h-11 px-6 rounded-full shadow-2xl flex items-center gap-2 cursor-pointer hover:bg-slate-800"
+          >
+            <Pencil className="w-4 h-4 text-emerald-400" />
+            <span>Back to Editor</span>
+          </Button>
+        </div>
+      )}
 
       {/* Floating Unsaved Changes Reminder Toast Bar - STRICTLY SCOPED to Builder Tabs (Bio, Reels, Design) */}
       {isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (

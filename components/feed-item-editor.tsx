@@ -351,7 +351,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
       )}
 
       {/* Add Reel Form */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="add-reel-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <Film className="h-4.5 w-4.5 text-emerald-600" /> Reels Manager
@@ -502,7 +502,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
       </Card>
 
       {/* Active Reels List */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="reels-list-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
             <CardTitle className="text-base font-bold text-zinc-900">

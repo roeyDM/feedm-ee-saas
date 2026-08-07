@@ -542,7 +542,7 @@ export function DesignEditor({
   return (
     <div className="flex flex-col gap-6 pb-20">
       {/* TIER 1: PRESETS / THEMES */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="preset-themes-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <Sparkles className="h-4 w-4 text-emerald-600" /> 1. Theme Presets (Quick Apply)
@@ -578,12 +578,9 @@ export function DesignEditor({
                   >
                     <div 
                       style={{ backgroundColor: preset.settings.cardBgColor }}
-                      className="w-full h-6 rounded-lg shadow-xs border border-white/40 flex items-center px-2"
+                      className="w-full py-1.5 px-2 rounded-md shadow-xs border text-center font-bold text-[10px] truncate"
                     >
-                      <div 
-                        style={{ backgroundColor: preset.settings.cardTextColor }}
-                        className="h-2 w-12 rounded-full opacity-80" 
-                      />
+                      <span style={{ color: preset.settings.cardTextColor }}>{preset.name}</span>
                     </div>
                     {isSelected && (
                       <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-white p-1 rounded-full shadow-md">
@@ -591,8 +588,11 @@ export function DesignEditor({
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-900 group-hover:text-black truncate w-full text-center tracking-tight leading-tight px-1">
+                  <span className="text-xs font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
                     {preset.name}
+                  </span>
+                  <span className="text-[10px] text-zinc-500 font-medium line-clamp-1">
+                    {preset.description}
                   </span>
                 </button>
               );
@@ -602,7 +602,7 @@ export function DesignEditor({
       </Card>
 
       {/* TIER 2: BACKGROUND CUSTOMIZATION & UPLOAD */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="color-picker-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <Paintbrush className="h-4 w-4 text-emerald-600" /> Background

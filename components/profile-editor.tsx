@@ -381,7 +381,7 @@ export function ProfileEditor({
   return (
     <div className="flex flex-col gap-6">
       {/* 1. Basic Profile Info */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="profile-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <User className="h-4.5 w-4.5 text-emerald-600" /> Profile Information
@@ -401,7 +401,7 @@ export function ProfileEditor({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Alex Rivers"
-                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900 h-9"
+                className="bg-zinc-50 border-zinc-200 text-base md:text-xs text-zinc-900 h-9"
               />
             </div>
 
@@ -419,7 +419,7 @@ export function ProfileEditor({
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                   placeholder="alexrivers"
-                  className={`bg-zinc-50 text-xs text-zinc-900 pr-8 ${
+                  className={`bg-zinc-50 text-base md:text-xs text-zinc-900 pr-8 ${
                     handleStatus
                       ? handleStatus.available
                         ? "border-emerald-500 focus:ring-emerald-500/30"
@@ -456,7 +456,7 @@ export function ProfileEditor({
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Your bio description..."
-              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 p-2.5 text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              className="w-full rounded-xl border border-zinc-200 bg-zinc-50 p-2.5 text-base md:text-xs text-zinc-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
             />
           </div>
 
@@ -468,14 +468,16 @@ export function ProfileEditor({
                 onClick={() => fileInputRef.current?.click()}
               >
                 {avatarUrl?.trim() ? (
-                  <img src={avatarUrl} alt="Avatar Preview" className="h-full w-full object-cover" />
+                  <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
                 ) : (
-                  <User className="h-8 w-8 m-auto mt-4 text-zinc-400" />
+                  <div className="flex h-full w-full items-center justify-center text-zinc-400">
+                    <User className="h-8 w-8" />
+                  </div>
                 )}
                 
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Upload className="h-4 w-4 text-white" />
+                  <Upload className="h-5 w-5 text-white" />
                 </div>
                 
                 {/* Loading state */}
@@ -486,10 +488,10 @@ export function ProfileEditor({
                 )}
               </div>
               
-              <div className="flex-1">
+              <div className="space-y-1">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp,image/jpg"
                   ref={fileInputRef}
                   onChange={handleAvatarSelect}
                   className="hidden"
@@ -500,12 +502,17 @@ export function ProfileEditor({
                   size="sm"
                   disabled={isUploadingAvatar}
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs font-bold rounded-xl h-9"
+                  className="text-xs font-bold h-8 px-3 rounded-lg"
                 >
-                  {isUploadingAvatar ? "Uploading..." : "Change Photo"}
+                  {isUploadingAvatar ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  Upload Photo
                 </Button>
-                <p className="text-[10px] text-zinc-500 mt-1.5 font-medium">
-                  Recommended: Square image, at least 300x300px.
+                <p className="text-[11px] text-zinc-500">
+                  Recommended: Square JPG, PNG or WebP. Max 5MB.
                 </p>
                 {avatarError && (
                   <p className="text-[10px] font-bold text-amber-700 mt-1 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
@@ -519,7 +526,7 @@ export function ProfileEditor({
       </Card>
 
       {/* 2. Quick Social Links */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="socials-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <Share2 className="h-4.5 w-4.5 text-emerald-600" /> Social Links
@@ -569,10 +576,12 @@ export function ProfileEditor({
                       <div className="h-8 w-8 rounded-full bg-zinc-200 flex items-center justify-center shrink-0 overflow-hidden">
                         {PLATFORM_INFO[link.platform]?.icon}
                       </div>
-                      <span className="text-xs font-bold text-zinc-800">{PLATFORM_INFO[link.platform]?.name || link.platform}</span>
+                      <span className="text-xs font-bold text-zinc-900 capitalize">{PLATFORM_INFO[link.platform]?.name || link.platform}</span>
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] font-bold text-zinc-500">URL or Username *</Label>
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-bold text-zinc-600">
+                        {link.platform === "whatsapp" ? "WhatsApp Number (with country code)" : `${PLATFORM_INFO[link.platform]?.name} URL`}
+                      </Label>
                       <Input
                         value={editSocialFormData.url || ""}
                         onChange={(e) => {
