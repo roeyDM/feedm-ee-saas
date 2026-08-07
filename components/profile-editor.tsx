@@ -858,6 +858,7 @@ export function ProfileEditor({
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
               <Send className="h-4.5 w-4.5 text-emerald-600" /> Lead Form Settings
+              <SectionHelp text="Configure contact form text content, field requirements, and submission routing." />
             </CardTitle>
             {planType === "free" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
@@ -865,7 +866,7 @@ export function ProfileEditor({
               </span>
             )}
           </div>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Configure contact form text content, field requirements, and submission routing
           </CardDescription>
         </CardHeader>

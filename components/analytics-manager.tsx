@@ -269,8 +269,11 @@ export function AnalyticsManager({
             {/* 1. Page Views (All Tiers) */}
             <div className="p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-zinc-500 uppercase tracking-wider">Total Views</span>
-                <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                <span className="text-xs font-extrabold text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                  Total Views
+                  <SectionHelp text="Total page impressions recorded on your public profile." />
+                </span>
+                <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shrink-0">
                   <Eye className="h-4 w-4" />
                 </div>
               </div>
@@ -283,8 +286,11 @@ export function AnalyticsManager({
             {/* 2. Link Clicks (All Tiers) */}
             <div className="p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-zinc-500 uppercase tracking-wider">Total Link Clicks</span>
-                <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
+                <span className="text-xs font-extrabold text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                  Total Link Clicks
+                  <SectionHelp text="Total number of outbound clicks across all links and buttons." />
+                </span>
+                <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shrink-0">
                   <MousePointerClick className="h-4 w-4" />
                 </div>
               </div>
@@ -297,8 +303,11 @@ export function AnalyticsManager({
             {/* 3. CTR % (All Tiers) */}
             <div className="p-5 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs hover:border-zinc-300 transition-all">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold text-zinc-500 uppercase tracking-wider">Click Rate (CTR)</span>
-                <div className="h-8 w-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
+                <span className="text-xs font-extrabold text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                  Click Rate (CTR)
+                  <SectionHelp text="Percentage of page views that resulted in at least one link click." />
+                </span>
+                <div className="h-8 w-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100 shrink-0">
                   <Percent className="h-4 w-4" />
                 </div>
               </div>
