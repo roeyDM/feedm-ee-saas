@@ -552,7 +552,7 @@ export function DesignEditor({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-4">
             {THEME_PRESETS.map((preset) => {
               const isSelected =
                 currentApp.bgType === preset.settings.bgType &&
@@ -566,19 +566,19 @@ export function DesignEditor({
                   type="button"
                   onClick={() => handleApplyPreset(preset)}
                   className={cn(
-                    "flex flex-col items-start p-3 rounded-2xl border text-left transition-all duration-200 relative group cursor-pointer bg-white shadow-xs hover:shadow-md hover:-translate-y-0.5",
+                    "flex flex-col items-start p-2 md:p-3 rounded-2xl border text-left transition-all duration-200 relative group cursor-pointer bg-white shadow-xs hover:shadow-md hover:-translate-y-0.5 w-full",
                     isSelected
-                      ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/20"
+                      ? "border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/20"
                       : "border-zinc-200 hover:border-zinc-300"
                   )}
                 >
                   <div
                     style={preset.bgPreviewStyle}
-                    className="w-full h-16 rounded-xl mb-2.5 shadow-inner border border-black/10 flex items-center justify-center p-2 relative overflow-hidden"
+                    className="w-full h-14 md:h-20 rounded-xl mb-2 md:mb-2.5 shadow-inner border border-black/10 flex items-center justify-center p-2 relative overflow-hidden shrink-0"
                   >
                     <div 
                       style={{ backgroundColor: preset.settings.cardBgColor }}
-                      className="w-full py-1.5 px-2 rounded-md shadow-xs border text-center font-bold text-[10px] truncate"
+                      className="w-full py-1 md:py-1.5 px-1.5 md:px-2 rounded-md shadow-xs border text-center font-bold text-[9px] md:text-[10px] truncate"
                     >
                       <span style={{ color: preset.settings.cardTextColor }}>{preset.name}</span>
                     </div>
@@ -588,10 +588,10 @@ export function DesignEditor({
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
+                  <span className="text-xs font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors truncate w-full md:text-sm">
                     {preset.name}
                   </span>
-                  <span className="text-[10px] text-zinc-500 font-medium line-clamp-1">
+                  <span className="text-[10px] text-zinc-500 font-medium line-clamp-1 hidden md:block">
                     {preset.description}
                   </span>
                 </button>
