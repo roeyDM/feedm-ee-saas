@@ -26,7 +26,7 @@ import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -507,37 +507,44 @@ function DashboardContent() {
 
       {/* MOBILE STICKY TOP BAR & DRAWER (Visible on mobile only) */}
       <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between block md:hidden">
-        {/* Left: Hamburger Button & FeedM.ee Brand Logo */}
-        <div className="flex items-center gap-3">
+        {/* Left Slot: Hamburger Button */}
+        <div className="w-1/4 flex justify-start">
           <button
             type="button"
             onClick={() => setMobileDrawerOpen(true)}
             className="p-1.5 rounded-xl bg-slate-800/80 text-slate-200 hover:text-white border border-slate-700/80 cursor-pointer"
             aria-label="Open Navigation Menu"
           >
-            <Menu className="w-5 h-5 text-slate-200" />
+            <Menu className="w-6 h-6 text-slate-200" />
           </button>
-          <Link href="/dashboard" className="flex items-center">
-            <Logo showText={true} wordmarkClassName="text-base text-white" />
+        </div>
+
+        {/* Center Slot: Centered FeedM.ee Brand Logo */}
+        <div className="w-2/4 flex justify-center items-center">
+          <Link href="/dashboard" className="flex items-center justify-center">
+            <Logo showText={false} />
           </Link>
         </div>
 
-        {/* Right: Plan Badge */}
-        {planType === "pro" ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase">
-            <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
-            <span>PRO TRIAL ACTIVE</span>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowUpgradeModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase cursor-pointer"
-          >
-            <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
-            <span>FREE TIER</span>
-          </button>
-        )}
+        {/* Right Slot: Plan Badge */}
+        <div className="w-1/4 flex justify-end">
+          {planType === "pro" ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
+              <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
+              <span className="hidden sm:inline">PRO TRIAL ACTIVE</span>
+              <span className="sm:hidden">PRO</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowUpgradeModal(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer"
+            >
+              <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
+              <span>FREE</span>
+            </button>
+          )}
+        </div>
       </header>
 
       {/* MOBILE HAMBURGER DRAWER OVERLAY (SLIDING FROM LEFT) */}
@@ -782,50 +789,52 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* CORE SECTION SWITCHER (SUB-HEADER) */}
-      <div className="sticky top-[57px] z-30 bg-slate-900 border-b border-slate-800 px-3 py-2 block md:hidden">
-        <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button
-            type="button"
-            onClick={() => setActiveTab("bio")}
-            className={cn(
-              "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
-              activeTab === "bio"
-                ? "bg-emerald-600 text-white shadow-sm font-extrabold"
-                : "text-slate-400 hover:text-slate-200"
-            )}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span>Bio &amp; Links</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("reels")}
-            className={cn(
-              "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
-              activeTab === "reels"
-                ? "bg-emerald-600 text-white shadow-sm font-extrabold"
-                : "text-slate-400 hover:text-slate-200"
-            )}
-          >
-            <Video className="w-3.5 h-3.5" />
-            <span>Videos &amp; Reels</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("design")}
-            className={cn(
-              "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
-              activeTab === "design"
-                ? "bg-emerald-600 text-white shadow-sm font-extrabold"
-                : "text-slate-400 hover:text-slate-200"
-            )}
-          >
-            <Palette className="w-3.5 h-3.5" />
-            <span>Design &amp; Themes</span>
-          </button>
+      {/* CORE SECTION SWITCHER (SUB-HEADER) - Visible ONLY inside Main Builder */}
+      {(activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
+        <div className="sticky top-[57px] z-30 bg-slate-900 border-b border-slate-800 px-3 py-2 block md:hidden">
+          <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setActiveTab("bio")}
+              className={cn(
+                "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+                activeTab === "bio"
+                  ? "bg-emerald-600 text-white shadow-sm font-extrabold"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Bio &amp; Links</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("reels")}
+              className={cn(
+                "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+                activeTab === "reels"
+                  ? "bg-emerald-600 text-white shadow-sm font-extrabold"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              <Video className="w-3.5 h-3.5" />
+              <span>Videos &amp; Reels</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("design")}
+              className={cn(
+                "py-2 px-1 text-[11px] font-bold rounded-lg transition-all text-center flex items-center justify-center gap-1 cursor-pointer",
+                activeTab === "design"
+                  ? "bg-emerald-600 text-white shadow-sm font-extrabold"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              <Palette className="w-3.5 h-3.5" />
+              <span>Design &amp; Themes</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <Suspense fallback={null}>
         <StripeCheckoutStatus 
@@ -1576,32 +1585,41 @@ function DashboardContent() {
               onClick={() => setActiveTab("bio")}
               className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
             >
-              <User className="w-4 h-4 text-emerald-400" />
-              <span>Builder</span>
+              <LayoutDashboard className="w-5 h-5 text-slate-300" />
+              <span>MY FEED</span>
             </button>
+
             <button
               type="button"
-              onClick={() => setActiveTab("reels")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+              onClick={() => setActiveTab("analytics")}
+              className={cn(
+                "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 transition-colors cursor-pointer",
+                activeTab === "analytics" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
+              )}
             >
-              <Video className="w-4 h-4 text-emerald-400" />
-              <span>Reels</span>
+              <BarChart3 className={cn("w-5 h-5", activeTab === "analytics" ? "text-emerald-400" : "text-slate-300")} />
+              <span>ANALYTICS</span>
             </button>
+
             <button
               type="button"
-              onClick={() => setActiveTab("design")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
+              onClick={() => setActiveTab("leads")}
+              className={cn(
+                "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 transition-colors cursor-pointer",
+                activeTab === "leads" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
+              )}
             >
-              <Palette className="w-4 h-4 text-emerald-400" />
-              <span>Design</span>
+              <Users className={cn("w-5 h-5", activeTab === "leads" ? "text-emerald-400" : "text-slate-300")} />
+              <span>CRM</span>
             </button>
+
             <button
               type="button"
               onClick={() => setShowMobilePreviewModal(true)}
               className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
             >
-              <Eye className="w-4 h-4 text-emerald-400" />
-              <span>Live Preview</span>
+              <Eye className="w-5 h-5 text-emerald-400" />
+              <span>LIVE PREVIEW</span>
             </button>
           </>
         )}

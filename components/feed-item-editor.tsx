@@ -676,7 +676,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
 
       {/* Reel Action Buttons & Contact Phone */}
       {leadForm && setLeadForm && (
-        <Card className="bg-white border-zinc-200/80 shadow-sm">
+        <Card id="reel-settings-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
               <MessageCircle className="h-4.5 w-4.5 text-emerald-600" /> Reel Action Buttons & Contact Phone

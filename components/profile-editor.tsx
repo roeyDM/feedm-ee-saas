@@ -672,7 +672,7 @@ export function ProfileEditor({
       </Card>
 
       {/* 3. Linktree Style Custom Links */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="links-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <LinkIcon className="h-4.5 w-4.5 text-emerald-600" /> Custom Links
