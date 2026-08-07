@@ -317,7 +317,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
       {planType === "free" && (
         <>
           {/* Mobile Compact Single-Line Strip */}
-          <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2 text-amber-950 flex items-center justify-between gap-2 shadow-2xs block md:hidden">
+          <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2 text-amber-950 flex items-center justify-between gap-2 shadow-2xs md:hidden">
             <div className="flex items-center gap-2 min-w-0">
               <Lock className="w-4 h-4 text-amber-600 shrink-0" />
               <span className="text-xs font-bold truncate">Free Tier Mode: Upgrade to unlock all features</span>

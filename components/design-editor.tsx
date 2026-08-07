@@ -44,6 +44,38 @@ interface DesignEditorProps {
   }) => void;
 }
 
+function ToggleSwitch({
+  checked,
+  onChange,
+  disabled = false,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+        checked ? "bg-emerald-500" : "bg-zinc-300",
+        disabled && "opacity-50 cursor-not-allowed"
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+          checked ? "translate-x-5" : "translate-x-0"
+        )}
+      />
+    </button>
+  );
+}
+
 export const THEME_PRESETS: {
   id: string;
   name: string;
@@ -828,19 +860,18 @@ export function DesignEditor({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <User className="h-4 w-4 text-emerald-600" /> Avatar Image Border Ring
+            <SectionHelp text="Configure profile image border ring color and thickness." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Configure profile image border ring color and thickness.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
             <span className="text-xs font-bold text-zinc-800">Enable Border Ring</span>
-            <input
-              type="checkbox"
+            <ToggleSwitch
               checked={currentApp.avatarBorderEnabled !== false}
-              onChange={(e) => updateAppearance({ avatarBorderEnabled: e.target.checked })}
-              className="h-4 w-4 accent-emerald-600 cursor-pointer"
+              onChange={(val) => updateAppearance({ avatarBorderEnabled: val })}
             />
           </div>
 
@@ -996,8 +1027,9 @@ export function DesignEditor({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <Share2 className="h-4 w-4 text-emerald-600" /> Social Icons Customization
+            <SectionHelp text="Customize social background pill colors with visual swatches and toggle between original brand logos or flat single-color." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Customize social background pill colors with visual swatches and toggle between original brand logos or flat single-color.
           </CardDescription>
         </CardHeader>
@@ -1049,7 +1081,8 @@ export function DesignEditor({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
-              <Sparkles className="h-4 w-4 text-emerald-600" /> FeedM.ee Branding Watermark
+              <Sparkles className="h-4 w-4 text-emerald-600" /> FeedM.ee Watermark
+              <SectionHelp text='Control the visibility of the "Powered by FeedM.ee" watermark at the bottom of your feed.' />
             </CardTitle>
             {planType === "free" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
@@ -1057,7 +1090,7 @@ export function DesignEditor({
               </span>
             )}
           </div>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Control the visibility of the "Powered by FeedM.ee" watermark at the bottom of your feed.
           </CardDescription>
         </CardHeader>
@@ -1065,24 +1098,22 @@ export function DesignEditor({
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
             <div>
               <p className="text-xs font-bold text-zinc-900">Remove FeedM.ee Branding</p>
-              <p className="text-[11px] font-medium text-zinc-500 mt-0.5">
+              <p className="text-[11px] font-medium text-zinc-500 mt-0.5 hidden md:block">
                 {planType === "free"
                   ? "Requires Pro Plan to hide watermark (currently visible on Starter)"
                   : "Hide watermark for a 100% white-label creator feed"}
               </p>
             </div>
-            <input
-              type="checkbox"
+            <ToggleSwitch
               checked={planType !== "free" && !!currentApp.hideBranding}
               disabled={planType === "free"}
-              onChange={(e) => {
+              onChange={(val) => {
                 if (planType === "free") {
                   setShowUpgradeModal(true);
                   return;
                 }
-                updateAppearance({ hideBranding: e.target.checked });
+                updateAppearance({ hideBranding: val });
               }}
-              className="h-5 w-5 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer disabled:cursor-not-allowed"
             />
           </div>
         </CardContent>
