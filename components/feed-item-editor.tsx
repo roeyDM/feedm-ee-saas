@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeModal } from "@/components/upgrade-modal";
+import { SectionHelp } from "@/components/ui/section-help";
 import {
   Film,
   Trash2,
@@ -314,25 +315,43 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
 
       {/* Free Plan Lock Warning Banner */}
       {planType === "free" && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm font-black">
-              <Lock className="h-5 w-5" />
+        <>
+          {/* Mobile Compact Single-Line Strip */}
+          <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2 text-amber-950 flex items-center justify-between gap-2 shadow-2xs block md:hidden">
+            <div className="flex items-center gap-2 min-w-0">
+              <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="text-xs font-bold truncate">Free Tier Mode: Upgrade to unlock all features</span>
             </div>
-            <div>
-              <h4 className="text-xs font-black">Video Reels &amp; Pages 2–4 Locked</h4>
-              <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
-                Upgrade to Pro to unlock 3 vertical video reels, lead form, and remove branding.
-              </p>
-            </div>
+            <Button
+              type="button"
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-[10px] h-7 px-2.5 rounded-lg shrink-0 gap-1 cursor-pointer shadow-2xs"
+            >
+              <span>Activate Pro</span> <Zap className="w-3 h-3 fill-current" />
+            </Button>
           </div>
-          <Button
-            onClick={() => setShowUpgradeModal(true)}
-            className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-3.5 rounded-xl shrink-0 gap-1.5 cursor-pointer shadow-xs"
-          >
-            <span>Unlock Pro</span> <Zap className="h-3.5 w-3.5 fill-current" />
-          </Button>
-        </div>
+
+          {/* Desktop Banner (100% Untouched) */}
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 items-start sm:items-center justify-between gap-3 shadow-xs hidden md:flex">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm font-black">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black">Video Reels &amp; Pages 2–4 Locked</h4>
+                <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
+                  Upgrade to Pro to unlock 3 vertical video reels, lead form, and remove branding.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-3.5 rounded-xl shrink-0 gap-1.5 cursor-pointer shadow-xs"
+            >
+              <span>Unlock Pro</span> <Zap className="h-3.5 w-3.5 fill-current" />
+            </Button>
+          </div>
+        </>
       )}
 
       {/* Pro Plan 0 Reels Smart Readiness Warning */}
@@ -355,8 +374,9 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <Film className="h-4.5 w-4.5 text-emerald-600" /> Reels Manager
+            <SectionHelp text={`Upload .mp4 or .mov files directly from your device (max ${MAX_FILE_SIZE_MB} MB)`} />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Upload .mp4 or .mov files directly from your device (max {MAX_FILE_SIZE_MB} MB)
           </CardDescription>
         </CardHeader>
@@ -505,10 +525,11 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
       <Card id="reels-list-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="text-base font-bold text-zinc-900">
+            <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-1.5">
               Active Reels ({reels.length}/3)
+              <SectionHelp text="Each reel forms a vertical snap page in your public profile" />
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-500">
+            <CardDescription className="text-xs text-zinc-500 hidden md:block">
               Each reel forms a vertical snap page in your public profile
             </CardDescription>
           </div>
@@ -680,8 +701,9 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
               <MessageCircle className="h-4.5 w-4.5 text-emerald-600" /> Reel Action Buttons & Contact Phone
+              <SectionHelp text="Configure the floating WhatsApp and Call action buttons displayed on your video reels" />
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-500">
+            <CardDescription className="text-xs text-zinc-500 hidden md:block">
               Configure the floating WhatsApp and Call action buttons displayed on your video reels
             </CardDescription>
           </CardHeader>

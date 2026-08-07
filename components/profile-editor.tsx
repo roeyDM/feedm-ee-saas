@@ -5,6 +5,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { SectionHelp } from "@/components/ui/section-help";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UpgradeModal } from "@/components/upgrade-modal";
@@ -385,8 +386,9 @@ export function ProfileEditor({
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <User className="h-4.5 w-4.5 text-emerald-600" /> Profile Information
+            <SectionHelp text="Update display name, handle, avatar and bio tagline" />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Update display name, handle, avatar and bio tagline
           </CardDescription>
         </CardHeader>
@@ -530,8 +532,9 @@ export function ProfileEditor({
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <Share2 className="h-4.5 w-4.5 text-emerald-600" /> Social Links
+            <SectionHelp text="Click to add a social platform icon to your profile header." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Click to add a social platform icon to your profile header.
           </CardDescription>
         </CardHeader>
@@ -676,8 +679,9 @@ export function ProfileEditor({
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <LinkIcon className="h-4.5 w-4.5 text-emerald-600" /> Custom Links
+            <SectionHelp text="Add custom buttons with optional coupon / discount tags (e.g. '10% OFF code: ALEX10')" />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Add custom buttons with optional coupon / discount tags (e.g. "10% OFF code: ALEX10")
           </CardDescription>
         </CardHeader>

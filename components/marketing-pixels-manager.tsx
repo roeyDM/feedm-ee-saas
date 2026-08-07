@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { SectionHelp } from "@/components/ui/section-help";
 
 interface MarketingPixelsManagerProps {
   username?: string;
@@ -331,12 +332,15 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-zinc-950 tracking-tight">Marketing &amp; Tracking Pixels</h2>
+                <h2 className="text-lg font-black text-zinc-950 tracking-tight flex items-center gap-1.5">
+                  Marketing &amp; Tracking Pixels
+                  <SectionHelp text="Connect your advertising accounts to track visitor actions, build custom audiences, and measure ad performance automatically." />
+                </h2>
                 <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                   Live Engine
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-medium mt-0.5">
+              <p className="text-xs text-zinc-500 font-medium mt-0.5 hidden md:block">
                 Connect your advertising accounts to track visitor actions, build custom audiences, and measure ad performance automatically.
               </p>
             </div>

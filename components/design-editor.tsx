@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeModal } from "@/components/upgrade-modal";
+import { SectionHelp } from "@/components/ui/section-help";
 import { 
   Palette, 
   RotateCcw, 
@@ -546,8 +547,9 @@ export function DesignEditor({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <Sparkles className="h-4 w-4 text-emerald-600" /> 1. Theme Presets (Quick Apply)
+            <SectionHelp text="Select a high-contrast theme preset pair to instantly transform background, cards, and typography." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Select a high-contrast theme preset pair to instantly transform background, cards, and typography.
           </CardDescription>
         </CardHeader>
@@ -566,34 +568,24 @@ export function DesignEditor({
                   type="button"
                   onClick={() => handleApplyPreset(preset)}
                   className={cn(
-                    "flex flex-col items-start p-2 md:p-3 rounded-2xl border text-left transition-all duration-200 relative group cursor-pointer bg-white shadow-xs hover:shadow-md hover:-translate-y-0.5 w-full",
+                    "relative w-full h-16 md:h-20 rounded-2xl border text-left transition-all duration-200 group cursor-pointer shadow-xs hover:shadow-md hover:-translate-y-0.5 overflow-hidden p-2 flex items-center justify-center shrink-0",
                     isSelected
-                      ? "border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/20"
-                      : "border-zinc-200 hover:border-zinc-300"
+                      ? "ring-2 ring-emerald-500 border-emerald-500"
+                      : "border-black/10 hover:border-zinc-300"
                   )}
+                  style={preset.bgPreviewStyle}
                 >
-                  <div
-                    style={preset.bgPreviewStyle}
-                    className="w-full h-14 md:h-20 rounded-xl mb-2 md:mb-2.5 shadow-inner border border-black/10 flex items-center justify-center p-2 relative overflow-hidden shrink-0"
+                  <div 
+                    style={{ backgroundColor: preset.settings.cardBgColor }}
+                    className="w-full py-1.5 px-2 rounded-xl shadow-xs border text-center font-bold text-[11px] md:text-xs truncate max-w-[95%]"
                   >
-                    <div 
-                      style={{ backgroundColor: preset.settings.cardBgColor }}
-                      className="w-full py-1 md:py-1.5 px-1.5 md:px-2 rounded-md shadow-xs border text-center font-bold text-[9px] md:text-[10px] truncate"
-                    >
-                      <span style={{ color: preset.settings.cardTextColor }}>{preset.name}</span>
-                    </div>
-                    {isSelected && (
-                      <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-white p-1 rounded-full shadow-md">
-                        <Check className="h-3 w-3 stroke-[3]" />
-                      </span>
-                    )}
+                    <span style={{ color: preset.settings.cardTextColor }}>{preset.name}</span>
                   </div>
-                  <span className="text-xs font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors truncate w-full md:text-sm">
-                    {preset.name}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 font-medium line-clamp-1 hidden md:block">
-                    {preset.description}
-                  </span>
+                  {isSelected && (
+                    <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-white p-1 rounded-full shadow-md z-10">
+                      <Check className="h-3 w-3 stroke-[3]" />
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -606,8 +598,9 @@ export function DesignEditor({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <Paintbrush className="h-4 w-4 text-emerald-600" /> Background
+            <SectionHelp text="Choose a solid color, multi-tone gradient, or upload a background image directly from your device." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Choose a solid color, multi-tone gradient, or upload a background image directly from your device.
           </CardDescription>
         </CardHeader>
@@ -885,8 +878,9 @@ export function DesignEditor({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <Type className="h-4 w-4 text-emerald-600" /> Typography &amp; Text Colors
+            <SectionHelp text="Select Google font family and customize separate Headline and Bio text colors with visual swatches." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Select Google font family and customize separate Headline and Bio text colors with visual swatches.
           </CardDescription>
         </CardHeader>
@@ -940,12 +934,13 @@ export function DesignEditor({
       </Card>
 
       {/* CUSTOM LINK STYLES & UNIFIED HEX */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm">
+      <Card id="button-style-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
             <LinkIcon className="h-4 w-4 text-emerald-600" /> Custom Link Card Styles
+            <SectionHelp text="Configure card shapes, background colors, text colors, and border strokes using visual swatches." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500">
+          <CardDescription className="text-xs text-zinc-500 hidden md:block">
             Configure card shapes, background colors, text colors, and border strokes using visual swatches.
           </CardDescription>
         </CardHeader>

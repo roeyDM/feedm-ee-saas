@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { SectionHelp } from "@/components/ui/section-help";
 
 interface AnalyticsManagerProps {
   planType?: "free" | "personal" | "pro" | "business";
@@ -184,12 +185,15 @@ export function AnalyticsManager({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-extrabold text-zinc-950 tracking-tight">Analytics &amp; Insights</h2>
+                <h2 className="text-base font-extrabold text-zinc-950 tracking-tight flex items-center gap-1.5">
+                  Analytics &amp; Insights
+                  <SectionHelp text="Real Supabase performance metrics and live visitor signals" />
+                </h2>
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                   {activeTier === "free" ? "Free Plan" : activeTier === "personal" ? "Personal Plan" : "Pro Plan"}
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-medium">Real Supabase performance metrics and live signals</p>
+              <p className="text-xs text-zinc-500 font-medium hidden md:block">Real Supabase performance metrics and live signals</p>
             </div>
           </div>
 
