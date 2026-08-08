@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getInMemoryEvents } from "@/lib/analytics-store";
 
 export async function GET(req: Request) {
   try {
@@ -87,11 +88,22 @@ export async function GET(req: Request) {
       query = query.eq("username", cleanUsername);
     }
 
-    const { data: events, error } = await query;
+    const { data: dbEvents, error } = await query;
 
     if (error) {
       console.warn("[Analytics Stats API Note]: analytics_events query error:", error.message);
     }
+
+    // Merge DB events and in-memory fallback events
+    const memoryEvents = getInMemoryEvents(cleanUsername || undefined, userId || undefined, startDateISO);
+    const combinedEvents = [...(dbEvents || []), ...memoryEvents];
+
+    // Deduplicate by ID if needed
+    const eventMap = new Map<string, any>();
+    combinedEvents.forEach((ev) => {
+      if (ev.id) eventMap.set(ev.id, ev);
+    });
+    const events = Array.from(eventMap.values());
 
     if (events && events.length > 0) {
       totalViews = events.filter((e) => e.event_type === "page_view").length;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { saveInMemoryEvent } from "@/lib/analytics-store";
 
 export async function POST(req: Request) {
   try {
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
       if (prof?.id) userId = prof.id;
     }
 
-    // 1. Insert into analytics_events table
+    // 1. Insert into analytics_events table & fallback store
     const insertPayload: any = {
       username: cleanUsername,
       event_type,
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
       created_at: new Date().toISOString(),
     };
     if (userId) insertPayload.user_id = userId;
+
+    // Always preserve in fallback store
+    saveInMemoryEvent(insertPayload);
 
     const { error: insertError } = await supabase.from("analytics_events").insert(insertPayload);
 
