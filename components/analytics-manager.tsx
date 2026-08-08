@@ -149,9 +149,19 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Fetch Real Analytics Events (views, clicks, reel_play, form_open)
+      // 2. Fetch Real Analytics Events (views, clicks, reel_play, form_open) with time-range filtering
       try {
-        let eventsQuery = supabase.from("analytics_events").select("*").order("created_at", { ascending: false });
+        const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - daysCount);
+        const startDateISO = startDate.toISOString();
+
+        let eventsQuery = supabase
+          .from("analytics_events")
+          .select("*")
+          .gte("created_at", startDateISO)
+          .order("created_at", { ascending: false });
+
         if (activeUserId && activeUsername) {
           eventsQuery = eventsQuery.or(`user_id.eq.${activeUserId},username.eq.${activeUsername}`);
         } else if (activeUserId) {
