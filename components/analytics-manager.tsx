@@ -316,7 +316,6 @@ export function AnalyticsManager({
                   {activeTier === "free" ? "Free Plan" : activeTier === "personal" ? "Personal Plan" : "Pro Plan"}
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-medium hidden md:block">Real Supabase performance metrics and live signals</p>
             </div>
           </div>
 

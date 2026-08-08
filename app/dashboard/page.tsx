@@ -953,6 +953,18 @@ function DashboardContent() {
                   <Share2 className="h-3.5 w-3.5 text-zinc-500" />
                   <span>Share Profile Link</span>
                 </button>
+
+                <button 
+                  type="button"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    if (typeof window !== "undefined") window.location.href = "/login";
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs border border-red-200/60 transition-colors cursor-pointer"
+                >
+                  <LogOut className="h-3.5 w-3.5 text-red-500" />
+                  <span>Log Out</span>
+                </button>
               </div>
             )}
           </div>
@@ -1127,14 +1139,6 @@ function DashboardContent() {
                     <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
                       New
                     </span>
-                  </button>
-
-                  <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
-                    <span>Custom Domain</span>
-                    <Lock className="h-3.5 w-3.5 text-amber-500" />
-                  </button>
-                  <button disabled className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-zinc-400 cursor-not-allowed text-left">
-                    <span>SEO &amp; Social Meta</span>
                   </button>
                 </div>
               )}

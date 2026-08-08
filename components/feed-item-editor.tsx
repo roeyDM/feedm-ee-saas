@@ -376,9 +376,6 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
             <Film className="h-4.5 w-4.5 text-emerald-600" /> Reels Manager
             <SectionHelp text={`Upload .mp4 or .mov files directly from your device (max ${MAX_FILE_SIZE_MB} MB)`} />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Upload .mp4 or .mov files directly from your device (max {MAX_FILE_SIZE_MB} MB)
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAdd} className="space-y-4">
@@ -529,9 +526,6 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
               Active Reels ({reels.length}/3)
               <SectionHelp text="Each reel forms a vertical snap page in your public profile" />
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-500 hidden md:block">
-              Each reel forms a vertical snap page in your public profile
-            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 p-4">
@@ -703,9 +697,6 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
               <MessageCircle className="h-4.5 w-4.5 text-emerald-600" /> Reel Action Buttons & Contact Phone
               <SectionHelp text="Configure the floating WhatsApp and Call action buttons displayed on your video reels" />
             </CardTitle>
-            <CardDescription className="text-xs text-zinc-500 hidden md:block">
-              Configure the floating WhatsApp and Call action buttons displayed on your video reels
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1">

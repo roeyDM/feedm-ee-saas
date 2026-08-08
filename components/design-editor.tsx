@@ -581,9 +581,6 @@ export function DesignEditor({
             <Sparkles className="h-4 w-4 text-emerald-600" /> 1. Theme Presets (Quick Apply)
             <SectionHelp text="Select a high-contrast theme preset pair to instantly transform background, cards, and typography." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Select a high-contrast theme preset pair to instantly transform background, cards, and typography.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-4">
@@ -632,9 +629,6 @@ export function DesignEditor({
             <Paintbrush className="h-4 w-4 text-emerald-600" /> Background
             <SectionHelp text="Choose a solid color, multi-tone gradient, or upload a background image directly from your device." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Choose a solid color, multi-tone gradient, or upload a background image directly from your device.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 rounded-xl bg-zinc-100 p-1.5 border border-zinc-200">
@@ -862,9 +856,6 @@ export function DesignEditor({
             <User className="h-4 w-4 text-emerald-600" /> Avatar Image Border Ring
             <SectionHelp text="Configure profile image border ring color and thickness." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Configure profile image border ring color and thickness.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
@@ -911,9 +902,6 @@ export function DesignEditor({
             <Type className="h-4 w-4 text-emerald-600" /> Typography &amp; Text Colors
             <SectionHelp text="Select Google font family and customize separate Headline and Bio text colors with visual swatches." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Select Google font family and customize separate Headline and Bio text colors with visual swatches.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -971,9 +959,6 @@ export function DesignEditor({
             <LinkIcon className="h-4 w-4 text-emerald-600" /> Custom Link Card Styles
             <SectionHelp text="Configure card shapes, background colors, text colors, and border strokes using visual swatches." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Configure card shapes, background colors, text colors, and border strokes using visual swatches.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -1029,9 +1014,6 @@ export function DesignEditor({
             <Share2 className="h-4 w-4 text-emerald-600" /> Social Icons Customization
             <SectionHelp text="Customize social background pill colors with visual swatches and toggle between original brand logos or flat single-color." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Customize social background pill colors with visual swatches and toggle between original brand logos or flat single-color.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
@@ -1090,9 +1072,6 @@ export function DesignEditor({
               </span>
             )}
           </div>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Control the visibility of the "Powered by FeedM.ee" watermark at the bottom of your feed.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">

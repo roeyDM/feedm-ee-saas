@@ -388,9 +388,6 @@ export function ProfileEditor({
             <User className="h-4.5 w-4.5 text-emerald-600" /> Profile Information
             <SectionHelp text="Update display name, handle, avatar and bio tagline" />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Update display name, handle, avatar and bio tagline
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3.5">
           <div className="grid grid-cols-2 gap-3 items-start">
@@ -534,9 +531,6 @@ export function ProfileEditor({
             <Share2 className="h-4.5 w-4.5 text-emerald-600" /> Social Links
             <SectionHelp text="Click to add a social platform icon to your profile header." />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Click to add a social platform icon to your profile header.
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -681,9 +675,6 @@ export function ProfileEditor({
             <LinkIcon className="h-4.5 w-4.5 text-emerald-600" /> Custom Links
             <SectionHelp text="Add custom buttons with optional coupon / discount tags (e.g. '10% OFF code: ALEX10')" />
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Add custom buttons with optional coupon / discount tags (e.g. "10% OFF code: ALEX10")
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Add Link Form */}
@@ -866,9 +857,6 @@ export function ProfileEditor({
               </span>
             )}
           </div>
-          <CardDescription className="text-xs text-zinc-500 hidden md:block">
-            Configure contact form text content, field requirements, and submission routing
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {planType === "free" ? (

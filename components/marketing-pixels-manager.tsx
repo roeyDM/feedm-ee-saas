@@ -340,9 +340,6 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
                   Live Engine
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 font-medium mt-0.5 hidden md:block">
-                Connect your advertising accounts to track visitor actions, build custom audiences, and measure ad performance automatically.
-              </p>
             </div>
           </div>
         </div>
