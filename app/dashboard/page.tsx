@@ -26,6 +26,7 @@ import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
+import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
 import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -168,6 +169,8 @@ function DashboardContent() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
 
   // Serialize current state for dirty checking
   const getCurrentStateJSON = () => {
@@ -228,12 +231,15 @@ function DashboardContent() {
           .maybeSingle();
 
         if (profile && !error) {
-          if (profile.name) setName(profile.name);
-          if (profile.username) setUsername(profile.username);
-          if (profile.bio !== undefined) setBio(profile.bio);
-          if (profile.avatar_url !== undefined) setAvatarUrl(profile.avatar_url);
-          if (profile.custom_hex_color) setCustomHexColor(profile.custom_hex_color);
-          if (profile.plan_type) setPlanType(profile.plan_type as PlanType);
+          const checkedProfile = await checkAndApplyTrialDowngrade(profile);
+          if (checkedProfile.name) setName(checkedProfile.name);
+          if (checkedProfile.username) setUsername(checkedProfile.username);
+          if (checkedProfile.bio !== undefined) setBio(checkedProfile.bio);
+          if (checkedProfile.avatar_url !== undefined) setAvatarUrl(checkedProfile.avatar_url);
+          if (checkedProfile.custom_hex_color) setCustomHexColor(checkedProfile.custom_hex_color);
+          if (checkedProfile.plan_type) setPlanType(checkedProfile.plan_type as PlanType);
+          setSubscriptionStatus(checkedProfile.subscription_status || "active");
+          setTrialEndsAt(checkedProfile.trial_ends_at || null);
           if (profile.social_links) {
             setSocialLinks(profile.social_links.map((l: any) => ({
               ...l,
@@ -859,6 +865,30 @@ function DashboardContent() {
           setStatusMsg={setStatusMsg}
         />
       </Suspense>
+
+      {/* 7-Day Trial Active Banner with Dynamic Countdown */}
+      {subscriptionStatus === "trialing" && trialEndsAt && (
+        <div className="w-full bg-gradient-to-r from-amber-500 via-emerald-600 to-teal-700 text-white px-4 py-2.5 shadow-md flex items-center justify-between text-xs font-bold animate-in fade-in duration-300">
+          <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="h-4 w-4 text-amber-300 animate-pulse shrink-0" />
+              <span className="truncate">
+                ⏳ Your 7-Day <strong className="capitalize">{planType}</strong> Trial ends in{" "}
+                <strong className="underline decoration-amber-300 underline-offset-2 font-black">
+                  {getRemainingTrialDays(trialEndsAt)} {getRemainingTrialDays(trialEndsAt) === 1 ? "day" : "days"}
+                </strong>.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-zinc-950 text-white hover:bg-zinc-900 px-3 py-1 rounded-lg font-black text-[11px] uppercase tracking-wider transition-all shrink-0 cursor-pointer shadow-xs ml-2"
+            >
+              Upgrade Now
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 w-full flex flex-col lg:flex-row items-start">
         

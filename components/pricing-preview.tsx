@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Check, Shield, Building2, Mail, Send, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 
 export function PricingPreview() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
@@ -14,12 +15,22 @@ export function PricingPreview() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   const handleCheckout = async (planType: "free" | "personal" | "pro" | "business") => {
-    if (planType === "free") {
-      window.location.href = "/dashboard";
-      return;
-    }
     if (planType === "business") {
       setContactModalOpen(true);
+      return;
+    }
+
+    // Check if user is logged in
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      // Unauthenticated guest -> route to registration page with plan params
+      window.location.href = `/register?plan=${planType}&billing=${billingCycle}`;
+      return;
+    }
+
+    if (planType === "free") {
+      window.location.href = "/dashboard";
       return;
     }
 
