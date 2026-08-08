@@ -11,6 +11,49 @@ export function PricingPreview() {
   const [agencyName, setAgencyName] = useState("");
   const [agencyEmail, setAgencyEmail] = useState("");
   const [agencyMsg, setAgencyMsg] = useState("");
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+
+  const handleCheckout = async (planType: "free" | "personal" | "pro" | "business") => {
+    if (planType === "free") {
+      window.location.href = "/dashboard";
+      return;
+    }
+    if (planType === "business") {
+      setContactModalOpen(true);
+      return;
+    }
+
+    try {
+      setIsCheckoutLoading(true);
+      let priceId = "";
+      if (planType === "personal") {
+        priceId = billingCycle === "yearly"
+          ? (process.env.NEXT_PUBLIC_STRIPE_PERSONAL_ANNUAL_PRICE_ID || "price_1PersonalAnnual")
+          : (process.env.NEXT_PUBLIC_STRIPE_PERSONAL_MONTHLY_PRICE_ID || "price_1PersonalMonthly");
+      } else if (planType === "pro") {
+        priceId = billingCycle === "yearly"
+          ? (process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID || "price_1TwKGW2L1rzwEqqyFFtRO1Fx")
+          : (process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID || "price_1TwKFh2L1rzwEqqyPqw9rIgu");
+      }
+
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planType, priceId, isAnnual: billingCycle === "yearly" }),
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        window.location.href = `/dashboard?upgrade=${planType}&cycle=${billingCycle}`;
+      }
+    } catch (err) {
+      window.location.href = `/dashboard?upgrade=${planType}&cycle=${billingCycle}`;
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,10 +146,13 @@ export function PricingPreview() {
 
               {/* CTA Button Positioned Above Features */}
               <div className="mb-6">
-                <Button className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all">
+                <Button 
+                  onClick={() => handleCheckout("free")}
+                  className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all"
+                >
                   Get Started Free
                 </Button>
-                <div className="h-4" /> {/* Spacer placeholder */}
+                <div className="h-4" />
               </div>
 
               {/* Features List */}
@@ -161,8 +207,12 @@ export function PricingPreview() {
 
               {/* CTA Button Positioned Above Features */}
               <div className="mb-6 text-center">
-                <Button className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all mb-1">
-                  Start Free Trial
+                <Button 
+                  onClick={() => handleCheckout("personal")}
+                  disabled={isCheckoutLoading}
+                  className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all mb-1"
+                >
+                  {isCheckoutLoading ? "Loading..." : "Start Free Trial"}
                 </Button>
                 <span className="text-[11px] text-zinc-500 font-semibold">Includes 7-day free trial</span>
               </div>
@@ -221,8 +271,12 @@ export function PricingPreview() {
 
               {/* CTA Button Positioned Above Features */}
               <div className="mb-6 text-center">
-                <Button className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-md transition-all mb-1">
-                  Start Free Trial
+                <Button 
+                  onClick={() => handleCheckout("pro")}
+                  disabled={isCheckoutLoading}
+                  className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-md transition-all mb-1"
+                >
+                  {isCheckoutLoading ? "Loading..." : "Start Free Trial"}
                 </Button>
                 <span className="text-[11px] text-zinc-500 font-semibold">Includes 7-day free trial</span>
               </div>
@@ -280,10 +334,13 @@ export function PricingPreview() {
 
               {/* CTA Button Positioned Above Features (Get Started Now) */}
               <div className="mb-6">
-                <Button className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all">
+                <Button 
+                  onClick={() => handleCheckout("business")}
+                  className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-xs transition-all"
+                >
                   Get Started Now
                 </Button>
-                <div className="h-4" /> {/* Spacer placeholder */}
+                <div className="h-4" />
               </div>
 
               {/* Features List */}
