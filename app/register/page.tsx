@@ -260,6 +260,20 @@ function RegisterForm() {
             Sign In Here
           </Link>
         </p>
+
+        {/* Terms Disclaimer */}
+        <p className="mt-3 text-center text-[11px] font-medium text-zinc-500">
+          By registering, you agree to our{" "}
+          <Link
+            href="/terms-of-service"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+          >
+            Terms of Service
+          </Link>{" "}
+          and Lemon Squeezy billing rules.
+        </p>
       </div>
     </div>
   );

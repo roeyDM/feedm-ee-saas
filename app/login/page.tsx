@@ -162,9 +162,22 @@ export default function LoginPage() {
         {/* Footer link */}
         <p className="mt-5 text-center text-xs font-semibold text-zinc-500">
           Don't have an account?{" "}
-          <Link href="/signup" className="font-bold text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline">
+          <Link href="/register" className="font-bold text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline">
             Create one free
           </Link>
+        </p>
+
+        {/* Terms Disclaimer */}
+        <p className="mt-3 text-center text-[11px] font-medium text-zinc-500">
+          By signing in, you agree to our{" "}
+          <Link
+            href="/terms-of-service"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
+          >
+            Terms of Service
+          </Link>.
         </p>
       </div>
     </div>
