@@ -23,3 +23,7 @@ export function Logo({ className = "", wordmarkClassName = "text-xl text-zinc-95
     </div>
   );
 }
+
+export function LogoIconOnly({ className = "" }: { className?: string }) {
+  return <Logo showText={false} className={className} />;
+}

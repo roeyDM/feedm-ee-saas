@@ -171,6 +171,7 @@ function DashboardContent() {
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // Serialize current state for dirty checking
   const getCurrentStateJSON = () => {
@@ -237,7 +238,12 @@ function DashboardContent() {
           if (checkedProfile.bio !== undefined) setBio(checkedProfile.bio);
           if (checkedProfile.avatar_url !== undefined) setAvatarUrl(checkedProfile.avatar_url);
           if (checkedProfile.custom_hex_color) setCustomHexColor(checkedProfile.custom_hex_color);
-          if (checkedProfile.plan_type) setPlanType(checkedProfile.plan_type as PlanType);
+          if (checkedProfile.is_super_admin === true) {
+            setIsSuperAdmin(true);
+            setPlanType("pro");
+          } else if (checkedProfile.plan_type) {
+            setPlanType(checkedProfile.plan_type as PlanType);
+          }
           setSubscriptionStatus(checkedProfile.subscription_status || "active");
           setTrialEndsAt(checkedProfile.trial_ends_at || null);
           if (profile.social_links) {
@@ -867,7 +873,7 @@ function DashboardContent() {
       </Suspense>
 
       {/* 7-Day Trial Active Banner with Dynamic Countdown */}
-      {subscriptionStatus === "trialing" && trialEndsAt && (
+      {!isSuperAdmin && subscriptionStatus === "trialing" && trialEndsAt && (
         <div className="w-full bg-gradient-to-r from-amber-500 via-emerald-600 to-teal-700 text-white px-4 py-2.5 shadow-md flex items-center justify-between text-xs font-bold animate-in fade-in duration-300">
           <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
             <div className="flex items-center gap-2 min-w-0">

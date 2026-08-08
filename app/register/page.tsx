@@ -4,6 +4,7 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { LogoIconOnly } from "@/components/logo";
 import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 
 function RegisterForm() {
@@ -129,8 +130,8 @@ function RegisterForm() {
 
         {/* Header Branding */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <Link href="/" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 shadow-lg shadow-emerald-500/20 mb-3">
-            <Film className="h-6 w-6 text-white stroke-[2.5]" />
+          <Link href="/" className="mb-3 flex items-center justify-center p-2 rounded-2xl bg-white shadow-sm border border-zinc-200/80 hover:scale-105 transition-transform">
+            <LogoIconOnly />
           </Link>
           <h1 className="text-2xl font-black text-zinc-950 tracking-tight sm:text-3xl">
             Claim Your FeedM<span className="text-emerald-600">.ee</span> Page

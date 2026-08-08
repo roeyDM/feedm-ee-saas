@@ -37,7 +37,7 @@ export function Navbar() {
           <Link href="/login" className="text-sm font-bold text-zinc-700 hover:text-emerald-600 transition px-2">
             Sign In
           </Link>
-          <Link href="/signup">
+          <Link href="/pricing">
             <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-sm rounded-xl shadow-md transition duration-300">
               Get Started <ArrowRight className="h-4 w-4 ml-1.5" />
             </Button>
@@ -67,7 +67,7 @@ export function Navbar() {
             <Link href="/login" className="text-sm font-bold text-zinc-700" onClick={() => setMobileOpen(false)}>
               Sign In
             </Link>
-            <Link href="/signup" onClick={() => setMobileOpen(false)}>
+            <Link href="/pricing" onClick={() => setMobileOpen(false)}>
               <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">
                 Get Started
               </Button>

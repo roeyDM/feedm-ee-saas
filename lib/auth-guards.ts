@@ -6,15 +6,33 @@ export interface ProfileRecord {
   plan_type: "free" | "personal" | "pro" | "business";
   subscription_status?: string | null;
   trial_ends_at?: string | null;
+  is_super_admin?: boolean;
   [key: string]: any;
 }
 
 /**
+ * Utility to check if a user profile has Super Admin bypass privileges.
+ */
+export function isUserSuperAdmin(profile?: ProfileRecord | null): boolean {
+  return profile?.is_super_admin === true;
+}
+
+/**
+ * Returns effective plan type. Super admins automatically bypass all feature locks and act as 'pro' / 'business'.
+ */
+export function getEffectivePlanType(profile?: ProfileRecord | null): "free" | "personal" | "pro" | "business" {
+  if (!profile) return "free";
+  if (profile.is_super_admin === true) return "pro";
+  return profile.plan_type || "free";
+}
+
+/**
  * Check if a profile's 7-day trial has expired.
+ * Super admin profiles bypass trial expiration checks.
  * If expired, automatically downgrade profile to 'free' tier in Supabase.
  */
 export async function checkAndApplyTrialDowngrade(profile: ProfileRecord): Promise<ProfileRecord> {
-  if (!profile || profile.subscription_status !== "trialing" || !profile.trial_ends_at) {
+  if (!profile || profile.is_super_admin === true || profile.subscription_status !== "trialing" || !profile.trial_ends_at) {
     return profile;
   }
 
