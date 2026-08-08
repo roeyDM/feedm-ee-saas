@@ -696,10 +696,9 @@ export function MobilePreview({
           <div className="absolute bottom-[22%] left-[50%] -translate-x-1/2 w-44 h-14 bg-gradient-to-r from-teal-500/60 via-emerald-400/50 to-amber-400/30 rounded-full blur-xl opacity-85 animate-pulse" />
           {/* Hotspot 3: WhatsApp Floating Button */}
           <div className="absolute top-[58%] right-[8%] w-24 h-12 bg-emerald-500/50 rounded-full blur-lg opacity-75 animate-pulse" />
-          {/* Heatmap Legend Badge */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-zinc-950/95 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full border border-emerald-500/50 shadow-xl flex items-center gap-1.5 z-50">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>🔥 Live Conversion Heatmap Active</span>
+            <span>⚡ Real-Time Analytics Engine Active</span>
           </div>
         </div>
       )}

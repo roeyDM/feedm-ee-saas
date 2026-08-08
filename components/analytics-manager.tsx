@@ -121,6 +121,32 @@ export function AnalyticsManager({
       let activeUserId = user?.id || null;
       let profileCounts = { views: 0, clicks: 0 };
 
+      // Attempt fetching from /api/analytics/stats API route
+      try {
+        const statsUrl = `/api/analytics/stats?timeframe=${dateRange}${propUsername ? `&username=${encodeURIComponent(propUsername)}` : ""}`;
+        const statsRes = await fetch(statsUrl, { cache: "no-store" });
+        if (statsRes.ok) {
+          const statsJson = await statsRes.json();
+          if (statsJson.stats && (statsJson.stats.totalViews > 0 || statsJson.stats.totalClicks > 0 || statsJson.stats.dailyData.length > 0)) {
+            setAnalyticsData({
+              totalViews: statsJson.stats.totalViews || 0,
+              totalClicks: statsJson.stats.totalClicks || 0,
+              reelPlays: statsJson.stats.reelPlays || 0,
+              formOpens: statsJson.stats.formOpens || 0,
+              leadsCount: statsJson.stats.leadSubmits || 0,
+              dailyData: statsJson.stats.dailyData || [],
+              topLinks: statsJson.stats.topLinks || [],
+              reelEngagement: [],
+              trafficSources: [],
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (apiErr) {
+        console.warn("[Analytics API Stats Fetch Note]: Using direct client fallback", apiErr);
+      }
+
       if (user) {
         const { data: prof } = await supabase
           .from("profiles")
