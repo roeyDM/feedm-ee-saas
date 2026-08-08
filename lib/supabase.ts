@@ -15,7 +15,7 @@ export function getSupabaseAdmin() {
   return supabase;
 }
 
-export type PlanType = "free" | "pro" | "business";
+export type PlanType = "free" | "personal" | "pro" | "business";
 
 export interface HandleValidationResult {
   valid: boolean;
