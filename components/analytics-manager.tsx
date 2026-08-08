@@ -28,6 +28,7 @@ interface AnalyticsManagerProps {
   planType?: "free" | "personal" | "pro" | "business";
   activeTier?: "free" | "personal" | "pro";
   onTierChange?: (tier: "free" | "personal" | "pro") => void;
+  username?: string;
 }
 
 interface AnalyticsData {
@@ -37,7 +38,7 @@ interface AnalyticsData {
   formOpens: number;
   leadsCount: number;
   dailyData: { day: string; views: number; clicks: number }[];
-  topLinks: { name: string; url: string; clicks: number; percentage: number }[];
+  topLinks: { name: string; clicks: number; percentage: number }[];
   reelEngagement: { title: string; plays: number; finishRate: string }[];
   trafficSources: { source: string; percent: number; count: number; color: string }[];
 }
@@ -70,6 +71,7 @@ export function AnalyticsManager({
   planType: initialPlan = "free",
   activeTier: controlledTier,
   onTierChange,
+  username: propUsername,
 }: AnalyticsManagerProps) {
   // Local state for draft tier switcher preview
   const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">(
@@ -110,41 +112,120 @@ export function AnalyticsManager({
       let totalClicks = 0;
       let reelPlays = 0;
       let formOpens = 0;
+      let dailyData: { day: string; views: number; clicks: number }[] = [];
+      let topLinks: { name: string; clicks: number; percentage: number }[] = [];
 
-      // 1. Fetch Real Leads Count from Supabase `leads` table
+      // 1. Determine active creator username and fetch profile counts
       const { data: { user } } = await supabase.auth.getUser();
-      let leadsRes;
+      let activeUsername = propUsername ? propUsername.toLowerCase().trim() : "";
+      let profileCounts = { views: 0, clicks: 0 };
+
       if (user) {
-        leadsRes = await supabase
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("username, views_count, clicks_count")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (prof) {
+          if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
+          profileCounts = {
+            views: prof.views_count || 0,
+            clicks: prof.clicks_count || 0,
+          };
+        }
+
+        const leadsRes = await supabase
           .from("leads")
           .select("id, created_at", { count: "exact" })
           .or(`user_id.eq.${user.id},user_id.is.null`);
-      } else {
-        leadsRes = await supabase.from("leads").select("id, created_at", { count: "exact" });
+
+        if (leadsRes.count !== null && leadsRes.count !== undefined) {
+          leadsCount = leadsRes.count;
+        } else if (leadsRes.data) {
+          leadsCount = leadsRes.data.length;
+        }
       }
 
-      if (leadsRes.count !== null && leadsRes.count !== undefined) {
-        leadsCount = leadsRes.count;
-      } else if (leadsRes.data) {
-        leadsCount = leadsRes.data.length;
-      }
-
-      // 2. Fetch Real Analytics Events (views, clicks, video_play) if analytics_events table exists
+      // 2. Fetch Real Analytics Events (views, clicks, reel_play, form_open)
       try {
-        const { data: events } = await supabase
-          .from("analytics_events")
-          .select("*")
-          .order("created_at", { ascending: false });
+        let eventsQuery = supabase.from("analytics_events").select("*").order("created_at", { ascending: false });
+        if (activeUsername) {
+          eventsQuery = eventsQuery.eq("username", activeUsername);
+        }
+
+        const { data: events, error: eventsErr } = await eventsQuery;
+
+        if (eventsErr) {
+          console.warn("[Analytics Fetch Note]: analytics_events query message:", eventsErr.message);
+        }
 
         if (events && events.length > 0) {
           totalViews = events.filter((e) => e.event_type === "page_view").length;
           totalClicks = events.filter((e) => e.event_type === "link_click").length;
           reelPlays = events.filter((e) => e.event_type === "reel_play").length;
           formOpens = events.filter((e) => e.event_type === "form_open").length;
+
+          // Compute daily time-series data
+          const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
+          const dayMap: Record<string, { views: number; clicks: number }> = {};
+
+          for (let i = daysCount - 1; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().split("T")[0]; // YYYY-MM-DD
+            dayMap[key] = { views: 0, clicks: 0 };
+          }
+
+          events.forEach((ev) => {
+            if (!ev.created_at) return;
+            const key = new Date(ev.created_at).toISOString().split("T")[0];
+            if (dayMap[key]) {
+              if (ev.event_type === "page_view") dayMap[key].views += 1;
+              if (ev.event_type === "link_click") dayMap[key].clicks += 1;
+            }
+          });
+
+          const maxViews = Math.max(...Object.values(dayMap).map((d) => d.views), 1);
+          const maxClicks = Math.max(...Object.values(dayMap).map((d) => d.clicks), 1);
+
+          dailyData = Object.entries(dayMap).map(([dateStr, counts]) => {
+            const dateObj = new Date(dateStr);
+            const label = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            return {
+              day: label,
+              views: Math.round((counts.views / maxViews) * 100) || (counts.views > 0 ? 10 : 0),
+              clicks: Math.round((counts.clicks / maxClicks) * 100) || (counts.clicks > 0 ? 10 : 0),
+            };
+          });
+
+          // Compute Top Links
+          const linkClickEvents = events.filter((e) => e.event_type === "link_click");
+          const linkMap: Record<string, number> = {};
+          linkClickEvents.forEach((ev) => {
+            const label = ev.link_title || ev.link_url || "Outbound Link";
+            linkMap[label] = (linkMap[label] || 0) + 1;
+          });
+
+          const totalLinkClicks = linkClickEvents.length || 1;
+          topLinks = Object.entries(linkMap)
+            .map(([name, clicks]) => ({
+              name,
+              clicks,
+              percentage: Math.round((clicks / totalLinkClicks) * 100),
+            }))
+            .sort((a, b) => b.clicks - a.clicks)
+            .slice(0, 5);
         }
       } catch (err) {
-        console.warn("[Analytics Events Table Info]: standard event fallback active.", err);
+        console.warn("[Analytics Events Fetch Warning]:", err);
       }
+
+      // 3. Fall back to profile accumulator counters if event count is 0
+      if (totalViews === 0 && profileCounts.views > 0) totalViews = profileCounts.views;
+      if (totalClicks === 0 && profileCounts.clicks > 0) totalClicks = profileCounts.clicks;
+
+      console.log(`[Analytics Fetch Success] @${activeUsername || "user"} views: ${totalViews}, clicks: ${totalClicks}, leads: ${leadsCount}`);
 
       setAnalyticsData({
         totalViews,
@@ -152,8 +233,8 @@ export function AnalyticsManager({
         reelPlays,
         formOpens,
         leadsCount,
-        dailyData: [],
-        topLinks: [],
+        dailyData,
+        topLinks,
         reelEngagement: [],
         trafficSources: [],
       });
@@ -166,7 +247,7 @@ export function AnalyticsManager({
 
   useEffect(() => {
     fetchRealAnalytics();
-  }, [dateRange]);
+  }, [dateRange, propUsername]);
 
   const { totalViews, totalClicks, reelPlays, formOpens, leadsCount, dailyData, topLinks, reelEngagement, trafficSources } = analyticsData;
   const ctr = totalViews > 0 ? `${((totalClicks / totalViews) * 100).toFixed(1)}%` : "0.0%";

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Script from "next/script";
 import {
   MobilePreview,
@@ -10,6 +10,7 @@ import {
   LeadFormSettings,
 } from "@/components/mobile-preview";
 import { sanitizeLeadForm } from "@/lib/sanitizers";
+import { trackAnalyticsEvent } from "@/lib/analytics-tracker";
 
 interface ProfileData {
   name: string;
@@ -34,6 +35,13 @@ interface PublicFeedClientProps {
 }
 
 export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) {
+  // Fire page_view analytics tracking on mount
+  useEffect(() => {
+    if (handleKey && profile) {
+      trackAnalyticsEvent(handleKey, "page_view");
+    }
+  }, [handleKey, profile]);
+
   // If profile is null (handle not found), show a neutral loading/not-found state
   // This should never flash fake data since SSR pre-populates real profile
   if (!profile) {

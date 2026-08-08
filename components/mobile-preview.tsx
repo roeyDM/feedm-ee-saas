@@ -22,6 +22,7 @@ import { CookieModal } from "./cookie-modal";
 import { ReportModal } from "./report-modal";
 import { cn } from "@/lib/utils";
 import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
+import { trackAnalyticsEvent } from "@/lib/analytics-tracker";
 
 export interface CustomLink {
   id: string;
@@ -467,6 +468,7 @@ export function MobilePreview({
     
     console.log("Form submitted", { targetEmail, fullName: cleanName, phone: cleanPhone, email: cleanEmail, username });
     setFormSubmitted(true);
+    trackAnalyticsEvent(username, "lead_submit", { metadata: { name: cleanName, email: cleanEmail } });
 
     try {
       if (onTestLeadSubmit) {
@@ -558,7 +560,15 @@ export function MobilePreview({
 
     if (link.label) {
       return (
-        <a key={link.id} href={link.url} target="_blank" rel="noreferrer" style={iconStyle} className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}>
+        <a 
+          key={link.id} 
+          href={link.url} 
+          target="_blank" 
+          rel="noreferrer" 
+          style={iconStyle} 
+          className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}
+          onClick={() => trackAnalyticsEvent(username, "link_click", { linkUrl: link.url, linkTitle: link.label || link.platform })}
+        >
           {iconElement}
           <span className="text-[10px] font-bold" style={{ color: customIconColor }}>{link.label}</span>
         </a>
@@ -566,7 +576,15 @@ export function MobilePreview({
     }
 
     return (
-      <a key={link.id} href={link.url} target="_blank" rel="noreferrer" style={iconStyle} className={iconClass}>
+      <a 
+        key={link.id} 
+        href={link.url} 
+        target="_blank" 
+        rel="noreferrer" 
+        style={iconStyle} 
+        className={iconClass}
+        onClick={() => trackAnalyticsEvent(username, "link_click", { linkUrl: link.url, linkTitle: link.platform })}
+      >
         {iconElement}
       </a>
     );
@@ -756,6 +774,7 @@ export function MobilePreview({
               href={link.url}
               target="_blank"
               rel="noreferrer"
+              onClick={() => trackAnalyticsEvent(username, "link_click", { linkUrl: link.url, linkTitle: link.title })}
               style={{
                 backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.85)",
                 color: activeAppearance.cardTextColor || "#09090b",

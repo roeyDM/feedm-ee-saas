@@ -1364,6 +1364,7 @@ function DashboardContent() {
                     planType={planType} 
                     activeTier={analyticsTier}
                     onTierChange={setAnalyticsTier}
+                    username={username}
                   />
                 </div>
               )}
