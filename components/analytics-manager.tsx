@@ -115,15 +115,16 @@ export function AnalyticsManager({
       let dailyData: { day: string; views: number; clicks: number }[] = [];
       let topLinks: { name: string; clicks: number; percentage: number }[] = [];
 
-      // 1. Determine active creator username and fetch profile counts
+      // 1. Determine active creator username, user_id, and fetch profile counts
       const { data: { user } } = await supabase.auth.getUser();
       let activeUsername = propUsername ? propUsername.toLowerCase().trim() : "";
+      let activeUserId = user?.id || null;
       let profileCounts = { views: 0, clicks: 0 };
 
       if (user) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("username, views_count, clicks_count")
+          .select("id, username, views_count, clicks_count")
           .eq("id", user.id)
           .maybeSingle();
 
@@ -133,6 +134,7 @@ export function AnalyticsManager({
             views: prof.views_count || 0,
             clicks: prof.clicks_count || 0,
           };
+          activeUserId = prof.id;
         }
 
         const leadsRes = await supabase
@@ -150,7 +152,11 @@ export function AnalyticsManager({
       // 2. Fetch Real Analytics Events (views, clicks, reel_play, form_open)
       try {
         let eventsQuery = supabase.from("analytics_events").select("*").order("created_at", { ascending: false });
-        if (activeUsername) {
+        if (activeUserId && activeUsername) {
+          eventsQuery = eventsQuery.or(`user_id.eq.${activeUserId},username.eq.${activeUsername}`);
+        } else if (activeUserId) {
+          eventsQuery = eventsQuery.eq("user_id", activeUserId);
+        } else if (activeUsername) {
           eventsQuery = eventsQuery.eq("username", activeUsername);
         }
 
@@ -225,7 +231,7 @@ export function AnalyticsManager({
       if (totalViews === 0 && profileCounts.views > 0) totalViews = profileCounts.views;
       if (totalClicks === 0 && profileCounts.clicks > 0) totalClicks = profileCounts.clicks;
 
-      console.log(`[Analytics Fetch Success] @${activeUsername || "user"} views: ${totalViews}, clicks: ${totalClicks}, leads: ${leadsCount}`);
+      console.log(`[Analytics Fetch Success] @${activeUsername || "user"} (id: ${activeUserId}) views: ${totalViews}, clicks: ${totalClicks}, leads: ${leadsCount}`);
 
       setAnalyticsData({
         totalViews,
@@ -309,35 +315,6 @@ export function AnalyticsManager({
               <RefreshCw className={`h-3.5 w-3.5 text-zinc-500 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
-
-            {/* DRAFT PREVIEW TIER SWITCHER (Local Dev Preview) */}
-            <div className="flex items-center gap-1 bg-amber-50/80 p-1 rounded-xl border border-amber-200 text-xs font-bold">
-              <span className="text-[10px] text-amber-800 font-black px-2 uppercase tracking-wider">Preview Tier:</span>
-              <button
-                onClick={() => handleTierChange("free")}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
-                  activeTier === "free" ? "bg-amber-500 text-white shadow-xs" : "text-amber-900 hover:bg-amber-100"
-                }`}
-              >
-                Free
-              </button>
-              <button
-                onClick={() => handleTierChange("personal")}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
-                  activeTier === "personal" ? "bg-amber-500 text-white shadow-xs" : "text-amber-900 hover:bg-amber-100"
-                }`}
-              >
-                Personal
-              </button>
-              <button
-                onClick={() => handleTierChange("pro")}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
-                  activeTier === "pro" ? "bg-amber-500 text-white shadow-xs" : "text-amber-900 hover:bg-amber-100"
-                }`}
-              >
-                Pro ⭐
-              </button>
-            </div>
           </div>
         </div>
 
