@@ -25,21 +25,25 @@ export function PricingPreview() {
 
     try {
       setIsCheckoutLoading(true);
-      let priceId = "";
+      let variantId = "";
       if (planType === "personal") {
-        priceId = billingCycle === "yearly"
-          ? (process.env.NEXT_PUBLIC_STRIPE_PERSONAL_ANNUAL_PRICE_ID || "price_1PersonalAnnual")
-          : (process.env.NEXT_PUBLIC_STRIPE_PERSONAL_MONTHLY_PRICE_ID || "price_1PersonalMonthly");
+        variantId = billingCycle === "yearly"
+          ? (process.env.LEMONSQUEEZY_VARIANT_PERSONAL_YEARLY || "1996076")
+          : (process.env.LEMONSQUEEZY_VARIANT_PERSONAL_MONTHLY || "1996051");
       } else if (planType === "pro") {
-        priceId = billingCycle === "yearly"
-          ? (process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID || "price_1TwKGW2L1rzwEqqyFFtRO1Fx")
-          : (process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID || "price_1TwKFh2L1rzwEqqyPqw9rIgu");
+        variantId = billingCycle === "yearly"
+          ? (process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY || "1996078")
+          : (process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY || "1996077");
+      } else if (planType === "business") {
+        variantId = billingCycle === "yearly"
+          ? (process.env.LEMONSQUEEZY_VARIANT_BUSINESS_YEARLY || "1996084")
+          : (process.env.LEMONSQUEEZY_VARIANT_BUSINESS_MONTHLY || "1996082");
       }
 
-      const res = await fetch("/api/stripe/checkout", {
+      const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planType, priceId, isAnnual: billingCycle === "yearly" }),
+        body: JSON.stringify({ variantId, planType }),
       });
 
       const data = await res.json();

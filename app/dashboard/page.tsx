@@ -206,6 +206,13 @@ function DashboardContent() {
           }
         }
 
+        // Check for ?checkout=success parameter
+        if (searchParams.get("checkout") === "success") {
+          setSaveStatus("success");
+          setStatusMsg("🎉 Subscription upgrade successful! Welcome to your upgraded creator workspace.");
+          setTimeout(() => setSaveStatus("idle"), 6000);
+        }
+
         // Default initial values before DB load
         if (fallbackUser) setUsername(fallbackUser);
         if (fallbackName) setName(fallbackName);
