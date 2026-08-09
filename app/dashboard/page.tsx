@@ -24,6 +24,7 @@ import {
 } from "@/components/mobile-preview";
 import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
+import { ExtraFeedModal } from "@/components/extra-feed-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
@@ -172,6 +173,8 @@ function DashboardContent() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [showExtraFeedModal, setShowExtraFeedModal] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
   // Serialize current state for dirty checking
   const getCurrentStateJSON = () => {
@@ -199,6 +202,7 @@ function DashboardContent() {
         let fallbackName = "";
 
         if (user) {
+          if (user.email) setUserEmail(user.email);
           fallbackUser = (user.user_metadata?.username || user.email?.split("@")[0] || "").toLowerCase();
           fallbackName = user.user_metadata?.display_name || user.user_metadata?.name || (fallbackUser ? fallbackUser.charAt(0).toUpperCase() + fallbackUser.slice(1) : "");
         } else {
@@ -955,7 +959,7 @@ function DashboardContent() {
                 {/* Add More Feeds Option */}
                 <button 
                   onClick={() => {
-                    setShowUpgradeModal(true);
+                    setShowExtraFeedModal(true);
                     setAccountMenuOpen(false);
                   }}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 text-xs font-semibold mt-1 transition-colors cursor-pointer min-w-0 group"
@@ -1784,6 +1788,14 @@ function DashboardContent() {
             localStorage.setItem("feedmee_subscription_tier", "pro");
           }
         }}
+      />
+      {/* Contextual Extra Feed Add-on Modal */}
+      <ExtraFeedModal
+        isOpen={showExtraFeedModal}
+        onClose={() => setShowExtraFeedModal(false)}
+        planType={planType}
+        userEmail={userEmail}
+        username={username}
       />
     </div>
   );
