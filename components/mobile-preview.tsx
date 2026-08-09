@@ -268,7 +268,14 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
     return `https://${trimmed}`;
   };
 
-  const targetFormattedUrl = formatUrl(reel.promoUrl);
+  const handleCtaClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const formatted = formatUrl(reel.promoUrl);
+    if (formatted && formatted !== "#") {
+      window.open(formatted, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div className="absolute bottom-[140px] left-4 right-20 z-30 pointer-events-auto">
@@ -291,12 +298,8 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
           )}
         </div>
         <a 
-          href={targetFormattedUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
+          href={formatUrl(reel.promoUrl)} 
+          onClick={handleCtaClick}
           className="mt-1 w-full flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-xl transition shadow-md cursor-pointer"
         >
           <span>{reel.promoCta || "Get Deal 🚀"}</span>
