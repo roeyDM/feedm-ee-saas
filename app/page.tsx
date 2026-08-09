@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 import { validateHandle, checkUsernameAvailability, sanitizeHandleInput } from "@/lib/supabase";
 
@@ -228,22 +229,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200/60 py-10 text-center text-xs text-zinc-500">
-        <div className="mx-auto max-w-7xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-950 text-white">
-              <Film className="h-3.5 w-3.5" />
-            </div>
-            <span className="font-extrabold text-zinc-950">FeedM.ee</span>
-          </div>
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <Link href="/pricing" className="hover:text-zinc-950">Pricing</Link>
-            <span>•</span>
-            <span>© {new Date().getFullYear()} FeedM.ee. All rights reserved.</span>
-          </div>
-        </div>
-      </footer>
+      {/* Landing Page Footer */}
+      <Footer />
 
     </div>
   );
