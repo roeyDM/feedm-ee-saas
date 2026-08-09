@@ -21,11 +21,27 @@ export async function POST(req: Request) {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // Look up user_id from profiles table if not provided
+    // Look up user_id & current counts from profiles table if not provided
     let userId: string | null = body.user_id || null;
-    if (!userId) {
-      const { data: prof } = await supabase.from("profiles").select("id").eq("username", cleanUsername).maybeSingle();
-      if (prof?.id) userId = prof.id;
+    let profData: { id: string; views_count: number; clicks_count: number } | null = null;
+
+    if (userId) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id, views_count, clicks_count")
+        .eq("id", userId)
+        .maybeSingle();
+      if (prof) profData = prof as any;
+    } else {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id, views_count, clicks_count")
+        .ilike("username", cleanUsername)
+        .maybeSingle();
+      if (prof) {
+        userId = prof.id;
+        profData = prof as any;
+      }
     }
 
     // 1. Insert into analytics_events table & fallback store
@@ -53,15 +69,14 @@ export async function POST(req: Request) {
 
     // 2. Also increment aggregate views_count/clicks_count on profiles table for bulletproof fallback
     try {
-      if (userId) {
+      const targetId = userId || profData?.id;
+      if (targetId) {
         if (event_type === "page_view") {
-          const { data: prof } = await supabase.from("profiles").select("views_count").eq("id", userId).maybeSingle();
-          const newViews = ((prof?.views_count as number) || 0) + 1;
-          await supabase.from("profiles").update({ views_count: newViews }).eq("id", userId);
+          const currentViews = profData?.views_count || 0;
+          await supabase.from("profiles").update({ views_count: currentViews + 1 }).eq("id", targetId);
         } else if (event_type === "link_click") {
-          const { data: prof } = await supabase.from("profiles").select("clicks_count").eq("id", userId).maybeSingle();
-          const newClicks = ((prof?.clicks_count as number) || 0) + 1;
-          await supabase.from("profiles").update({ clicks_count: newClicks }).eq("id", userId);
+          const currentClicks = profData?.clicks_count || 0;
+          await supabase.from("profiles").update({ clicks_count: currentClicks + 1 }).eq("id", targetId);
         }
       }
     } catch (e) {

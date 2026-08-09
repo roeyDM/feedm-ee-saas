@@ -53,7 +53,7 @@ export async function GET(req: Request) {
       const { data: prof } = await supabase
         .from("profiles")
         .select("id, username, views_count, clicks_count")
-        .eq("username", cleanUsername)
+        .ilike("username", cleanUsername)
         .maybeSingle();
 
       if (prof) {
@@ -81,11 +81,11 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false });
 
     if (userId && cleanUsername) {
-      query = query.or(`user_id.eq.${userId},username.eq.${cleanUsername}`);
+      query = query.or(`user_id.eq.${userId},username.ilike.${cleanUsername}`);
     } else if (userId) {
       query = query.eq("user_id", userId);
     } else if (cleanUsername) {
-      query = query.eq("username", cleanUsername);
+      query = query.ilike("username", cleanUsername);
     }
 
     const { data: dbEvents, error } = await query;

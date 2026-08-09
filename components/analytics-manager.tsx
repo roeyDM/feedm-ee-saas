@@ -189,11 +189,11 @@ export function AnalyticsManager({
           .order("created_at", { ascending: false });
 
         if (activeUserId && activeUsername) {
-          eventsQuery = eventsQuery.or(`user_id.eq.${activeUserId},username.eq.${activeUsername}`);
+          eventsQuery = eventsQuery.or(`user_id.eq.${activeUserId},username.ilike.${activeUsername}`);
         } else if (activeUserId) {
           eventsQuery = eventsQuery.eq("user_id", activeUserId);
         } else if (activeUsername) {
-          eventsQuery = eventsQuery.eq("username", activeUsername);
+          eventsQuery = eventsQuery.ilike("username", activeUsername);
         }
 
         const { data: events, error: eventsErr } = await eventsQuery;
