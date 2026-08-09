@@ -262,7 +262,7 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
   if (!show || !reel.promoEnabled || !isActive) return null;
 
   return (
-    <div className="absolute bottom-[230px] left-4 right-20 z-30 pointer-events-auto">
+    <div className="absolute bottom-[140px] left-4 right-20 z-30 pointer-events-auto">
       <div className="bg-black/85 backdrop-blur-md border border-white/20 p-3.5 rounded-2xl shadow-2xl flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-300 relative">
         <button
           onClick={(e) => {
