@@ -505,7 +505,7 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50/80 flex flex-col font-sans text-zinc-900 relative">
+    <div className="h-screen max-h-screen w-screen overflow-hidden flex flex-col bg-zinc-50/80 font-sans text-zinc-900 relative">
       {/* Floating Error Toast Notification Overlay (Auto-dismisses after 4s) */}
       {showErrorToast && saveStatus === "error" && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300">
@@ -896,10 +896,10 @@ function DashboardContent() {
         </div>
       )}
 
-      <main className="flex-1 w-full flex flex-col lg:flex-row items-start">
+      <main className="flex-1 w-full flex flex-col lg:flex-row items-start overflow-hidden min-h-0">
         
         {/* LEFT SIDEBAR (Desktop only) */}
-        <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-4 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] overflow-y-auto self-start z-10 bg-zinc-100/80 border-r border-zinc-200 px-4 py-5 lg:px-5 pb-8 hidden lg:flex">
+        <aside className="w-full lg:w-[280px] shrink-0 h-full flex flex-col gap-4 overflow-y-auto border-r border-zinc-200 bg-zinc-100/80 px-4 py-5 lg:px-5 pb-8 hidden lg:flex">
           {/* Consolidated Profile & Feed Switcher */}
           <div className="relative">
             <div 
@@ -1190,7 +1190,7 @@ function DashboardContent() {
         </aside>
 
         {/* CENTER WORKSPACE */}
-        <div className={cn("min-w-0 flex flex-col w-full flex-1", activeTab === "settings" ? "p-0 m-0 border-0" : "px-4 py-6 lg:px-8 gap-6")}>
+        <div className={cn("min-w-0 flex flex-col w-full flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
           {/* Status Notification Toast Banner - Only shown on editing tabs (Bio, Reels, Design) */}
           {saveStatus !== "idle" && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
             <div
@@ -1446,7 +1446,7 @@ function DashboardContent() {
 
         {/* RIGHT PANEL: MOBILE PREVIEW (Desktop only, hidden on mobile) */}
         {activeTab !== "settings" && (
-          <aside className="w-full lg:w-[410px] shrink-0 lg:sticky lg:top-24 flex-col items-center gap-3 px-2 py-6 overflow-visible justify-center hidden lg:flex">
+          <aside className="w-[360px] lg:w-[380px] xl:w-[410px] h-full shrink-0 border-l border-zinc-200/80 flex flex-col items-center justify-center p-4 bg-white overflow-hidden hidden lg:flex">
             <div className="text-center w-full flex justify-center mb-1">
               <Link href={`/${username}`} target="_blank">
                 <Button
