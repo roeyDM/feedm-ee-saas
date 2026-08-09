@@ -246,39 +246,39 @@ interface MobilePreviewProps {
   onTestLeadSubmit?: (targetEmail: string, leadData: { name: string; phone: string; email: string }) => Promise<void> | void;
 }
 
-function PromoOverlay({ reel }: { reel: VideoReel }) {
+function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }) {
   const [show, setShow] = useState(false);
   
   useEffect(() => {
-    if (!reel.promoEnabled) {
+    if (!reel.promoEnabled || !isActive) {
       setShow(false);
       return;
     }
     const delay = (reel.promoDelaySeconds ?? 3) * 1000;
     const timer = setTimeout(() => setShow(true), delay);
     return () => clearTimeout(timer);
-  }, [reel]);
+  }, [reel, isActive, reel.promoEnabled, reel.promoDelaySeconds, reel.promoTitle, reel.promoCode, reel.promoCta, reel.promoUrl]);
 
-  if (!show || !reel.promoEnabled) return null;
+  if (!show || !reel.promoEnabled || !isActive) return null;
 
   return (
-    <div className="absolute bottom-[155px] left-4 right-20 z-30 pointer-events-none">
-      <div className="bg-black/75 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-500">
+    <div className="absolute bottom-[155px] left-4 right-16 z-30 pointer-events-auto">
+      <div className="bg-black/85 backdrop-blur-md border border-white/20 p-3.5 rounded-2xl shadow-2xl flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-300 relative">
         <button
           onClick={(e) => {
             e.stopPropagation();
             setShow(false);
           }}
-          className="absolute top-2 right-2 text-white/60 hover:text-white pointer-events-auto transition cursor-pointer p-1"
+          className="absolute top-2.5 right-2.5 text-white/60 hover:text-white transition cursor-pointer p-1 rounded-full hover:bg-white/10"
         >
           <X className="h-3.5 w-3.5" />
         </button>
-        <div className="pr-5">
-          <h4 className="text-[11px] font-bold text-white leading-tight drop-shadow">{reel.promoTitle || "Special Offer!"}</h4>
+        <div className="pr-6">
+          <h4 className="text-xs font-black text-white leading-tight drop-shadow-sm">{reel.promoTitle || "Special Offer!"}</h4>
           {reel.promoCode && (
-             <div className="mt-1.5 inline-block bg-white/20 text-white text-[9px] px-1.5 py-0.5 rounded border border-white/30 font-mono font-bold">
-               Code: {reel.promoCode}
-             </div>
+            <div className="mt-1.5 inline-flex items-center gap-1 bg-white/20 text-white text-[10px] px-2 py-0.5 rounded-md border border-white/30 font-mono font-extrabold">
+              <span>Code:</span> <span>{reel.promoCode}</span>
+            </div>
           )}
         </div>
         <a 
@@ -286,9 +286,10 @@ function PromoOverlay({ reel }: { reel: VideoReel }) {
           target="_blank" 
           rel="noreferrer" 
           onClick={(e) => e.stopPropagation()}
-          className="mt-1 w-full flex items-center justify-center gap-1 bg-white text-black hover:bg-zinc-200 text-[10px] font-extrabold py-2 rounded-lg pointer-events-auto transition shadow-sm"
+          className="mt-1 w-full flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-xl transition shadow-md cursor-pointer"
         >
-           {reel.promoCta || "Get Deal 🚀"}
+          <span>{reel.promoCta || "Get Deal 🚀"}</span>
+          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
         </a>
       </div>
     </div>
@@ -1066,6 +1067,9 @@ export function MobilePreview({
                 {reel.caption}
               </p>
             </div>
+
+            {/* Video Promo / Deal Popup Overlay */}
+            <PromoOverlay reel={reel} isActive={activePageIndex >= 1 && activePageIndex <= displayReels.length && idx === currentReelIndex} />
         </div>
       );
       })}
