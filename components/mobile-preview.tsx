@@ -261,6 +261,15 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
 
   if (!show || !reel.promoEnabled || !isActive) return null;
 
+  const formatUrl = (url?: string) => {
+    if (!url || !url.trim()) return "#";
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+  };
+
+  const targetFormattedUrl = formatUrl(reel.promoUrl);
+
   return (
     <div className="absolute bottom-[140px] left-4 right-20 z-30 pointer-events-auto">
       <div className="bg-black/85 backdrop-blur-md border border-white/20 p-3.5 rounded-2xl shadow-2xl flex flex-col gap-2 animate-in slide-in-from-bottom-5 fade-in duration-300 relative">
@@ -282,14 +291,11 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
           )}
         </div>
         <a 
-          href={reel.promoUrl || "#"} 
+          href={targetFormattedUrl} 
           target="_blank" 
           rel="noopener noreferrer" 
           onClick={(e) => {
             e.stopPropagation();
-            if (reel.promoUrl && reel.promoUrl !== "#") {
-              window.open(reel.promoUrl, "_blank", "noopener,noreferrer");
-            }
           }}
           className="mt-1 w-full flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-xl transition shadow-md cursor-pointer"
         >
