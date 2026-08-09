@@ -27,7 +27,9 @@ import {
   Sparkles,
   QrCode,
   CheckSquare,
-  BadgeCheck
+  BadgeCheck,
+  Scale,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -801,55 +803,134 @@ export function AccountSettingsEditor({
             </Card>
           )}
 
-          {/* CARD 7: DANGER ZONE */}
+          {/* CARD 7: DANGER ZONE & LEGAL */}
           {activeSubTab === "danger" && (
-            <Card className="bg-rose-50/30 border-rose-200/80 shadow-sm animate-in fade-in duration-200">
-              <CardHeader>
-                <CardTitle className="text-base font-bold text-rose-700 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-rose-600" /> Danger Zone
-                </CardTitle>
-                <CardDescription className="text-xs text-rose-600/80">
-                  Export account data or permanently delete your account and associated feeds.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Export Data */}
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-rose-200/80 shadow-sm">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-zinc-900">Export All Account Data</span>
-                    <span className="text-[11px] text-zinc-500 font-medium">
-                      Download a complete CSV backup of your profile details, bio links, and analytics.
-                    </span>
+            <div className="space-y-6">
+              {/* LEGAL & POLICIES CARD (Above Danger Zone) */}
+              <Card className="bg-white border-zinc-200/80 shadow-sm animate-in fade-in duration-200">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
+                    <Scale className="h-4 w-4 text-emerald-600" /> Legal &amp; Policies
+                  </CardTitle>
+                  <CardDescription className="text-xs text-zinc-500">
+                    View and access FeedM.ee legal documents and user compliance agreements.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Privacy Policy */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-zinc-900">Privacy Policy</span>
+                        <ExternalLink className="h-3 w-3 text-emerald-600" />
+                      </div>
+                      <span className="text-[11px] text-zinc-500 font-medium">
+                        Learn how we collect, process, and protect your personal data.
+                      </span>
+                    </div>
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-bold text-zinc-800 hover:bg-zinc-100 hover:text-emerald-700 transition-colors shadow-2xs shrink-0"
+                    >
+                      View Policy
+                    </a>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExportCSV}
-                    className="text-xs font-bold rounded-xl border-zinc-300 gap-1.5 hover:bg-zinc-50 cursor-pointer shrink-0"
-                  >
-                    <Download className="h-4 w-4 text-zinc-600" /> Export CSV
-                  </Button>
-                </div>
 
-                {/* Delete Account */}
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-100/40 border border-rose-300/80">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-rose-900">Delete Account &amp; All Data</span>
-                    <span className="text-[11px] text-rose-700/90 font-medium">
-                      Once deleted, your video feed and all subscriber data will be permanently removed.
-                    </span>
+                  {/* Terms of Service */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-zinc-900">Terms of Service</span>
+                        <ExternalLink className="h-3 w-3 text-emerald-600" />
+                      </div>
+                      <span className="text-[11px] text-zinc-500 font-medium">
+                        Read our terms, conditions, and platform usage guidelines.
+                      </span>
+                    </div>
+                    <a
+                      href="/terms-of-service"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-bold text-zinc-800 hover:bg-zinc-100 hover:text-emerald-700 transition-colors shadow-2xs shrink-0"
+                    >
+                      View Terms
+                    </a>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setShowDeleteModal(true)}
-                    className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl gap-1.5 cursor-pointer shrink-0"
-                  >
-                    <Trash2 className="h-4 w-4" /> Delete Account
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+
+                  {/* Cookie Policy */}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-zinc-900">Cookie Policy</span>
+                        <ExternalLink className="h-3 w-3 text-emerald-600" />
+                      </div>
+                      <span className="text-[11px] text-zinc-500 font-medium">
+                        Understand how cookies and tracking technologies are managed.
+                      </span>
+                    </div>
+                    <a
+                      href="/privacy#cookies"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-bold text-zinc-800 hover:bg-zinc-100 hover:text-emerald-700 transition-colors shadow-2xs shrink-0"
+                    >
+                      View Cookies
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* DANGER ZONE CARD */}
+              <Card className="bg-rose-50/30 border-rose-200/80 shadow-sm animate-in fade-in duration-200">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold text-rose-700 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-rose-600" /> Danger Zone
+                  </CardTitle>
+                  <CardDescription className="text-xs text-rose-600/80">
+                    Export account data or permanently delete your account and associated feeds.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Export Data */}
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-rose-200/80 shadow-sm">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-zinc-900">Export All Account Data</span>
+                      <span className="text-[11px] text-zinc-500 font-medium">
+                        Download a complete CSV backup of your profile details, bio links, and analytics.
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportCSV}
+                      className="text-xs font-bold rounded-xl border-zinc-300 gap-1.5 hover:bg-zinc-50 cursor-pointer shrink-0"
+                    >
+                      <Download className="h-4 w-4 text-zinc-600" /> Export CSV
+                    </Button>
+                  </div>
+
+                  {/* Delete Account */}
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-100/40 border border-rose-300/80">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-rose-900">Delete Account &amp; All Data</span>
+                      <span className="text-[11px] text-rose-700/90 font-medium">
+                        Once deleted, your video feed and all subscriber data will be permanently removed.
+                      </span>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowDeleteModal(true)}
+                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" /> Delete Account
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </main>
