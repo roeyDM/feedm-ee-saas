@@ -63,6 +63,7 @@ export type SettingsSubTab =
   | "preferences"
   | "notifications"
   | "team"
+  | "legal"
   | "danger";
 
 interface TeamMember {
@@ -239,6 +240,7 @@ export function AccountSettingsEditor({
     { id: "preferences" as SettingsSubTab, label: "Preferences", icon: Globe },
     { id: "notifications" as SettingsSubTab, label: "Notifications", icon: Bell },
     { id: "team" as SettingsSubTab, label: "Team & Workspace", icon: Users, badge: "PRO" },
+    { id: "legal" as SettingsSubTab, label: "Legal & Policies", icon: Scale },
     { id: "danger" as SettingsSubTab, label: "Danger Zone", icon: AlertTriangle, isDanger: true },
   ];
 
@@ -803,10 +805,88 @@ export function AccountSettingsEditor({
             </Card>
           )}
 
-          {/* CARD 7: DANGER ZONE & LEGAL */}
+          {/* CARD 7: LEGAL & POLICIES (STANDALONE SUBTAB) */}
+          {activeSubTab === "legal" && (
+            <Card className="bg-white border-zinc-200/80 shadow-sm animate-in fade-in duration-200">
+              <CardHeader>
+                <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
+                  <Scale className="h-4 w-4 text-emerald-600" /> Legal &amp; Policies
+                </CardTitle>
+                <CardDescription className="text-xs text-zinc-500">
+                  View and access FeedM.ee legal documents and user compliance agreements.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Privacy Policy */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-zinc-900">Privacy Policy</span>
+                      <ExternalLink className="h-3 w-3 text-emerald-600" />
+                    </div>
+                    <span className="text-[11px] text-zinc-500 font-medium">
+                      Learn how we collect, process, and protect your personal data.
+                    </span>
+                  </div>
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-bold text-zinc-800 hover:bg-zinc-100 hover:text-emerald-700 transition-colors shadow-2xs shrink-0"
+                  >
+                    View Policy
+                  </a>
+                </div>
+
+                {/* Terms of Service */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-zinc-900">Terms of Service</span>
+                      <ExternalLink className="h-3 w-3 text-emerald-600" />
+                    </div>
+                    <span className="text-[11px] text-zinc-500 font-medium">
+                      Read our terms, conditions, and platform usage guidelines.
+                    </span>
+                  </div>
+                  <a
+                    href="/terms-of-service"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-bold text-zinc-800 hover:bg-zinc-100 hover:text-emerald-700 transition-colors shadow-2xs shrink-0"
+                  >
+                    View Terms
+                  </a>
+                </div>
+
+                {/* Cookie Policy */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 hover:border-zinc-300 transition-all">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-zinc-900">Cookie Policy</span>
+                      <ExternalLink className="h-3 w-3 text-emerald-600" />
+                    </div>
+                    <span className="text-[11px] text-zinc-500 font-medium">
+                      Understand how cookies and tracking technologies are managed.
+                    </span>
+                  </div>
+                  <a
+                    href="/privacy#cookies"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-bold text-zinc-800 hover:bg-zinc-100 hover:text-emerald-700 transition-colors shadow-2xs shrink-0"
+                  >
+                    View Cookies
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CARD 8: DANGER ZONE */}
           {activeSubTab === "danger" && (
             <div className="space-y-6">
-              {/* LEGAL & POLICIES CARD (Above Danger Zone) */}
+              {/* STANDALONE LEGAL & POLICIES CARD (Above Danger Zone) */}
               <Card className="bg-white border-zinc-200/80 shadow-sm animate-in fade-in duration-200">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
