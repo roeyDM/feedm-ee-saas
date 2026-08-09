@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
-import { Film, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { Film, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight, ShieldCheck, KeyRound } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,18 +15,68 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 2FA Interception State
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [factorId, setFactorId] = useState<string | null>(null);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
+      return;
+    }
+
+    // Check if account has 2FA TOTP enabled
+    try {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const verifiedFactor = factors?.totp?.find((f: any) => f.status === "verified");
+
+      if (verifiedFactor) {
+        setFactorId(verifiedFactor.id);
+        setRequires2FA(true);
+        setLoading(false);
+        return;
+      }
+    } catch (mfaErr) {
+      console.warn("MFA check note:", mfaErr);
+    }
+
+    router.push("/dashboard");
+  };
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!totpCode || totpCode.trim().length < 6 || !factorId) {
+      setError("Please enter your 6-digit authenticator code.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId });
+      if (challengeErr) throw challengeErr;
+
+      const { error: verifyErr } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId: challengeData.id,
+        code: totpCode.trim(),
+      });
+
+      if (verifyErr) throw verifyErr;
+
       router.push("/dashboard");
+    } catch (err: any) {
+      console.error("2FA Verification Error:", err);
+      setError(err.message || "Invalid 6-digit code. Please try again.");
+      setLoading(false);
     }
   };
 
@@ -38,7 +88,6 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    // Dynamic redirect URL — works on localhost AND Netlify
     const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -50,7 +99,7 @@ export default function LoginPage() {
       setError(error.message);
     } else {
       setError(null);
-      alert(`✅ Magic link sent to ${email}! Check your inbox.`);
+      alert(`Magic link sent to ${email}! Check your inbox.`);
     }
     setLoading(false);
   };
@@ -71,7 +120,7 @@ export default function LoginPage() {
             Welcome back to FeedM<span className="text-emerald-600">.ee</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 mt-1">
-            Sign in to your Creator Studio
+            {requires2FA ? "Two-Factor Verification Required" : "Sign in to your Creator Studio"}
           </p>
         </div>
 
@@ -84,100 +133,140 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-700">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
-                />
+          {requires2FA ? (
+            /* 2FA OTP Challenge Verification Form */
+            <form onSubmit={handleVerify2FA} className="space-y-4">
+              <div className="p-3 rounded-2xl bg-violet-50 border border-violet-200 text-violet-950 flex items-center gap-3">
+                <ShieldCheck className="h-5 w-5 text-violet-600 shrink-0" />
+                <p className="text-xs font-semibold">
+                  Two-Factor Authentication is enabled. Open your authenticator app (Google Authenticator / 1Password) to generate code.
+                </p>
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-700">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                <input
-                  type={showPw ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-10 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
-                >
-                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-700">6-Digit Security Code</label>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="123456"
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-base tracking-widest font-mono text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Sign In Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-60"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>Sign In <ArrowRight className="h-4 w-4" /></>
-              )}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-sm font-bold text-white shadow-md shadow-violet-600/20 hover:bg-violet-700 transition disabled:opacity-60 cursor-pointer"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>Verify Code &amp; Access Dashboard <ArrowRight className="h-4 w-4" /></>
+                )}
+              </button>
 
-          {/* Divider */}
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-200" />
-            </div>
-            <div className="relative flex justify-center text-[11px] font-bold text-zinc-400">
-              <span className="bg-white px-3">or use a Magic Link</span>
-            </div>
-          </div>
+              <button
+                type="button"
+                onClick={() => setRequires2FA(false)}
+                className="w-full text-center text-xs font-bold text-zinc-500 hover:text-zinc-900 transition pt-2"
+              >
+                Back to Password Login
+              </button>
+            </form>
+          ) : (
+            /* Standard Login Form */
+            <form onSubmit={handleLogin} className="space-y-4">
+              {/* Email */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-700">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  />
+                </div>
+              </div>
 
-          {/* Magic Link Button */}
-          <button
-            type="button"
-            onClick={handleMagicLink}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition disabled:opacity-60"
-          >
-            <Mail className="h-4 w-4 text-emerald-600" /> Send Magic Link to Email
-          </button>
+              {/* Password */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-700">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <input
+                    type={showPw ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-10 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw(!showPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
+                  >
+                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Sign In Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-60 cursor-pointer"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>Sign In <ArrowRight className="h-4 w-4" /></>
+                )}
+              </button>
+            </form>
+          )}
+
+          {!requires2FA && (
+            <>
+              {/* Divider */}
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-200" />
+                </div>
+                <div className="relative flex justify-center text-[11px] font-bold text-zinc-400">
+                  <span className="bg-white px-3">or use a Magic Link</span>
+                </div>
+              </div>
+
+              {/* Magic Link Action */}
+              <button
+                type="button"
+                onClick={handleMagicLink}
+                disabled={loading}
+                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer"
+              >
+                Send Instant Magic Link
+              </button>
+            </>
+          )}
         </div>
 
         {/* Footer link */}
-        <p className="mt-5 text-center text-xs font-semibold text-zinc-500">
-          Don't have an account?{" "}
-          <Link href="/register" className="font-bold text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline">
-            Create one free
+        <p className="mt-6 text-center text-xs font-semibold text-zinc-500">
+          Don&apos;t have an account?{" "}
+          <Link href="/register" className="font-extrabold text-emerald-600 hover:text-emerald-700 underline underline-offset-2">
+            Create Free Feed
           </Link>
-        </p>
-
-        {/* Terms Disclaimer */}
-        <p className="mt-3 text-center text-[11px] font-medium text-zinc-500">
-          By signing in, you agree to our{" "}
-          <Link
-            href="/terms-of-service"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
-          >
-            Terms of Service
-          </Link>.
         </p>
       </div>
     </div>

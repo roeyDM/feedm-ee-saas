@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlanType } from "@/lib/supabase";
@@ -448,13 +449,20 @@ export function AccountSettingsEditor({
 
               {/* Two-Factor Authentication Card */}
               <Card className="bg-white border-zinc-200/80 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
-                    <Smartphone className="h-4 w-4 text-violet-600" /> Two-Factor Authentication
-                  </CardTitle>
-                  <CardDescription className="text-xs text-zinc-500">
-                    Add an extra layer of protection to your account using an authenticator app.
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                  <div className="space-y-1">
+                    <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
+                      <Smartphone className="h-4 w-4 text-violet-600" /> Two-Factor Authentication
+                    </CardTitle>
+                    <CardDescription className="text-xs text-zinc-500">
+                      Add an extra layer of protection to your account using an authenticator app.
+                    </CardDescription>
+                  </div>
+                  {is2FAEnabled && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-200">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> 2FA Active
+                    </span>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80">
@@ -481,7 +489,7 @@ export function AccountSettingsEditor({
                 </CardContent>
               </Card>
 
-              {/* Active Sessions Card */}
+              {/* Active Sessions Card (Parsed dynamically from User-Agent) */}
               <Card className="bg-white border-zinc-200/80 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-base font-bold text-zinc-900 flex items-center gap-2">
@@ -489,32 +497,60 @@ export function AccountSettingsEditor({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80">
-                    <div className="flex items-center gap-3">
-                      <Laptop className="h-5 w-5 text-emerald-600" />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-zinc-900">Windows PC — Chrome</span>
-                        <span className="text-[10px] text-emerald-700 font-semibold">Current Active Session (Tel Aviv, IL)</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">This Device</span>
-                  </div>
+                  {(() => {
+                    const activeDevice = typeof window !== "undefined" && (/iPhone|Android|iPad/i.test(navigator.userAgent))
+                      ? { name: "Mobile Device", isMobile: true }
+                      : { name: "Desktop PC", isMobile: false };
+                    
+                    const ua = typeof window !== "undefined" ? navigator.userAgent : "";
+                    let osName = "Desktop Workstation";
+                    if (/iPhone/i.test(ua)) osName = "Apple iPhone";
+                    else if (/iPad/i.test(ua)) osName = "Apple iPad";
+                    else if (/Android/i.test(ua)) osName = "Android Phone";
+                    else if (/Macintosh|Mac OS/i.test(ua)) osName = "Mac OS";
+                    else if (/Windows/i.test(ua)) osName = "Windows PC";
+                    else if (/Linux/i.test(ua)) osName = "Linux PC";
 
-                  <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-50 border border-zinc-200/80">
-                    <div className="flex items-center gap-3">
-                      <Smartphone className="h-5 w-5 text-zinc-500" />
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-zinc-900">iPhone 15 Pro — Safari</span>
-                        <span className="text-[10px] text-zinc-500 font-medium">Last active 2 hours ago</span>
+                    let browserName = "Chrome";
+                    if (/Edg/i.test(ua)) browserName = "Edge";
+                    else if (/Chrome/i.test(ua)) browserName = "Chrome";
+                    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browserName = "Safari";
+                    else if (/Firefox/i.test(ua)) browserName = "Firefox";
+
+                    return (
+                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80">
+                        <div className="flex items-center gap-3">
+                          {activeDevice.isMobile ? (
+                            <Smartphone className="h-5 w-5 text-emerald-600" />
+                          ) : (
+                            <Laptop className="h-5 w-5 text-emerald-600" />
+                          )}
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-zinc-900">{osName} — {browserName}</span>
+                            <span className="text-[10px] text-emerald-700 font-semibold">Active Session (Verified Auth)</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                          Current Device
+                        </span>
                       </div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-rose-600 hover:bg-rose-50 rounded-lg">
-                      Revoke
-                    </Button>
-                  </div>
+                    );
+                  })()}
 
                   <div className="pt-2 flex justify-end">
-                    <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl gap-1.5 text-zinc-700 hover:bg-zinc-100">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await supabase.auth.signOut({ scope: "others" });
+                          setSecurityNotice("Successfully logged out all other active sessions.");
+                        } catch (e) {
+                          console.warn("Signout others:", e);
+                        }
+                      }}
+                      className="text-xs font-bold rounded-xl gap-1.5 text-zinc-700 hover:bg-zinc-100 cursor-pointer"
+                    >
                       <LogOut className="h-3.5 w-3.5 text-zinc-500" /> Log out from all other sessions
                     </Button>
                   </div>
