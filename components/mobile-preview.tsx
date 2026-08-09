@@ -284,8 +284,13 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
         <a 
           href={reel.promoUrl || "#"} 
           target="_blank" 
-          rel="noreferrer" 
-          onClick={(e) => e.stopPropagation()}
+          rel="noopener noreferrer" 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (reel.promoUrl && reel.promoUrl !== "#") {
+              window.open(reel.promoUrl, "_blank", "noopener,noreferrer");
+            }
+          }}
           className="mt-1 w-full flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black py-2.5 rounded-xl transition shadow-md cursor-pointer"
         >
           <span>{reel.promoCta || "Get Deal 🚀"}</span>

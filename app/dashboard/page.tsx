@@ -259,6 +259,12 @@ function DashboardContent() {
               .map((r: any) => ({
                 ...r,
                 videoUrl: r.videoUrl || r.url || "",
+                promoUrl: r.promoUrl || r.promo_url || r.targetUrl || r.target_url || "",
+                promoTitle: r.promoTitle || r.promo_title || "",
+                promoCode: r.promoCode || r.promo_code || "",
+                promoCta: r.promoCta || r.promo_cta || "Get Deal 🚀",
+                promoEnabled: !!(r.promoEnabled || r.promo_enabled),
+                promoDelaySeconds: typeof r.promoDelaySeconds === "number" ? r.promoDelaySeconds : (typeof r.promo_delay_seconds === "number" ? r.promo_delay_seconds : 3),
               }))
               .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"));
             setReels(cleanedReels);
