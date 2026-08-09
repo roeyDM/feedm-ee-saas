@@ -306,7 +306,7 @@ export function AccountSettingsEditor({
                   <User className="h-4 w-4 text-emerald-600" /> Account Profile Information
                 </CardTitle>
                 <CardDescription className="text-xs text-zinc-500">
-                  Update your system account photo, full legal name, optional company name, and contact details.
+                  Update your full legal name, optional company name, and registered account email details.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -318,51 +318,6 @@ export function AccountSettingsEditor({
                     </div>
                   )}
 
-                  {/* Account Avatar (Independent from Public Feed Builder) */}
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80">
-                    <div className="relative shrink-0">
-                      <img
-                        src={accountAvatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop"}
-                        alt={name}
-                        className="h-16 w-16 rounded-full object-cover border-2 border-white shadow-md"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2 min-w-0">
-                      <input
-                        ref={avatarInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => avatarInputRef.current?.click()}
-                          className="h-8 text-xs font-bold rounded-xl gap-1.5 cursor-pointer"
-                        >
-                          <Upload className="h-3.5 w-3.5 text-zinc-600" /> Upload Account Photo
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setAccountAvatarUrl("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop");
-                          }}
-                          className="h-8 text-xs text-rose-600 hover:bg-rose-50 rounded-xl"
-                        >
-                          Reset
-                        </Button>
-                      </div>
-                      <span className="text-[10px] text-zinc-500">
-                        System account photo (Independent from your public bio feed avatar)
-                      </span>
-                    </div>
-                  </div>
-
                   {/* Form Inputs: Full Name & Company Name */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -370,6 +325,7 @@ export function AccountSettingsEditor({
                       <Input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        placeholder="Full Name"
                         className="rounded-xl border-zinc-200 text-xs font-semibold"
                         required
                       />
@@ -389,7 +345,7 @@ export function AccountSettingsEditor({
                     </div>
                   </div>
 
-                  {/* Account Email Address */}
+                  {/* Account Email Address (Read Only Auth Email) */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <Label className="text-xs font-bold text-zinc-700">Account Email Address</Label>
@@ -400,8 +356,8 @@ export function AccountSettingsEditor({
                     <Input
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="rounded-xl border-zinc-200 text-xs font-semibold"
-                      required
+                      disabled
+                      className="rounded-xl border-zinc-200 bg-zinc-100/80 text-zinc-600 text-xs font-semibold cursor-not-allowed"
                     />
                   </div>
 
