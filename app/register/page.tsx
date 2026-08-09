@@ -272,7 +272,7 @@ function RegisterForm() {
           >
             Terms of Service
           </Link>{" "}
-          and Lemon Squeezy billing rules.
+          and billing terms.
         </p>
       </div>
     </div>

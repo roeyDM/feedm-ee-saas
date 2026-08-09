@@ -74,7 +74,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
       window.open(portalUrl, "_blank", "noopener,noreferrer");
     } catch (err: any) {
       console.error("Portal error:", err);
-      setNoticeMsg("Unable to open Lemon Squeezy portal. Please try again.");
+      setNoticeMsg("Unable to open billing portal. Please try again.");
     } finally {
       setLoadingPortal(false);
     }
@@ -101,7 +101,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
           <h2 className="text-xl font-extrabold text-zinc-950 tracking-tight">Settings &amp; Billing Management</h2>
         </div>
         <p className="text-xs font-semibold text-zinc-500">
-          Manage your Lemon Squeezy subscription, active plan entitlements, payment receipts, and customer billing portal.
+          Manage your FeedM.ee subscription, active plan entitlements, payment receipts, and customer billing portal.
         </p>
       </div>
 
@@ -194,10 +194,10 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
         {/* Subscription Info & Renewals */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-zinc-50/80 rounded-2xl p-4 border border-zinc-200/60">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Billing Provider</span>
+            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider font-mono">Security</span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-800">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Lemon Squeezy Merchant</span>
+              <span>256-Bit SSL Encryption</span>
             </div>
           </div>
 
@@ -233,7 +233,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
             className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors cursor-pointer"
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            <span>Open Self-Serve Lemon Squeezy Portal</span>
+            <span>Open Self-Serve Billing Portal</span>
           </button>
         </div>
       </div>
@@ -246,12 +246,12 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
             <h3 className="text-base font-extrabold text-zinc-950">Invoices, Receipts &amp; Payment Portal</h3>
           </div>
           <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
-            Official Merchant
+            Secure Checkout
           </span>
         </div>
 
         <p className="text-xs text-zinc-600 font-medium">
-          All subscription invoices, tax receipts, and payment method updates are processed securely via Lemon Squeezy Customer Portal.
+          All subscription invoices, tax receipts, and payment method updates are processed securely via Customer Billing Portal.
         </p>
 
         <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -260,7 +260,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
               <CreditCard className="h-5 w-5" />
             </div>
             <div>
-              <h4 className="text-xs font-extrabold text-zinc-950">Lemon Squeezy Order History</h4>
+              <h4 className="text-xs font-extrabold text-zinc-950">Order History &amp; Invoices</h4>
               <p className="text-[11px] text-zinc-500 font-medium">View all receipts and update payment details in 1-click</p>
             </div>
           </div>

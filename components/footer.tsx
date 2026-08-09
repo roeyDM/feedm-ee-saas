@@ -20,7 +20,7 @@ export function Footer() {
 
           <div className="flex items-center gap-2 rounded-xl bg-zinc-50 border border-zinc-200/80 px-3.5 py-2 text-[11px] font-bold text-zinc-600 shadow-2xs">
             <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-            <span>Official Reseller &amp; Merchant of Record: <strong>Lemon Squeezy, LLC</strong></span>
+            <span>Encrypted Billing &amp; 256-Bit SSL <strong>Secure Checkout</strong></span>
           </div>
         </div>
 

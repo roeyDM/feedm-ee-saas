@@ -61,9 +61,9 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <div>
-            <h2 className="text-xl font-black text-zinc-950 mb-2">5. Subscriptions &amp; Reseller Merchant</h2>
+            <h2 className="text-xl font-black text-zinc-950 mb-2">5. Subscriptions &amp; Payment Processing</h2>
             <p className="leading-relaxed">
-              All payment transactions and financial records are processed securely by our online reseller and Merchant of Record, <strong>Lemon Squeezy, LLC</strong>. 
+              All payment transactions and financial records are processed securely via 256-bit SSL encrypted payment gateways. 
               FeedM.ee never stores credit card or bank details on our servers.
             </p>
           </div>

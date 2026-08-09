@@ -447,7 +447,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px] font-bold">
                     <span className="text-zinc-600">
-                      {isUploading ? "Uploading to Supabase..." : "Upload complete!"}
+                      {isUploading ? "Uploading video..." : "Upload complete!"}
                     </span>
                     <span className={isUploading ? "text-zinc-500" : "text-emerald-600"}>
                       {Math.round(Math.min(uploadProgress, 100))}%
@@ -576,9 +576,9 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
                         <span className="flex items-center gap-1">
                           <Heart className="h-3 w-3 text-rose-500 fill-current" /> {reel.likes} Likes
                         </span>
-                        {reel.videoUrl.includes("supabase") && (
+                        {reel.videoUrl && (
                           <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">
-                            Supabase ↑
+                            Cloud Video
                           </span>
                         )}
                       </div>

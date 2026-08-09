@@ -65,10 +65,10 @@ export default function TermsOfServicePage() {
 
           {/* Section 4 - Merchant of Record */}
           <div>
-            <h2 className="text-xl font-black text-zinc-950 mb-2">4. Subscriptions, Payments &amp; Merchant of Record</h2>
+            <h2 className="text-xl font-black text-zinc-950 mb-2">4. Subscriptions, Payments &amp; Billing Rules</h2>
             <p className="leading-relaxed">
-              Our order process and subscription billing are conducted by our online reseller and Merchant of Record, 
-              <strong className="text-zinc-950 font-bold"> Lemon Squeezy, LLC</strong>. Lemon Squeezy handles payment processing, customer service inquiries, 
+              Our order process and subscription billing are conducted by 
+              <strong className="text-zinc-950 font-bold"> secure, 256-bit SSL encrypted payment gateways</strong>. Our payment partners handle secure card processing, customer service billing inquiries, 
               and global tax compliance (Sales Tax, VAT, GST). Subscriptions automatically renew at the end of each billing cycle 
               (monthly or annually) unless canceled prior to the renewal date via your account billing settings.
             </p>

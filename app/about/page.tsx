@@ -108,9 +108,9 @@ export default function AboutPage() {
                 <ShieldCheck className="h-6 w-6 text-emerald-400" />
               </div>
               <div className="flex flex-col">
-                <h4 className="text-base font-bold text-white">Merchant of Record Processing</h4>
+                <h4 className="text-base font-bold text-white">256-Bit SSL Encrypted Processing</h4>
                 <p className="text-xs text-emerald-200 font-medium mt-0.5">
-                  Subscriptions, invoicing, and tax compliance are securely managed by reseller <strong>Lemon Squeezy, LLC</strong>.
+                  Subscriptions, invoicing, and payment compliance are securely processed with bank-grade encryption.
                 </p>
               </div>
             </div>
