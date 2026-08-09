@@ -537,9 +537,21 @@ function DashboardContent() {
         <DashboardHeader
           username={username}
           planType={planType}
+          subscriptionStatus={subscriptionStatus}
+          trialEndsAt={trialEndsAt}
           onSave={handleSave}
           isSaving={isSaving}
           onUpgradeClick={() => setShowUpgradeModal(true)}
+          onResetToFree={() => {
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("feedmee_subscription_tier");
+              localStorage.removeItem("feedmee_trial_active");
+            }
+            setPlanType("free");
+            setSaveStatus("success");
+            setStatusMsg("Switched back to Free Tier Mode for testing.");
+            setTimeout(() => setSaveStatus("idle"), 3000);
+          }}
         />
       </div>
 
@@ -882,29 +894,7 @@ function DashboardContent() {
         />
       </Suspense>
 
-      {/* 7-Day Trial Active Banner with Dynamic Countdown */}
-      {!isSuperAdmin && subscriptionStatus === "trialing" && trialEndsAt && (
-        <div className="w-full bg-gradient-to-r from-amber-500 via-emerald-600 to-teal-700 text-white px-4 py-2.5 shadow-md flex items-center justify-between text-xs font-bold animate-in fade-in duration-300">
-          <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
-            <div className="flex items-center gap-2 min-w-0">
-              <Sparkles className="h-4 w-4 text-amber-300 animate-pulse shrink-0" />
-              <span className="truncate">
-                ⏳ Your 7-Day <strong className="capitalize">{planType}</strong> Trial ends in{" "}
-                <strong className="underline decoration-amber-300 underline-offset-2 font-black">
-                  {getRemainingTrialDays(trialEndsAt)} {getRemainingTrialDays(trialEndsAt) === 1 ? "day" : "days"}
-                </strong>.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowUpgradeModal(true)}
-              className="bg-zinc-950 text-white hover:bg-zinc-900 px-3 py-1 rounded-lg font-black text-[11px] uppercase tracking-wider transition-all shrink-0 cursor-pointer shadow-xs ml-2"
-            >
-              Upgrade Now
-            </button>
-          </div>
-        </div>
-      )}
+
 
       <main className="flex-1 w-full flex flex-col lg:flex-row items-start overflow-hidden min-h-0">
         
@@ -1254,7 +1244,7 @@ function DashboardContent() {
                       }
                       setPlanType("pro");
                       setSaveStatus("success");
-                      setStatusMsg("🎉 Pro Trial Activated! You now have full access to Video Reels & Lead Forms.");
+                      setStatusMsg("Pro Trial Activated! You now have full access to Video Reels & Lead Forms.");
                       setTimeout(() => setSaveStatus("idle"), 4000);
                     }}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-9 px-4 rounded-xl shadow-md gap-1 cursor-pointer"
@@ -1263,42 +1253,7 @@ function DashboardContent() {
                   </Button>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 p-3.5 text-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md font-black">
-                    <Zap className="h-5 w-5 fill-current" />
-                  </div>
-                  <div>
-                    <h2 className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-                      ⚡ 7-Day Pro Trial Active <span className="text-[10px] normal-case font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">Full Access</span>
-                    </h2>
-                    <p className="text-[11px] font-semibold text-emerald-800 mt-0.5">
-                      All features unlocked (3 Video Reels, Lead Capture &amp; White-Label Branding active).
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (typeof window !== "undefined") {
-                        localStorage.removeItem("feedmee_subscription_tier");
-                        localStorage.removeItem("feedmee_trial_active");
-                      }
-                      setPlanType("free");
-                      setSaveStatus("success");
-                      setStatusMsg("Switched back to Free Tier Mode for testing.");
-                      setTimeout(() => setSaveStatus("idle"), 3000);
-                    }}
-                    className="text-[11px] font-extrabold text-emerald-800 hover:text-emerald-950 underline px-2 py-1 cursor-pointer"
-                  >
-                    Reset to Free Tier (Dev Test)
-                  </button>
-                </div>
-              </div>
-            )
+            ) : null
           )}
 
           {(activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
