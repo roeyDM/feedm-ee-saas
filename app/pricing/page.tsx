@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { PricingPreview } from "@/components/pricing-preview";
+import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "Pricing & Subscription Plans | FeedM.ee SaaS",
@@ -14,6 +15,7 @@ export default function PricingPage() {
       <main>
         <PricingPreview />
       </main>
+      <Footer />
     </div>
   );
 }

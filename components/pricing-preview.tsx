@@ -454,66 +454,101 @@ export function PricingPreview() {
 
           <div className="bg-white/95 rounded-3xl border border-zinc-200/90 shadow-xl overflow-hidden backdrop-blur-md">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[720px]">
+              <table className="w-full text-left border-collapse min-w-[760px] table-fixed">
                 <thead>
                   <tr className="border-b border-zinc-200/80 bg-zinc-50/90">
-                    <th className="p-4 text-xs font-extrabold text-zinc-500 uppercase tracking-wider w-2/5">
+                    <th className="p-4 sm:p-5 text-xs font-extrabold text-zinc-500 uppercase tracking-wider w-2/6">
                       Feature &amp; Parameter
                     </th>
-                    <th className="p-4 text-center text-xs font-bold text-zinc-700 w-1/5">
-                      Starter (Free)
+                    <th className="p-4 text-center text-xs font-bold text-zinc-700 w-1/6 align-top">
+                      <span className="block font-black text-sm text-zinc-900 mb-1">Starter (Free)</span>
+                      <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">$0 / mo</span>
+                      <Button
+                        onClick={() => handleCheckout("free")}
+                        variant="outline"
+                        className="w-full h-8 text-[11px] font-bold rounded-xl border-zinc-300 hover:bg-zinc-100 text-zinc-800 cursor-pointer shadow-2xs"
+                      >
+                        Get Started
+                      </Button>
                     </th>
-                    <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/5">
-                      Personal
+                    <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/6 align-top">
+                      <span className="block font-black text-sm text-zinc-950 mb-1">Personal</span>
+                      <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">
+                        {billingCycle === "yearly" ? "$7/mo" : "$9/mo"}
+                      </span>
+                      <Button
+                        onClick={() => handleCheckout("personal")}
+                        className="w-full h-8 text-[11px] font-extrabold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white cursor-pointer shadow-2xs"
+                      >
+                        Get Personal
+                      </Button>
                     </th>
-                    <th className="p-4 text-center text-xs font-black text-emerald-800 bg-emerald-100/70 border-x border-emerald-200/90 w-1/5">
-                      <div className="flex items-center justify-center gap-1">
+                    <th className="p-4 text-center text-xs font-black text-emerald-950 bg-emerald-100/70 border-x border-emerald-200/90 w-1/6 align-top">
+                      <div className="flex items-center justify-center gap-1 mb-1">
                         <Sparkles className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                        <span>Growth Pro</span>
+                        <span className="font-black text-sm text-emerald-950">Growth Pro</span>
                       </div>
+                      <span className="block text-[11px] font-bold text-emerald-700 mb-2.5">
+                        {billingCycle === "yearly" ? "$12/mo" : "$15/mo"}
+                      </span>
+                      <Button
+                        onClick={() => handleCheckout("pro")}
+                        className="w-full h-8 text-[11px] font-black rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs"
+                      >
+                        Try Pro Free
+                      </Button>
                     </th>
-                    <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/5">
-                      Business
+                    <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/6 align-top">
+                      <span className="block font-black text-sm text-zinc-950 mb-1">Business</span>
+                      <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">
+                        {billingCycle === "yearly" ? "$29/mo" : "$35/mo"}
+                      </span>
+                      <Button
+                        onClick={() => handleCheckout("business")}
+                        className="w-full h-8 text-[11px] font-extrabold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white cursor-pointer shadow-2xs"
+                      >
+                        Contact Sales
+                      </Button>
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-xs">
                   {/* Category 1 */}
                   <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
-                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                    <td colSpan={5} className="py-3 px-5 bg-zinc-100/90 text-zinc-800 font-extrabold text-xs">
                       1. Video Feed &amp; Player
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Video Reels Count</td>
-                    <td className="p-4 text-center text-zinc-500 font-medium">0 Videos (Static Link-in-Bio)</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Video Reels Count</td>
+                    <td className="p-4 text-center text-zinc-500 font-medium">0 Videos (Static Bio)</td>
                     <td className="p-4 text-center font-bold text-zinc-900">3 Videos</td>
                     <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">3 Videos</td>
                     <td className="p-4 text-center font-bold text-zinc-900">3 Videos / Feed</td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">TikTok-Style Vertical Feed</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">TikTok-Style Vertical Feed</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Video Promo &amp; Deal Popup Overlays</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Video Promo &amp; Deal Popup Overlays</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Dynamic Display Delays (0s, 3s, 5s, 10s)</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Dynamic Display Delays (0s, 3s, 5s, 10s)</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Auto-Looping &amp; Audio Mute Controls</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Auto-Looping &amp; Audio Mute Controls</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
@@ -522,40 +557,40 @@ export function PricingPreview() {
 
                   {/* Category 2 */}
                   <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
-                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                    <td colSpan={5} className="py-3 px-5 bg-zinc-100/90 text-zinc-800 font-extrabold text-xs">
                       2. Lead Capture &amp; CRM
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Custom Lead Generation Forms</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Custom Lead Generation Forms</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Direct Email Lead Routing</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Direct Email Lead Routing</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">WhatsApp 1-Click Instant Lead Route</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">WhatsApp 1-Click Instant Lead Route</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Leads CRM Manager &amp; CSV Export</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Leads CRM Manager &amp; CSV Export</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">API &amp; Webhook Access</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">API &amp; Webhook Access</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
@@ -564,33 +599,33 @@ export function PricingPreview() {
 
                   {/* Category 3 */}
                   <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
-                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                    <td colSpan={5} className="py-3 px-5 bg-zinc-100/90 text-zinc-800 font-extrabold text-xs">
                       3. Customization &amp; Branding
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Custom Bio Links &amp; Social Icons</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Custom Bio Links &amp; Social Icons</td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Color Palettes &amp; Typography Themes</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Color Palettes &amp; Typography Themes</td>
                     <td className="p-4 text-center text-zinc-500 font-medium">Basic Themes</td>
                     <td className="p-4 text-center font-bold text-zinc-900">Advanced Themes</td>
                     <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">Advanced Themes</td>
                     <td className="p-4 text-center font-bold text-zinc-900">Full Custom CSS</td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">White-Label (Remove FeedM.ee Badge)</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">White-Label (Remove FeedM.ee Badge)</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Feed Handles per Account</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Feed Handles per Account</td>
                     <td className="p-4 text-center text-zinc-500 font-medium">1 Feed</td>
                     <td className="p-4 text-center font-bold text-zinc-900">1 Feed</td>
                     <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">1 Feed (+ Add-ons)</td>
@@ -599,33 +634,33 @@ export function PricingPreview() {
 
                   {/* Category 4 */}
                   <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
-                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                    <td colSpan={5} className="py-3 px-5 bg-zinc-100/90 text-zinc-800 font-extrabold text-xs">
                       4. Analytics &amp; Marketing Tech
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Traffic Overview &amp; Page Views</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Traffic Overview &amp; Page Views</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center text-zinc-700 font-medium">Basic Counts</td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Outbound Link Click Tracking</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Outbound Link Click Tracking</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center text-zinc-700 font-medium">Basic Counts</td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Video Reel Play Engagement Rates</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Video Reel Play Engagement Rates</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Marketing Pixels (Meta, TikTok, Google)</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Marketing Pixels (Meta, TikTok, Google)</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
@@ -634,33 +669,33 @@ export function PricingPreview() {
 
                   {/* Category 5 */}
                   <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
-                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                    <td colSpan={5} className="py-3 px-5 bg-zinc-100/90 text-zinc-800 font-extrabold text-xs">
                       5. Security &amp; Support
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">256-Bit SSL Encryption</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">256-Bit SSL Encryption</td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Two-Factor Authentication (2FA TOTP)</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Two-Factor Authentication (2FA TOTP)</td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Team Collaborators</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Team Collaborators</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center font-bold text-zinc-900">Multi-User Seats</td>
                   </tr>
                   <tr>
-                    <td className="p-4 font-semibold text-zinc-900">Support Level</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Support Level</td>
                     <td className="p-4 text-center text-zinc-500 font-medium">Community</td>
                     <td className="p-4 text-center font-bold text-zinc-900">Standard Email</td>
                     <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">Priority Support</td>
