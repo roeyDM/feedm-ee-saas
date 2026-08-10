@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Shield, Building2, Mail, Send, X, Sparkles } from "lucide-react";
+import { Check, Shield, Building2, Mail, Send, X, Sparkles, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -382,6 +382,22 @@ export function PricingPreview() {
           </div>
         </div>
 
+        {/* Quick Action Button: Smooth scroll to full feature comparison table */}
+        <div className="mt-8 text-center">
+          <a
+            href="#full-feature-list"
+            onClick={(e) => {
+              e.preventDefault();
+              const el = document.getElementById("full-feature-list");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-white/90 hover:bg-white border border-emerald-300/80 px-5 py-2.5 rounded-full shadow-xs transition-all cursor-pointer group backdrop-blur-md"
+          >
+            <span>View Full Feature Comparison</span>
+            <ArrowDown className="h-3.5 w-3.5 text-emerald-600 group-hover:translate-y-0.5 transition-transform" />
+          </a>
+        </div>
+
         {/* Footer Guarantee */}
         <div className="mt-14 text-center flex flex-wrap items-center justify-center gap-6 text-xs text-zinc-500 font-medium">
           <div className="flex items-center gap-2">
@@ -417,6 +433,242 @@ export function PricingPreview() {
             >
               Contact Sales <Mail className="h-4 w-4" />
             </Button>
+          </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* ACCURATE FULL FEATURE COMPARISON TABLE */}
+        {/* ======================================================== */}
+        <div id="full-feature-list" className="mt-16 space-y-6 pt-4 scroll-mt-12">
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-200">
+              Detailed Breakdown
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 tracking-tight">
+              Compare All Features Across Plans
+            </h2>
+            <p className="text-xs sm:text-sm font-medium text-zinc-600">
+              Comprehensive parameter comparison for Free, Personal, Pro, and Business tiers.
+            </p>
+          </div>
+
+          <div className="bg-white/95 rounded-3xl border border-zinc-200/90 shadow-xl overflow-hidden backdrop-blur-md">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[720px]">
+                <thead>
+                  <tr className="border-b border-zinc-200/80 bg-zinc-50/90">
+                    <th className="p-4 text-xs font-extrabold text-zinc-500 uppercase tracking-wider w-2/5">
+                      Feature &amp; Parameter
+                    </th>
+                    <th className="p-4 text-center text-xs font-bold text-zinc-700 w-1/5">
+                      Starter (Free)
+                    </th>
+                    <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/5">
+                      Personal
+                    </th>
+                    <th className="p-4 text-center text-xs font-black text-emerald-800 bg-emerald-100/70 border-x border-emerald-200/90 w-1/5">
+                      <div className="flex items-center justify-center gap-1">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        <span>Growth Pro</span>
+                      </div>
+                    </th>
+                    <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/5">
+                      Business
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 text-xs">
+                  {/* Category 1 */}
+                  <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
+                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                      1. Video Feed &amp; Player
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Video Reels Count</td>
+                    <td className="p-4 text-center text-zinc-500 font-medium">0 Videos (Static Link-in-Bio)</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">3 Videos</td>
+                    <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">3 Videos</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">3 Videos / Feed</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">TikTok-Style Vertical Feed</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Video Promo &amp; Deal Popup Overlays</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Dynamic Display Delays (0s, 3s, 5s, 10s)</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Auto-Looping &amp; Audio Mute Controls</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+
+                  {/* Category 2 */}
+                  <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
+                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                      2. Lead Capture &amp; CRM
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Custom Lead Generation Forms</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Direct Email Lead Routing</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">WhatsApp 1-Click Instant Lead Route</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Leads CRM Manager &amp; CSV Export</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">API &amp; Webhook Access</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+
+                  {/* Category 3 */}
+                  <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
+                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                      3. Customization &amp; Branding
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Custom Bio Links &amp; Social Icons</td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Color Palettes &amp; Typography Themes</td>
+                    <td className="p-4 text-center text-zinc-500 font-medium">Basic Themes</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Advanced Themes</td>
+                    <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">Advanced Themes</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Full Custom CSS</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">White-Label (Remove FeedM.ee Badge)</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Feed Handles per Account</td>
+                    <td className="p-4 text-center text-zinc-500 font-medium">1 Feed</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">1 Feed</td>
+                    <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">1 Feed (+ Add-ons)</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">5 Feeds Included</td>
+                  </tr>
+
+                  {/* Category 4 */}
+                  <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
+                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                      4. Analytics &amp; Marketing Tech
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Traffic Overview &amp; Page Views</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center text-zinc-700 font-medium">Basic Counts</td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Outbound Link Click Tracking</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center text-zinc-700 font-medium">Basic Counts</td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Video Reel Play Engagement Rates</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Marketing Pixels (Meta, TikTok, Google)</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+
+                  {/* Category 5 */}
+                  <tr className="bg-zinc-100/70 font-black text-zinc-900 uppercase text-[10px] tracking-wider">
+                    <td colSpan={5} className="py-2.5 px-4 bg-zinc-100/90 text-zinc-800">
+                      5. Security &amp; Support
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">256-Bit SSL Encryption</td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Two-Factor Authentication (2FA TOTP)</td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Team Collaborators</td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Multi-User Seats</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 font-semibold text-zinc-900">Support Level</td>
+                    <td className="p-4 text-center text-zinc-500 font-medium">Community</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Standard Email</td>
+                    <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">Priority Support</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Dedicated Manager</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
