@@ -79,7 +79,7 @@ export function Navbar() {
 
           <button
             onClick={handleCtaClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-5 py-2.5 text-sm font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-full px-5 py-2.5 text-sm font-semibold shadow-md shadow-emerald-950/20 hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <span>Get Started</span>
             <ArrowRight className="h-4 w-4" />
@@ -101,21 +101,21 @@ export function Navbar() {
             <Link
               href="/pricing"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Features
             </Link>
             <Link
               href="/demo"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Examples
             </Link>
             <Link
               href="/pricing"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Pricing
             </Link>
@@ -123,7 +123,7 @@ export function Navbar() {
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Log in
             </Link>
@@ -132,7 +132,7 @@ export function Navbar() {
                 setMobileOpen(false);
                 handleCtaClick(e);
               }}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full bg-emerald-900 hover:bg-emerald-800 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-emerald-950/20 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Get Started</span>
               <ArrowRight className="h-4 w-4" />
