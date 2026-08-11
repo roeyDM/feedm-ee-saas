@@ -103,6 +103,15 @@ function RegisterForm() {
         if (profErr) {
           console.warn("[Registration Profile Note]:", profErr.message);
         }
+
+        // Dispatch Free Welcome Email via Resend API
+        if (isFreePlan && email) {
+          fetch("/api/auth/free-welcome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, name: cleanHandle }),
+          }).catch((err) => console.warn("[Free Welcome Dispatch Warning]:", err));
+        }
       }
 
       router.push(`/dashboard?welcome=true&plan=${plan}`);

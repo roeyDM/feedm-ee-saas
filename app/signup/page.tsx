@@ -125,6 +125,15 @@ function SignupFormContent() {
       } catch (err) {
         console.warn("Failed to create profile record on signup:", err);
       }
+
+      // Dispatch Free Welcome Email via Resend API
+      if (isFreePlan && email) {
+        fetch("/api/auth/free-welcome", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name: formattedName }),
+        }).catch((err) => console.warn("[Free Welcome Dispatch Warning]:", err));
+      }
     }
 
     // If user auto-confirmed (no email verification required), redirect immediately
