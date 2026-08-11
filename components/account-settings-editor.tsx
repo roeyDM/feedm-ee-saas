@@ -29,7 +29,8 @@ import {
   CheckSquare,
   BadgeCheck,
   Scale,
-  ExternalLink
+  ExternalLink,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,8 +95,8 @@ export function AccountSettingsEditor({
 
   // Account-level Profile State (Strictly decoupled from public Feed Builder)
   const [accountAvatarUrl, setAccountAvatarUrl] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop");
-  const [companyName, setCompanyName] = useState("Rivers Media Studio LLC");
-  const [email, setEmail] = useState("alex@riversmedia.com");
+  const [companyName, setCompanyName] = useState("");
+  const [email, setEmail] = useState("");
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -106,6 +107,91 @@ export function AccountSettingsEditor({
   const [securityNotice, setSecurityNotice] = useState<string | null>(null);
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
+  const [totpSecret, setTotpSecret] = useState("JBSWY3DPEHPK3PXP");
+  const [totpCode, setTotpCode] = useState("");
+  const [totpError, setTotpError] = useState<string | null>(null);
+
+  // Load Auth User Data & 2FA Status on mount
+  React.useEffect(() => {
+    async function loadAuthUserData() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          if (user.email) setEmail(user.email);
+          if (user.user_metadata?.full_name && setName) setName(user.user_metadata.full_name);
+          if (user.user_metadata?.company_name) setCompanyName(user.user_metadata.company_name);
+
+          const is2FA = user.user_metadata?.two_factor_enabled || user.user_metadata?.is_2fa_enabled || false;
+          setIs2FAEnabled(is2FA);
+
+          const { data: factors } = await supabase.auth.mfa.listFactors();
+          if (factors?.totp?.some((f: any) => f.status === "verified")) {
+            setIs2FAEnabled(true);
+          }
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("two_factor_enabled")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (profile?.two_factor_enabled) {
+            setIs2FAEnabled(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Error loading 2FA auth status:", err);
+      }
+    }
+    loadAuthUserData();
+  }, []);
+
+  const handleActivate2FA = async () => {
+    if (!totpCode || totpCode.trim().length < 6) {
+      setTotpError("Please enter a valid 6-digit code.");
+      return;
+    }
+    setTotpError(null);
+
+    try {
+      await supabase.auth.updateUser({
+        data: { two_factor_enabled: true, is_2fa_enabled: true }
+      });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase.from("profiles").update({ two_factor_enabled: true }).eq("id", user.id);
+      }
+
+      setIs2FAEnabled(true);
+      setShow2FAModal(false);
+      setTotpCode("");
+      setSecurityNotice("Two-Factor Authentication is now active on your account!");
+      setTimeout(() => setSecurityNotice(null), 3000);
+    } catch (err: any) {
+      console.error("2FA Activation Error:", err);
+      setTotpError("Verification failed. Please try again.");
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    try {
+      await supabase.auth.updateUser({
+        data: { two_factor_enabled: false, is_2fa_enabled: false }
+      });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase.from("profiles").update({ two_factor_enabled: false }).eq("id", user.id);
+      }
+
+      setIs2FAEnabled(false);
+      setSecurityNotice("Two-Factor Authentication has been disabled.");
+      setTimeout(() => setSecurityNotice(null), 3000);
+    } catch (err) {
+      console.warn("Disable 2FA error:", err);
+    }
+  };
 
   // Preferences State
   const [language, setLanguage] = useState<"en">("en");
@@ -480,10 +566,18 @@ export function AccountSettingsEditor({
                     <Button
                       variant={is2FAEnabled ? "outline" : "default"}
                       size="sm"
-                      onClick={() => setShow2FAModal(true)}
+                      onClick={() => {
+                        if (is2FAEnabled) {
+                          if (confirm("Are you sure you want to disable Two-Factor Authentication?")) {
+                            handleDisable2FA();
+                          }
+                        } else {
+                          setShow2FAModal(true);
+                        }
+                      }}
                       className={cn("rounded-xl text-xs font-bold px-4 py-2 cursor-pointer", !is2FAEnabled && "bg-violet-600 hover:bg-violet-700 text-white")}
                     >
-                      {is2FAEnabled ? "Manage Two-Factor Authentication" : "Enable Two-Factor Authentication"}
+                      {is2FAEnabled ? "Disable Two-Factor Authentication" : "Enable Two-Factor Authentication"}
                     </Button>
                   </div>
                 </CardContent>
@@ -1012,7 +1106,10 @@ export function AccountSettingsEditor({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-zinc-200 space-y-5 animate-in zoom-in-95 duration-200 relative">
             <button
-              onClick={() => setShow2FAModal(false)}
+              onClick={() => {
+                setShow2FAModal(false);
+                setTotpError(null);
+              }}
               className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700 p-1 rounded-full hover:bg-zinc-100 transition"
             >
               <X className="h-4 w-4" />
@@ -1028,38 +1125,68 @@ export function AccountSettingsEditor({
               </div>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3">
-              <div className="h-40 w-40 bg-white rounded-xl border border-zinc-300 p-2 shadow-inner flex items-center justify-center">
-                <img
-                  src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/FeedMee:alexrivers?secret=JBSWY3DPEHPK3PXP"
-                  alt="2FA QR Code"
-                  className="h-full w-full object-contain"
-                />
-              </div>
-              <span className="text-[11px] font-mono font-bold text-zinc-600 bg-white px-3 py-1 rounded-md border border-zinc-200">
-                Secret: JBSW-Y3DP-EHPK-3PXP
-              </span>
-            </div>
+            {(() => {
+              const accountLabel = email || username || "user@feedm.ee";
+              const otpauthUri = `otpauth://totp/FeedM.ee:${encodeURIComponent(accountLabel)}?secret=${totpSecret}&issuer=FeedM.ee`;
+              const qrCodeImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpauthUri)}`;
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-zinc-700">Enter 6-Digit Code from App</Label>
-              <Input placeholder="123456" maxLength={6} className="text-center font-mono font-bold tracking-widest text-base rounded-xl" />
-            </div>
+              return (
+                <>
+                  <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-zinc-50 border border-zinc-200/80 space-y-3">
+                    <div className="h-40 w-40 bg-white rounded-xl border border-zinc-300 p-2 shadow-inner flex items-center justify-center">
+                      <img
+                        src={qrCodeImgUrl}
+                        alt="2FA QR Code"
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    <div className="text-center space-y-1">
+                      <span className="text-[11px] font-mono font-bold text-zinc-600 bg-white px-3 py-1 rounded-md border border-zinc-200 inline-block">
+                        Secret: {totpSecret}
+                      </span>
+                      <p className="text-[10px] text-zinc-500 font-semibold">Account: FeedM.ee ({accountLabel})</p>
+                    </div>
+                  </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShow2FAModal(false)} className="rounded-xl text-xs font-bold">
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  setIs2FAEnabled(true);
-                  setShow2FAModal(false);
-                }}
-                className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold"
-              >
-                Verify &amp; Activate 2FA
-              </Button>
-            </div>
+                  {totpError && (
+                    <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{totpError}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-zinc-700">Enter 6-Digit Code from App</Label>
+                    <Input
+                      placeholder="123456"
+                      maxLength={6}
+                      value={totpCode}
+                      onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                      className="text-center font-mono font-bold tracking-widest text-base rounded-xl"
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShow2FAModal(false);
+                        setTotpError(null);
+                      }}
+                      className="rounded-xl text-xs font-bold"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleActivate2FA}
+                      className="bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold"
+                    >
+                      Verify &amp; Activate 2FA
+                    </Button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

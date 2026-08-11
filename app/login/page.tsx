@@ -33,20 +33,37 @@ export default function LoginPage() {
       return;
     }
 
-    // Check if account has 2FA TOTP enabled (via Supabase MFA or user metadata)
+    // Check if account has 2FA TOTP enabled (via DB profile, user metadata, or Supabase MFA)
     try {
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const verifiedFactor = factors?.totp?.find((f: any) => f.status === "verified");
+      const user = authData?.user;
+      let is2FAActive = false;
 
-      if (verifiedFactor) {
-        setFactorId(verifiedFactor.id);
-        setRequires2FA(true);
-        setLoading(false);
-        return;
+      if (user?.user_metadata?.two_factor_enabled || user?.user_metadata?.is_2fa_enabled) {
+        is2FAActive = true;
       }
 
-      const user = authData?.user;
-      if (user?.user_metadata?.two_factor_enabled || user?.user_metadata?.is_2fa_enabled) {
+      if (!is2FAActive && user?.id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("two_factor_enabled")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile?.two_factor_enabled) {
+          is2FAActive = true;
+        }
+      }
+
+      if (!is2FAActive) {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const verifiedFactor = factors?.totp?.find((f: any) => f.status === "verified");
+        if (verifiedFactor) {
+          setFactorId(verifiedFactor.id);
+          is2FAActive = true;
+        }
+      }
+
+      if (is2FAActive) {
         setRequires2FA(true);
         setLoading(false);
         return;
