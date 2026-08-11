@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { supabase, sanitizeHandleInput } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
 import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 
@@ -11,8 +11,9 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const rawPlan = (searchParams.get("plan") || "pro").toLowerCase();
-  const plan = rawPlan === "personal" ? "personal" : rawPlan === "free" ? "free" : "pro";
+  const rawPlan = (searchParams.get("plan") || "free").toLowerCase();
+  const plan = rawPlan === "personal" ? "personal" : rawPlan === "free" || rawPlan === "starter" ? "free" : "pro";
+  const isFreePlan = plan === "free";
   const billing = searchParams.get("billing") || "monthly";
 
   const [name, setName] = useState("");
@@ -23,14 +24,14 @@ function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
 
   const badgeText =
-    plan === "free"
+    isFreePlan
       ? "⚡ Create Your Free Page in Minutes • No Credit Card Required"
       : plan === "personal"
       ? "⚡ 7-Day Personal Trial Included • No Credit Card Required"
       : "⚡ 7-Day Pro Trial Included • No Credit Card Required";
 
   const planTitle =
-    plan === "free"
+    isFreePlan
       ? "Starter Free Plan"
       : plan === "personal"
       ? "Personal Creator Plan"
@@ -41,7 +42,7 @@ function RegisterForm() {
     setLoading(true);
     setError(null);
 
-    const cleanHandle = handle.toLowerCase().replace(/[^a-z0-9_-]/g, "").trim();
+    const cleanHandle = sanitizeHandleInput(handle);
 
     if (!cleanHandle) {
       setError("Please enter a valid handle name for your feed.");
@@ -84,7 +85,6 @@ function RegisterForm() {
       const user = authData.user;
       if (user) {
         // 3. Provision profile record in Supabase
-        const isFree = plan === "free";
         const now = new Date();
         const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -93,8 +93,8 @@ function RegisterForm() {
           username: cleanHandle,
           name: name || cleanHandle,
           plan_type: plan,
-          subscription_status: isFree ? "active" : "trialing",
-          trial_ends_at: isFree ? null : trialEnd,
+          subscription_status: isFreePlan ? "active" : "trialing",
+          trial_ends_at: isFreePlan ? null : trialEnd,
           avatar_url: `https://api.dicebear.com/7.x/shapes/svg?seed=${cleanHandle}`,
           updated_at: now.toISOString(),
         };
@@ -122,7 +122,7 @@ function RegisterForm() {
       <div className="relative w-full max-w-md z-10">
         {/* Dynamic Plan Badge */}
         <div className="mb-6 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-emerald-300 shadow-sm px-4 py-1.5 text-xs font-bold text-emerald-950 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-emerald-300 shadow-xs px-4 py-1.5 text-xs font-bold text-emerald-950 backdrop-blur-md">
             <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse" />
             <span>{badgeText}</span>
           </div>
@@ -130,14 +130,14 @@ function RegisterForm() {
 
         {/* Header Branding */}
         <div className="mb-8 flex flex-col items-center text-center">
-          <Link href="/" className="mb-3 flex items-center justify-center p-2 rounded-2xl bg-white shadow-sm border border-zinc-200/80 hover:scale-105 transition-transform">
+          <Link href="/" className="mb-3 flex items-center justify-center p-2 rounded-2xl bg-white shadow-xs border border-zinc-200/80 hover:scale-105 transition-transform">
             <LogoIconOnly />
           </Link>
           <h1 className="text-2xl font-black text-zinc-950 tracking-tight sm:text-3xl">
             Claim Your FeedM<span className="text-emerald-600">.ee</span> Page
           </h1>
           <p className="text-xs font-semibold text-zinc-600 mt-1">
-            Setting up your account for <span className="font-extrabold text-emerald-700">{planTitle}</span> ({billing})
+            Setting up your account for <span className="font-extrabold text-emerald-700">{planTitle}</span> ({isFreePlan ? "Forever Free" : billing})
           </p>
         </div>
 
@@ -176,7 +176,7 @@ function RegisterForm() {
                   type="text"
                   required
                   value={handle}
-                  onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
+                  onChange={(e) => setHandle(sanitizeHandleInput(e.target.value))}
                   placeholder="username"
                   className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-24 pr-4 text-sm font-bold text-emerald-950 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
                 />
@@ -227,6 +227,11 @@ function RegisterForm() {
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Creating Your Feed...</span>
                 </>
+              ) : isFreePlan ? (
+                <>
+                  <span>Create Free Account</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
               ) : (
                 <>
                   <span>Create Account &amp; Start Trial</span>
@@ -238,18 +243,48 @@ function RegisterForm() {
 
           {/* Included Features Summary */}
           <div className="mt-6 border-t border-zinc-100 pt-5 space-y-2 text-xs text-zinc-600 font-medium">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Instant Setup — Live in under 60 seconds</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Full access to 3 Video Reels &amp; custom themes</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Cancel or switch plans anytime in 1-click</span>
-            </div>
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2.5">
+              {isFreePlan ? "Included in Starter Free Plan:" : "Included in Pro Trial:"}
+            </p>
+            {isFreePlan ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Instant Setup — Live in under 60 seconds</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Unlimited Bio Links</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Custom Subdomain (feedm.ee/you)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Unlimited Bandwidth</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Cancel or switch plans anytime in 1-click</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Instant Setup — Live in under 60 seconds</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Full access to 3 Video Reels &amp; custom themes</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Cancel or switch plans anytime in 1-click</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -271,8 +306,8 @@ function RegisterForm() {
             className="font-bold text-emerald-700 hover:text-emerald-800 underline underline-offset-2"
           >
             Terms of Service
-          </Link>{" "}
-          and billing terms.
+          </Link>
+          {isFreePlan ? " and Privacy Policy." : " and billing terms."}
         </p>
       </div>
     </div>
