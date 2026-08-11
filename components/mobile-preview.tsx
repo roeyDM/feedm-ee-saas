@@ -499,7 +499,9 @@ export function MobilePreview({
             targetEmail,
             feedHandle: username || profileName || "main",
             username: username || "main",
-            isTest: false,
+            is_test: true,
+            isTest: true,
+            source: "simulator",
           }),
         });
 

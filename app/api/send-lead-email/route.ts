@@ -18,6 +18,20 @@ export async function POST(request: Request) {
     }
     const formattedFeedHandle = cleanHandle ? `@${cleanHandle}` : "@main";
 
+    const isTestMode =
+      body.is_test === true ||
+      body.isTest === true ||
+      body.source === "simulator";
+
+    if (isTestMode) {
+      console.log("🧪 [Simulator Test Lead]: Bypassing DB quotas, CRM lead lists, and Resend emails.");
+      return NextResponse.json({
+        success: true,
+        isTestMode: true,
+        message: "Simulator submission succeeded without affecting quotas or sending emails.",
+      });
+    }
+
     if (!targetEmail || typeof targetEmail !== "string" || !targetEmail.includes("@")) {
       return NextResponse.json(
         { success: false, error: "Invalid target recipient email address" },

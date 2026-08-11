@@ -1459,7 +1459,9 @@ function DashboardContent() {
                       email: leadData.email,
                       phone: leadData.phone,
                       feedHandle: username || name || "main",
+                      is_test: true,
                       isTest: true,
+                      source: "simulator",
                     }),
                   });
 
