@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { renderLeadWarningEmail } from "@/lib/email/templates/lead-warning-email";
+import { renderLeadLimitReachedEmail } from "@/lib/email/templates/lead-limit-reached-email";
 
 export async function POST(request: Request) {
   try {
@@ -23,10 +25,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Resolve Feed Owner's user_id from feeds OR profiles table
     const dbAdmin = getSupabaseAdmin();
     let feedOwnerUserId: string | null = null;
+    let ownerProfile: any = null;
 
+    // 1. Resolve Feed Owner's user_id from feeds OR profiles table
     try {
       const feedIdParam = body.feedId || body.feed_id || cleanHandle;
       if (feedIdParam) {
@@ -44,19 +47,62 @@ export async function POST(request: Request) {
       if (!feedOwnerUserId && cleanHandle) {
         const { data: profile } = await dbAdmin
           .from("profiles")
-          .select("id, username")
+          .select("id, username, email, full_name, plan_type, warning_email_sent_month, limit_email_sent_month")
           .or(`username.eq.${cleanHandle.toLowerCase()},id.eq.${cleanHandle}`)
           .maybeSingle();
 
         if (profile?.id) {
           feedOwnerUserId = profile.id;
+          ownerProfile = profile;
         }
+      }
+
+      if (feedOwnerUserId && !ownerProfile) {
+        const { data: prof } = await dbAdmin
+          .from("profiles")
+          .select("id, username, email, full_name, plan_type, warning_email_sent_month, limit_email_sent_month")
+          .eq("id", feedOwnerUserId)
+          .maybeSingle();
+        ownerProfile = prof;
       }
     } catch (resolveErr) {
       console.warn("[Lead Resolver Note]: Could not resolve user_id for handle/feed:", cleanHandle, resolveErr);
     }
 
-    // 2. Perform DB Insertion via Supabase Admin / Service Role
+    // 2. Calculate Monthly Lead Count & Enforce Plan Thresholds
+    const ownerPlan = (ownerProfile?.plan_type || "free").toLowerCase();
+    let limit = 5;
+    let warningThreshold = 4;
+    let isUnlimited = false;
+
+    if (ownerPlan === "personal") {
+      limit = 20;
+      warningThreshold = 18;
+    } else if (ownerPlan === "pro" || ownerPlan === "business") {
+      limit = 999999;
+      warningThreshold = 999999;
+      isUnlimited = true;
+    }
+
+    const now = new Date();
+    const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    const currentMonthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+
+    let currentMonthlyLeadCount = 0;
+    if (feedOwnerUserId) {
+      const { count } = await dbAdmin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", feedOwnerUserId)
+        .gte("created_at", startOfMonth);
+      currentMonthlyLeadCount = count || 0;
+    }
+
+    const newTotalLeadCount = currentMonthlyLeadCount + 1;
+    const isLocked = !isUnlimited && newTotalLeadCount > limit;
+    const assignedStatus = isLocked ? "locked" : "active";
+
+    // 3. Perform DB Insertion with assigned status
     try {
       const leadPayload: any = {
         user_id: feedOwnerUserId || null,
@@ -65,173 +111,192 @@ export async function POST(request: Request) {
         full_name: fullName,
         email: email,
         phone: phone,
-        status: "new",
+        status: assignedStatus,
       };
 
-      console.log("📝 SUBMITTING SANITIZED LEAD PAYLOAD TO SUPABASE:", leadPayload);
+      console.log("📝 SUBMITTING LEAD PAYLOAD TO SUPABASE:", leadPayload);
 
-      const { data: insertedLead, error: insertError } = await dbAdmin
-        .from("leads")
-        .insert([leadPayload])
-        .select();
+      const { error: insertError } = await dbAdmin.from("leads").insert([leadPayload]);
 
       if (insertError) {
         console.error("❌ SUPABASE LEAD INSERT ERROR:", JSON.stringify(insertError, null, 2));
-
-        // Fallback insert with essential columns if schema is minimal
-        const { data: fallbackLead, error: fallbackErr } = await dbAdmin
-          .from("leads")
-          .insert([
-            {
-              full_name: fullName,
-              email: email,
-              phone: phone,
-              status: "new",
-            },
-          ])
-          .select();
-
-        if (fallbackErr) {
-          console.error("❌ SUPABASE FALLBACK LEAD INSERT ERROR:", JSON.stringify(fallbackErr, null, 2));
-        } else {
-          console.log("✅ SUPABASE FALLBACK LEAD INSERT SUCCESS:", fallbackLead);
-        }
-      } else {
-        console.log("✅ SUPABASE LEAD INSERT SUCCESS:", insertedLead);
+        // Fallback insert if schema has fewer columns
+        await dbAdmin.from("leads").insert([
+          {
+            full_name: fullName,
+            email: email,
+            phone: phone,
+            status: assignedStatus,
+          },
+        ]);
       }
     } catch (dbErr) {
       console.error("❌ SUPABASE LEAD INSERT EXCEPTION:", dbErr);
     }
 
-    // 3. Dispatch Email via Resend API
+    // 4. Dispatch Resend Email Helper
     const apiKey =
       process.env.RESEND_API_KEY ||
       process.env.NEXT_PUBLIC_RESEND_API_KEY ||
       process.env.LEAD_EMAIL_API_KEY;
 
-    console.log("[Resend Key Status]:", !!apiKey, apiKey ? `Key length: ${apiKey.length}` : "No key found");
-
-    if (!apiKey) {
-      console.error("[Email Error]: RESEND_API_KEY environment variable is not configured on server.");
-      return NextResponse.json({
-        success: true,
-        warning: "⚠️ Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify settings.",
-        message: "Lead saved to DB, but email delivery failed. Please check RESEND_API_KEY in Netlify settings.",
-      });
-    }
-
     const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.URL || "https://feedm.ee";
-    const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-    const subject = `🎉 New Lead Captured on FeedM.ee! (${fullName || "Visitor"})`;
     const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee <updates@feedm.ee>";
+    const ownerEmailAddress = ownerProfile?.email || targetEmail;
 
-    const htmlContent = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff; color: #111827;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #059669; margin: 0; font-size: 22px; font-weight: 800;">🎉 New Lead Captured on FeedM.ee!</h2>
-          <p style="font-size: 13px; color: #6b7280; margin-top: 4px;">You just received a new contact submission from your video feed.</p>
-        </div>
+    const sendResendMail = async (toEmail: string, emailSubject: string, htmlBody: string) => {
+      if (!apiKey) return;
+      try {
+        let res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey.trim()}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: senderEmail,
+            to: [toEmail.trim()],
+            subject: emailSubject,
+            html: htmlBody,
+          }),
+        });
 
-        <div style="background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 12px; padding: 16px; margin: 20px 0;">
-          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 35%; font-weight: 600;">Full Name:</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${fullName || "N/A"}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Email Address:</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #059669; font-weight: 700;">${email ? `<a href="mailto:${email}" style="color: #059669; text-decoration: none;">${email}</a>` : "N/A"}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Phone Number:</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${phone ? `<a href="tel:${phone}" style="color: #111827; text-decoration: none;">${phone}</a>` : "N/A"}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Feed Handle:</td>
-              <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${formattedFeedHandle}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; color: #6b7280;">Submission Time:</td>
-              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${timestampStr}</td>
-            </tr>
-          </table>
-        </div>
+        let data = await res.json();
 
-        <div style="text-align: center; margin: 24px 0 12px 0;">
-          <a href="${BASE_URL}/dashboard" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 12px 28px; border-radius: 10px; font-weight: 800; font-size: 13px; text-decoration: none;">
-            View Leads in Dashboard &rarr;
-          </a>
-        </div>
+        // Fallback to onboarding@resend.dev if unverified domain error
+        if (!res.ok && (res.status === 403 || data.message?.includes("domain") || data.message?.includes("Verify"))) {
+          res = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey.trim()}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "FeedM.ee Alerts <onboarding@resend.dev>",
+              to: [toEmail.trim()],
+              subject: emailSubject,
+              html: htmlBody,
+            }),
+          });
+        }
+      } catch (e) {
+        console.warn("[Resend Dispatch Note]:", e);
+      }
+    };
 
-        <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0 16px 0;" />
-        <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">
-          Sent via <a href="${BASE_URL}" style="color: #059669; text-decoration: none; font-weight: bold;">FeedM.ee</a> Video Link-in-Bio Platform
-        </p>
-      </div>
-    `;
+    // 5. Threshold & Capacity Email Triggers (Idempotent per Month)
+    if (!isUnlimited && feedOwnerUserId) {
+      // 80% Capacity Warning Email
+      if (
+        newTotalLeadCount >= warningThreshold &&
+        newTotalLeadCount <= limit &&
+        ownerProfile?.warning_email_sent_month !== currentMonthKey
+      ) {
+        const warningTemplate = renderLeadWarningEmail({
+          count: newTotalLeadCount,
+          limit,
+          ownerName: ownerProfile?.full_name || "Creator",
+          feedHandle: formattedFeedHandle,
+          appUrl: BASE_URL,
+        });
 
-    let resendRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey.trim()}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: senderEmail,
-        to: [targetEmail.trim()],
-        subject: subject,
-        html: htmlContent,
-      }),
-    });
+        await sendResendMail(ownerEmailAddress, warningTemplate.subject, warningTemplate.html);
 
-    let resendData = await resendRes.json();
+        await dbAdmin
+          .from("profiles")
+          .update({ warning_email_sent_month: currentMonthKey })
+          .eq("id", feedOwnerUserId);
 
-    // Automatic Fallback: If custom sender domain returns 403 or unverified domain error, retry with onboarding@resend.dev
-    if (!resendRes.ok && (resendRes.status === 403 || resendData.message?.includes("domain") || resendData.message?.includes("Verify"))) {
-      console.warn("[Resend Warning]: Primary sender domain failed. Retrying with onboarding@resend.dev...", resendData.message);
-      const fallbackRes = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey.trim()}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "FeedM.ee Leads <onboarding@resend.dev>",
-          to: [targetEmail.trim()],
-          subject: subject,
-          html: htmlContent,
-        }),
-      });
+        console.log(`[Resend Capacity Alert]: 80% warning email sent to ${ownerEmailAddress}`);
+      }
 
-      const fallbackData = await fallbackRes.json();
-      if (fallbackRes.ok) {
-        resendRes = fallbackRes;
-        resendData = fallbackData;
-        console.log("[Email Fallback Success]: Dispatched via onboarding@resend.dev", fallbackData);
+      // 100% Capacity Limit Reached Email
+      if (
+        newTotalLeadCount >= limit &&
+        ownerProfile?.limit_email_sent_month !== currentMonthKey
+      ) {
+        const limitTemplate = renderLeadLimitReachedEmail({
+          count: newTotalLeadCount,
+          limit,
+          ownerName: ownerProfile?.full_name || "Creator",
+          feedHandle: formattedFeedHandle,
+          appUrl: BASE_URL,
+        });
+
+        await sendResendMail(ownerEmailAddress, limitTemplate.subject, limitTemplate.html);
+
+        await dbAdmin
+          .from("profiles")
+          .update({ limit_email_sent_month: currentMonthKey })
+          .eq("id", feedOwnerUserId);
+
+        console.log(`[Resend Capacity Alert]: 100% limit email sent to ${ownerEmailAddress}`);
       }
     }
 
-    if (!resendRes.ok) {
-      console.error("[Email Error]: Resend API Error response:", resendData);
-      return NextResponse.json(
-        {
-          success: false,
-          error: resendData.message || resendData.name || "Failed to deliver email via Resend API",
-        },
-        { status: resendRes.status || 500 }
-      );
+    // 6. Standard Lead Notification Email (Sent only if lead is active)
+    if (!isLocked && apiKey) {
+      const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+      const standardSubject = `🎉 New Lead Captured on FeedM.ee! (${fullName || "Visitor"})`;
+
+      const standardHtml = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff; color: #111827;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #059669; margin: 0; font-size: 22px; font-weight: 800;">🎉 New Lead Captured on FeedM.ee!</h2>
+            <p style="font-size: 13px; color: #6b7280; margin-top: 4px;">You just received a new contact submission from your video feed.</p>
+          </div>
+
+          <div style="background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 12px; padding: 16px; margin: 20px 0;">
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 35%; font-weight: 600;">Full Name:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${fullName || "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Email Address:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #059669; font-weight: 700;">${email ? `<a href="mailto:${email}" style="color: #059669; text-decoration: none;">${email}</a>` : "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Phone Number:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${phone ? `<a href="tel:${phone}" style="color: #111827; text-decoration: none;">${phone}</a>` : "N/A"}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Feed Handle:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${formattedFeedHandle}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #6b7280;">Submission Time:</td>
+                <td style="padding: 8px 0; color: #111827; font-weight: 600;">${timestampStr}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="text-align: center; margin: 24px 0 12px 0;">
+            <a href="${BASE_URL}/dashboard" target="_blank" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 12px 28px; border-radius: 10px; font-weight: 800; font-size: 13px; text-decoration: none;">
+              View Leads in Dashboard &rarr;
+            </a>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0 16px 0;" />
+          <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">
+            Sent via <a href="${BASE_URL}" style="color: #059669; text-decoration: none; font-weight: bold;">FeedM.ee</a> Video Link-in-Bio Platform
+          </p>
+        </div>
+      `;
+
+      await sendResendMail(targetEmail, standardSubject, standardHtml);
     }
 
-    console.log("[Email Success]: Lead email dispatched successfully to", targetEmail, resendData);
+    // 7. Always Return Standard HTTP 200 Success Response to Public Visitor
     return NextResponse.json({
       success: true,
-      message: `Lead captured & email sent to ${targetEmail}!`,
-      id: resendData.id,
+      message: "Thank you! Your submission has been received.",
+      status: assignedStatus,
     });
   } catch (err: any) {
-    console.error("[Email Error]: Internal Exception during lead email dispatch:", err);
+    console.error("[Email Error]: Exception during lead submission:", err);
     return NextResponse.json(
-      { success: false, error: err.message || "Internal server error during email dispatch" },
+      { success: false, error: err.message || "Internal server error during lead submission" },
       { status: 500 }
     );
   }

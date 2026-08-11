@@ -82,14 +82,46 @@ export async function POST(req: Request) {
 
       if (userId) {
         const { error } = await supabase.from("profiles").update(updateData).eq("id", userId);
-        if (error) console.warn("[Lemon Squeezy Webhook DB Error]:", error.message);
-        else console.log(`[Lemon Squeezy Webhook Success]: Updated user ${userId} to plan "${tier}"`);
+        if (error) {
+          console.warn("[Lemon Squeezy Webhook DB Error]:", error.message);
+        } else {
+          console.log(`[Lemon Squeezy Webhook Success]: Updated user ${userId} to plan "${tier}"`);
+          // Auto-unlock all pending locked leads upon upgrade to Pro/Business
+          if (tier === "pro" || tier === "business") {
+            const { error: unlockErr } = await supabase
+              .from("leads")
+              .update({ status: "active", updated_at: new Date().toISOString() })
+              .eq("user_id", userId)
+              .eq("status", "locked");
+
+            if (unlockErr) {
+              console.warn("[Lemon Squeezy Lead Auto-Unlock Error]:", unlockErr.message);
+            } else {
+              console.log(`[Lemon Squeezy Webhook Success]: Auto-unlocked locked leads for user ${userId}`);
+            }
+          }
+        }
       } else {
         // Fallback: match profile by customer email if user_id is missing in custom_data
         const userEmail = attributes.user_email;
         if (userEmail) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("email", userEmail)
+            .maybeSingle();
+
           const { error } = await supabase.from("profiles").update(updateData).eq("email", userEmail);
-          if (error) console.warn("[Lemon Squeezy Webhook Email DB Note]:", error.message);
+          if (error) {
+            console.warn("[Lemon Squeezy Webhook Email DB Note]:", error.message);
+          } else if (profile?.id && (tier === "pro" || tier === "business")) {
+            await supabase
+              .from("leads")
+              .update({ status: "active", updated_at: new Date().toISOString() })
+              .eq("user_id", profile.id)
+              .eq("status", "locked");
+            console.log(`[Lemon Squeezy Webhook Success]: Auto-unlocked locked leads for profile email ${userEmail}`);
+          }
         }
       }
     } else if (eventName === "subscription_cancelled" || eventName === "subscription_expired") {
