@@ -91,20 +91,23 @@ export default function Home() {
 
         {/* Claim Handle Bar */}
         <form onSubmit={handleClaim} className="mx-auto mt-10 max-w-lg space-y-3">
-          <div className="relative flex items-center rounded-2xl border border-zinc-200 bg-white/90 p-2 shadow-xl shadow-emerald-950/5 backdrop-blur-md transition focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-emerald-500/20">
-            <span className="pl-4 text-sm font-extrabold text-zinc-400 select-none">
-              feedm.ee/
-            </span>
-            <input
-              type="text"
-              placeholder="yourhandle"
-              value={handle}
-              onChange={(e) => setHandle(sanitizeHandleInput(e.target.value))}
-              className="flex-1 bg-transparent py-2 px-1 text-sm font-bold text-zinc-900 placeholder-zinc-400 focus:outline-none"
-            />
+          <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center rounded-2xl border border-zinc-200 bg-white/90 p-2 shadow-xl shadow-emerald-950/5 backdrop-blur-md transition focus-within:border-emerald-500/80 focus-within:ring-2 focus-within:ring-emerald-500/20 gap-2 sm:gap-0">
+            <div className="flex items-center flex-1 px-2 sm:px-0 py-1 sm:py-0">
+              <span className="pl-2 sm:pl-4 text-sm font-extrabold text-zinc-400 select-none">
+                feedm.ee/
+              </span>
+              <input
+                type="text"
+                placeholder="yourhandle"
+                value={handle}
+                onChange={(e) => setHandle(sanitizeHandleInput(e.target.value))}
+                className="w-full bg-transparent py-2 px-1 text-sm font-bold text-zinc-900 placeholder-zinc-400 focus:outline-none"
+              />
+            </div>
             <Button
               type="submit"
-              className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold rounded-xl px-5 h-11 text-xs shrink-0 shadow-sm gap-1.5 cursor-pointer"
+              style={{ backgroundColor: "#00BC7D" }}
+              className="w-full sm:w-auto hover:opacity-90 text-white font-bold rounded-xl px-5 h-11 text-xs shrink-0 shadow-sm gap-1.5 cursor-pointer"
             >
               <span>Claim My Feed</span>
               <ArrowRight className="h-3.5 w-3.5" />

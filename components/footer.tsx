@@ -32,13 +32,13 @@ export function Footer() {
             <h4 className="text-xs font-black text-zinc-950 uppercase tracking-widest">Product</h4>
             <ul className="flex flex-col gap-2 text-xs font-semibold text-zinc-600">
               <li>
-                <Link href="#features" className="hover:text-emerald-600 transition-colors">
-                  Bio &amp; Video
+                <Link href="/features" className="hover:text-emerald-600 transition-colors">
+                  Features
                 </Link>
               </li>
               <li>
-                <Link href="#crm" className="hover:text-emerald-600 transition-colors">
-                  Lead CRM
+                <Link href="/examples" className="hover:text-emerald-600 transition-colors">
+                  Examples
                 </Link>
               </li>
               <li>

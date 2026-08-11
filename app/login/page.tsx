@@ -131,12 +131,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4">
+    <div className="min-h-screen overflow-x-hidden relative w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4 py-8">
       {/* Background orbs */}
       <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[40%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-10%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[120px]" />
 
-      <div className="relative w-full max-w-sm">
+      <div className="relative w-full max-w-sm max-w-full">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center text-center">
           <Link href="/" className="mb-3 flex items-center justify-center p-2 rounded-2xl bg-white shadow-sm border border-zinc-200/80 hover:scale-105 transition-transform">
