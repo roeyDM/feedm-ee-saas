@@ -184,12 +184,17 @@ export default function ExamplesPage() {
           </div>
         </section>
 
-        {/* ─── 4. TESTIMONIAL QUOTE SECTION ──────────────────────────────── */}
+        {/* ─── 4. FEATURED CREATOR CASE STUDY SECTION ─────────────────────── */}
         <section className="relative mx-auto max-w-4xl px-6 py-12">
           <div className="rounded-3xl border border-zinc-200/90 bg-white/90 p-8 sm:p-10 shadow-xl shadow-zinc-900/5 backdrop-blur-md relative overflow-hidden text-center">
-            <Quote className="h-10 w-10 text-emerald-400/40 mx-auto mb-4" />
+            <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-100/80 border border-emerald-300 px-3.5 py-1 text-[11px] font-black text-emerald-950">
+              <Sparkles className="h-3.5 w-3.5 text-[#00BC7D] animate-pulse" />
+              <span>Interactive Profile Preview • Creator Case Study</span>
+            </div>
+
+            <Quote className="h-8 w-8 text-emerald-400/50 mx-auto mb-3" />
             <blockquote className="text-base sm:text-xl font-bold text-zinc-900 leading-relaxed max-w-2xl mx-auto">
-              "FeedM increased my link conversion by 40% using video snap reels. My audience loves swiping through video previews before booking a strategy consultation."
+              "By featuring vertical video snap reels directly above my bio links, my audience engages 40% more before booking a strategy consultation."
             </blockquote>
             <div className="mt-6 flex items-center justify-center gap-3">
               <img
@@ -199,7 +204,7 @@ export default function ExamplesPage() {
               />
               <div className="text-left">
                 <div className="text-xs font-black text-zinc-950">Alex Rivers</div>
-                <div className="text-[11px] font-semibold text-zinc-500">Founder at Rivers Media Studio (@alexrivers)</div>
+                <div className="text-[11px] font-semibold text-zinc-500">Featured Creator Case Study (@alexrivers)</div>
               </div>
             </div>
           </div>

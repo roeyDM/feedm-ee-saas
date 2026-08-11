@@ -27,23 +27,36 @@ export const metadata: Metadata = {
 const ALEX_RIVERS_DEMO_REELS = [
   {
     id: "reel-alex-1",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-vertical-video-of-a-woman-talking-on-a-cell-phone-41484-large.mp4",
+    videoUrl: "/demo-video-1.mp4",
     caption: "Stop losing 80% of your link-in-bio traffic! Here's how video snap reels double your conversion rate. 🚀",
     likes: 342,
     productTag: "Masterclass 2026",
+    promoEnabled: true,
     promoTitle: "Get 40% Off Creator Course",
     promoCta: "Claim Offer ⚡",
-    promoUrl: "https://feedm.ee/pricing",
+    promoUrl: "/pricing",
   },
   {
     id: "reel-alex-2",
-    videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-young-woman-vlogging-with-her-cell-phone-in-a-park-41487-large.mp4",
+    videoUrl: "/demo-video-2.mp4",
     caption: "Turn casual Instagram & TikTok visitors into qualified WhatsApp leads in under 60 seconds! 📲",
     likes: 512,
     productTag: "WhatsApp Lead Tool",
+    promoEnabled: true,
     promoTitle: "Book 1-on-1 Strategy Call",
     promoCta: "Book Call 📅",
-    promoUrl: "https://feedm.ee/pricing",
+    promoUrl: "/pricing",
+  },
+  {
+    id: "reel-alex-3",
+    videoUrl: "/demo-video-3.mp4",
+    caption: "Build your video bio link in under 60 seconds! Connect, upload your top Reels, and add direct conversion links. ⚡",
+    likes: 429,
+    productTag: "Quick Setup",
+    promoEnabled: true,
+    promoTitle: "Launch Your Feed",
+    promoCta: "Get Started 🚀",
+    promoUrl: "/pricing",
   },
 ];
 
@@ -51,21 +64,21 @@ const ALEX_RIVERS_LINKS = [
   {
     id: "link-1",
     title: "Join Creator Masterclass 2026 🚀",
-    url: "https://feedm.ee/pricing",
+    url: "/pricing",
     badgeText: "POPULAR",
     isActive: true,
   },
   {
     id: "link-2",
     title: "Download Free 2026 Video Bio Playbook 📘",
-    url: "https://feedm.ee/pricing",
+    url: "/pricing",
     badgeText: "FREE PDF",
     isActive: true,
   },
   {
     id: "link-3",
     title: "Book 1-on-1 Content Strategy Consultation 💼",
-    url: "https://feedm.ee/pricing",
+    url: "/pricing",
     isActive: true,
   },
 ];
@@ -98,11 +111,16 @@ export default function FeaturesPage() {
         {/* ─── 2. INTERACTIVE DEMO SIMULATOR SECTION ─────────────────────── */}
         <section className="relative mx-auto max-w-6xl px-6 pt-12 pb-16">
           <div className="text-center mb-8">
+            <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-100/80 border border-emerald-300 px-3.5 py-1 text-[11px] font-black text-emerald-950">
+              <Sparkles className="h-3.5 w-3.5 text-[#00BC7D] animate-pulse" />
+              <span>Interactive Profile Preview • Creator Case Study</span>
+            </div>
+
             <h2 className="text-2xl font-black text-zinc-950 sm:text-3xl">
-              Experience the "Alex Rivers" Demo Feed
+              Alex Rivers (@alexrivers) — Featured Creator Profile
             </h2>
-            <p className="text-xs font-semibold text-zinc-500 mt-1">
-              Click or scroll inside the phone below to test bio links, video reels, and lead forms live.
+            <p className="text-xs font-semibold text-zinc-500 mt-1 max-w-lg mx-auto">
+              Test Alex's live 5-page feed below: tap links, swipe through video reels, and test the lead capture form in real time.
             </p>
           </div>
 
