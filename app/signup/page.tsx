@@ -22,6 +22,10 @@ function SignupFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const handleParam = searchParams.get("handle") || "";
+  const planParam = (searchParams.get("plan") || "free").toLowerCase();
+
+  // Determine if signup context is Starter Free Plan
+  const isFreePlan = planParam === "free" || planParam === "starter" || !searchParams.has("plan");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -115,7 +119,7 @@ function SignupFormContent() {
           name: formattedName,
           bio: "",
           avatar_url: "",
-          plan_type: "free",
+          plan_type: isFreePlan ? "free" : planParam,
           updated_at: new Date().toISOString(),
         }, { onConflict: "id" });
       } catch (err) {
@@ -155,7 +159,7 @@ function SignupFormContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4 py-8">
       {/* Background orbs */}
       <div className="pointer-events-none absolute top-[-10%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-10%] left-[-5%] w-[40%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[120px]" />
@@ -170,16 +174,20 @@ function SignupFormContent() {
             Join FeedM<span className="text-emerald-600">.ee</span>
           </h1>
           <p className="text-xs font-semibold text-zinc-500 mt-1">
-            Claim your creator handle and launch your page in minutes
+            {isFreePlan ? "Create your free account & launch your bio page in minutes" : "Claim your creator handle and launch your page in minutes"}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-8 shadow-xl shadow-zinc-900/5 backdrop-blur-md">
-          {/* Pro Trial Included Callout Badge */}
+          {/* Plan Context Callout Badge */}
           <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-300/80 px-3.5 py-2.5 text-xs font-black text-emerald-950 shadow-2xs">
             <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse shrink-0" />
-            <span>⚡ 7-Day Pro Trial Included • No Credit Card Required</span>
+            <span>
+              {isFreePlan
+                ? "⚡ Starter Free Plan • Forever Free"
+                : "⚡ 7-Day Pro Trial Included • No Credit Card Required"}
+            </span>
           </div>
 
           {error && (
@@ -280,19 +288,73 @@ function SignupFormContent() {
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Submit CTA Button */}
             <button
               type="submit"
               disabled={loading || (handleStatus ? !handleStatus.available : false)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
+              ) : isFreePlan ? (
                 <>Create Free Account <ArrowRight className="h-4 w-4" /></>
+              ) : (
+                <>Create Account &amp; Start Trial <ArrowRight className="h-4 w-4" /></>
               )}
             </button>
           </form>
+
+          {/* Feature Bullet Points (Lower Section) */}
+          <div className="mt-6 pt-5 border-t border-zinc-100 space-y-2">
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-2.5">
+              {isFreePlan ? "Included in Starter Free Plan:" : "Included in Pro Trial:"}
+            </p>
+            <div className="grid grid-cols-1 gap-2 text-xs font-semibold text-zinc-700">
+              {isFreePlan ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Instant Setup</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Unlimited Bio Links</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Custom Subdomain (feedm.ee/you)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Unlimited Bandwidth</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Cancel or switch plans anytime</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Instant Setup</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Full access to video reels</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Lead capture forms &amp; CRM</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <span>Cancel or switch plans anytime</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
 
           <p className="mt-4 text-center text-[11px] font-medium text-zinc-400">
             By signing up you agree to our Terms &amp; Privacy Policy.
