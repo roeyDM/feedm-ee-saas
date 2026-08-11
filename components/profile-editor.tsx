@@ -851,11 +851,32 @@ export function ProfileEditor({
               <Send className="h-4.5 w-4.5 text-emerald-600" /> Lead Form Settings
               <SectionHelp text="Configure contact form text content, field requirements, and submission routing." />
             </CardTitle>
-            {planType === "free" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
-                <Lock className="h-3 w-3" /> Pro Feature
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setLeadForm({
+                      ...leadForm,
+                      is_enabled: checked,
+                      is_leadform_enabled: checked,
+                    });
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                <span className="ml-2 text-xs font-bold text-zinc-700">
+                  {leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false ? "Enabled" : "Disabled"}
+                </span>
+              </label>
+              {planType === "free" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
+                  <Lock className="h-3 w-3" /> Pro Feature
+                </span>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">

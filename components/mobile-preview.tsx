@@ -15,7 +15,12 @@ import {
   CheckCircle2,
   Sparkles,
   X,
-  Play
+  Play,
+  MoreVertical,
+  Lock,
+  Cookie,
+  ShieldAlert,
+  Scale
 } from "lucide-react";
 
 import { CookieModal } from "./cookie-modal";
@@ -137,6 +142,8 @@ export interface LeadFormSettings {
   showCallButton?: boolean;
   is_phone_required?: boolean;
   is_email_required?: boolean;
+  is_enabled?: boolean;
+  is_leadform_enabled?: boolean;
 }
 
 export interface AppearanceSettings {
@@ -357,6 +364,10 @@ export function MobilePreview({
   const [showCopyToast, setShowCopyToast] = useState(false);
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [showLegalMenu, setShowLegalMenu] = useState(false);
+
+  // Leadform enabled state derivation
+  const isLeadFormEnabled = leadForm?.is_leadform_enabled !== false && leadForm?.is_enabled !== false;
 
   // Live user reels derivation: Accept all valid reel objects with videoUrl or url
   const validUserReels = (reels || []).filter(
@@ -739,6 +750,70 @@ export function MobilePreview({
             <Share2 className="h-4 w-4" />
           </button>
 
+          {/* 3-Dots Contextual Legal & Report Menu (Triggered ONLY when lead form is disabled) */}
+          {!isLeadFormEnabled && (
+            <div className="absolute top-2 left-2 z-30">
+              <button
+                onClick={() => setShowLegalMenu((prev) => !prev)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-md border border-white/40 shadow-sm transition-transform hover:scale-110 hover:bg-white/30 text-zinc-800 cursor-pointer"
+                aria-label="More Options"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+
+              {/* Contextual Dropdown Menu / Modal Sheet */}
+              {showLegalMenu && (
+                <div className="absolute top-11 left-0 z-50 w-52 rounded-2xl bg-white/95 backdrop-blur-md border border-zinc-200/80 p-1.5 shadow-xl shadow-black/10 animate-in fade-in zoom-in-95 duration-150 text-left">
+                  <button
+                    onClick={() => {
+                      setShowLegalMenu(false);
+                      setIsReportModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 transition cursor-pointer text-left"
+                  >
+                    <ShieldAlert className="h-4 w-4 text-rose-500 shrink-0" />
+                    <span>Report Profile</span>
+                  </button>
+
+                  <div className="my-1 border-t border-zinc-100" />
+
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setShowLegalMenu(false)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer"
+                  >
+                    <Lock className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                    <span>Privacy Policy</span>
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      setShowLegalMenu(false);
+                      setIsCookieModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer text-left"
+                  >
+                    <Cookie className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                    <span>Manage Cookies</span>
+                  </button>
+
+                  <a
+                    href="/terms-of-service"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setShowLegalMenu(false)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer"
+                  >
+                    <Scale className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                    <span>Terms of Service</span>
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Avatar with dynamic colored border & width */}
           <div className="relative mb-3 mt-4">
             <div 
@@ -863,12 +938,19 @@ export function MobilePreview({
               (activeAppearance.cardTextColor || "").toLowerCase() === "#f8fafc" ||
               (activeAppearance.headlineColor || "").toLowerCase() === "#ffffff";
 
+            const hasReels = displayReels.length > 0;
+            const hasNextPage = hasReels || isLeadFormEnabled;
+
+            if (!hasNextPage) {
+              return null; // Scenarios A & C: HIDE / REMOVE indicator completely when no Reels exist and Lead Form is disabled!
+            }
+
             return (
               <div 
                 style={{ color: isDarkBg ? "#FFFFFF" : (activeAppearance.cardTextColor || "#09090B") }}
                 className="flex items-center gap-1 text-[11px] font-extrabold tracking-wider uppercase animate-bounce pt-1 drop-shadow-md"
               >
-                <span>Scroll for Reels</span>
+                <span>{hasReels ? "Scroll for Reels" : "Scroll Down"}</span>
                 <ChevronDown className="h-4 w-4" />
               </div>
             );
@@ -1091,9 +1173,9 @@ export function MobilePreview({
       })}
 
       {/* ------------------------------------------------------------- */}
-      {/* PAGE 5: THE CONTACT / COLLABORATION FORM */}
+      {/* PAGE 5: THE CONTACT / COLLABORATION FORM (Rendered ONLY IF isLeadFormEnabled) */}
       {/* ------------------------------------------------------------- */}
-      {(() => {
+      {isLeadFormEnabled && (() => {
         const isDarkBg = 
           isDarkColor(activeAppearance.bgColor) ||
           isDarkColor(activeAppearance.bgGradientStart) ||
