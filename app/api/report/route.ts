@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     }
 
     const reason = body.reason || "Unspecified Violation";
+    const relationship = body.relationship || body.reporter_relationship || "User/visitor reporting content";
     const reporterEmail = body.reporterEmail || body.email || body.reporter_email || "Anonymous Visitor";
     const details = body.details || body.additionalDetails || "No additional context provided.";
 
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
         username: username,
         profile_url: profileUrl || `https://feedm.ee/${username}`,
         reason: reason,
+        relationship: relationship,
         reporter_email: reporterEmail,
         details: details,
         status: "pending",
@@ -57,19 +59,19 @@ export async function POST(request: Request) {
       console.warn("⚠️ [Report DB Warning]: Exception recording report to Supabase table:", dbErr);
     }
 
-    // 2. Dispatch Notification Email via Resend API
+    // 2. Dispatch Notification Email via Resend API to report@feedm.ee
     const apiKey =
       process.env.RESEND_API_KEY ||
       process.env.NEXT_PUBLIC_RESEND_API_KEY ||
       process.env.LEAD_EMAIL_API_KEY;
 
     const adminTargetEmail =
+      process.env.REPORT_EMAIL ||
       process.env.SYSTEM_ADMIN_EMAIL ||
       process.env.SUPPORT_EMAIL ||
-      process.env.ADMIN_EMAIL ||
-      "support@feedm.ee";
+      "report@feedm.ee";
 
-    const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee Safety <updates@feedm.ee>";
+    const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee Moderation <updates@feedm.ee>";
     const subject = `[FeedM.ee Report] New Profile Report Submitted for @${username}`;
     const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
@@ -77,7 +79,7 @@ export async function POST(request: Request) {
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 20px; background-color: #ffffff; color: #111827;">
         <div style="background-color: #0f172a; padding: 20px 24px; text-align: center; border-radius: 12px 12px 0 0;">
           <span style="font-size: 18px; font-weight: 900; color: #ffffff;">
-            FeedM<span style="color: #10b981;">.ee</span> Admin Safety Alert
+            FeedM<span style="color: #10b981;">.ee</span> Moderation Alert
           </span>
         </div>
 
@@ -94,7 +96,7 @@ export async function POST(request: Request) {
 
           <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 8px;">
             <tr>
-              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600; width: 35%;">Reported Profile:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600; width: 40%;">Reported Profile:</td>
               <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">
                 <a href="${profileUrl || `https://feedm.ee/${username}`}" target="_blank" style="color: #10b981; text-decoration: none;">
                   ${profileUrl || `https://feedm.ee/${username}`}
@@ -102,12 +104,18 @@ export async function POST(request: Request) {
               </td>
             </tr>
             <tr>
-              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Violation Reason:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Report Category:</td>
               <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #dc2626; font-weight: 800;">${reason}</td>
             </tr>
             <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Reporter Relationship:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${relationship}</td>
+            </tr>
+            <tr>
               <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Reporter Email:</td>
-              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #111827; font-weight: 700;">${reporterEmail}</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #10b981; font-weight: 700;">
+                <a href="mailto:${reporterEmail}" style="color: #10b981; text-decoration: none;">${reporterEmail}</a>
+              </td>
             </tr>
             <tr>
               <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-weight: 600;">Report Time:</td>
@@ -117,7 +125,7 @@ export async function POST(request: Request) {
 
           <div style="margin-top: 20px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px;">
             <span style="font-size: 11px; font-weight: 800; color: #4b5563; text-transform: uppercase; display: block; margin-bottom: 6px;">
-              Additional Details &amp; Context:
+              Detailed Description:
             </span>
             <p style="margin: 0; font-size: 13px; color: #111827; line-height: 1.5; white-space: pre-wrap;">
               ${details}
@@ -127,7 +135,7 @@ export async function POST(request: Request) {
 
         <div style="background-color: #f9fafb; border-top: 1px solid #f3f4f6; padding: 16px 24px; text-align: center; border-radius: 0 0 12px 12px;">
           <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-            FeedM.ee Automated Safety &amp; Moderation Dispatch
+            Sent automatically to report@feedm.ee via FeedM.ee Moderation Service
           </p>
         </div>
       </div>
