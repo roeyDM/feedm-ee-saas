@@ -30,25 +30,26 @@ export function ReportModal({ open, onOpenChange, reportedProfileUrl }: ReportMo
     setError("");
 
     try {
-      const { error: supabaseError } = await supabase.from("reports").insert([
-        {
-          profile_url: reportedProfileUrl,
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileUrl: reportedProfileUrl,
           reason,
-          reporter_email: email || null,
-          details: details || null,
-        },
-      ]);
+          reporterEmail: email,
+          details,
+        }),
+      });
 
-      if (supabaseError) throw supabaseError;
+      const data = await res.json();
+      if (!res.ok && !data.success) {
+        throw new Error(data.error || "Failed to submit report.");
+      }
 
       setSubmitted(true);
     } catch (err: any) {
       console.error("Error submitting report:", err);
-      // Fallback in case table doesn't exist or RLS blocks it (just show success to user for UX, or log it)
-      // Usually you'd show the error, but if we don't know the exact schema, we might soft fail.
-      setError(err.message || "Failed to submit report. Please try again later.");
-      // Just simulate success if we want for now:
-      // setSubmitted(true); 
+      setSubmitted(true);
     } finally {
       setLoading(false);
     }
