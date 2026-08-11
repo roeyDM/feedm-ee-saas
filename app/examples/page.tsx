@@ -10,14 +10,14 @@ import {
   Sparkles,
   ArrowRight,
   ExternalLink,
-  CheckCircle2,
   Quote,
-  Star,
   Film,
-  ShoppingBag,
-  Briefcase,
-  Users,
+  MessageCircle,
+  Tag,
+  Calendar,
   Smartphone,
+  Layers,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function ExamplesPage() {
@@ -37,6 +37,21 @@ export default function ExamplesPage() {
     const demoEl = document.getElementById("demo-viewport-section");
     if (demoEl) {
       demoEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const renderBadgeIcon = (id: string) => {
+    switch (id) {
+      case "alex-rivers":
+        return <Film className="h-3.5 w-3.5 text-[#00BC7D]" />;
+      case "fitgym-studio":
+        return <MessageCircle className="h-3.5 w-3.5 text-[#00BC7D]" />;
+      case "aura-apparel":
+        return <Tag className="h-3.5 w-3.5 text-[#00BC7D]" />;
+      case "urban-bakery":
+        return <Calendar className="h-3.5 w-3.5 text-[#00BC7D]" />;
+      default:
+        return <Layers className="h-3.5 w-3.5 text-[#00BC7D]" />;
     }
   };
 
@@ -60,7 +75,7 @@ export default function ExamplesPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base font-medium text-zinc-600 sm:text-lg leading-relaxed">
-            Discover how creators, e-commerce stores, and service businesses use FeedM's 5-page video snap reels to double link engagement and capture qualified leads.
+            Discover how creators, e-commerce stores, and service businesses use FeedM's 5-page video snap reels to showcase products and capture qualified leads.
           </p>
         </section>
 
@@ -179,11 +194,11 @@ export default function ExamplesPage() {
                   </div>
                 </div>
 
-                {/* Footer Stats & Demo CTA */}
+                {/* Footer Clean Badge & Demo CTA */}
                 <div className="mt-4 pt-4 border-t border-zinc-100 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-emerald-700">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span>{item.stats}</span>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200/60">
+                    {renderBadgeIcon(item.id)}
+                    <span>{item.badgeLabel}</span>
                   </div>
 
                   <button
@@ -209,7 +224,7 @@ export default function ExamplesPage() {
 
             <Quote className="h-8 w-8 text-emerald-400/50 mx-auto mb-3" />
             <blockquote className="text-base sm:text-xl font-bold text-zinc-900 leading-relaxed max-w-2xl mx-auto">
-              "By featuring vertical video snap reels directly above my bio links, my audience engages 40% more before booking a strategy consultation."
+              "By featuring vertical video snap reels directly above my bio links, my audience engages significantly more before booking a strategy consultation."
             </blockquote>
             <div className="mt-6 flex items-center justify-center gap-3">
               <img
