@@ -30,13 +30,13 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-5xl transition-all duration-300">
+    <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-5xl transition-all duration-300">
       {/* Floating Glassmorphism Pill Container */}
       <div
-        className={`relative h-14 w-full rounded-full border px-4 sm:px-6 flex items-center justify-between backdrop-blur-md backdrop-saturate-150 transition-all duration-300 ${
+        className={`relative h-14 w-full rounded-full border px-4 sm:px-6 flex items-center justify-between backdrop-blur-md transition-all duration-300 ${
           scrolled
-            ? "bg-white/90 border-zinc-200/90 shadow-xl shadow-black/8"
-            : "bg-white/80 border-zinc-200/70 shadow-lg shadow-black/5"
+            ? "bg-white/90 border-gray-200/80 shadow-xl shadow-black/8"
+            : "bg-white/80 border-gray-200/60 shadow-lg shadow-black/5"
         }`}
       >
         {/* Left Side: Brand Logo */}
@@ -49,20 +49,26 @@ export function Navbar() {
         {/* Center Navigation Links (Desktop) */}
         <nav className="hidden md:flex items-center gap-6 lg:gap-8">
           <Link
-            href="/pricing"
-            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors"
+            href="/features"
+            className={`text-[15px] font-semibold transition-colors ${
+              pathname === "/features" ? "text-black font-bold" : "text-gray-700 hover:text-black"
+            }`}
           >
             Features
           </Link>
           <Link
-            href="/demo"
-            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors"
+            href="/examples"
+            className={`text-[15px] font-semibold transition-colors ${
+              pathname === "/examples" ? "text-black font-bold" : "text-gray-700 hover:text-black"
+            }`}
           >
             Examples
           </Link>
           <Link
             href="/pricing"
-            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors"
+            className={`text-[15px] font-semibold transition-colors ${
+              pathname === "/pricing" ? "text-black font-bold" : "text-gray-700 hover:text-black"
+            }`}
           >
             Pricing
           </Link>
@@ -72,14 +78,15 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors px-3 py-1.5"
+            className="text-[15px] font-semibold text-gray-700 hover:text-black transition-colors px-3 py-1.5"
           >
             Log in
           </Link>
 
           <button
             onClick={handleCtaClick}
-            className="bg-emerald-900 hover:bg-emerald-800 text-white rounded-full px-5 py-2.5 text-sm font-semibold shadow-md shadow-emerald-950/20 hover:shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+            style={{ backgroundColor: "#00BC7D" }}
+            className="text-white font-semibold rounded-full px-5 py-2.5 text-sm shadow-md shadow-[#00BC7D]/25 hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <span>Get Started</span>
             <ArrowRight className="h-4 w-4" />
@@ -88,7 +95,7 @@ export function Navbar() {
 
         {/* Mobile Hamburger Button */}
         <button
-          className="md:hidden flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100/80 text-zinc-800 hover:bg-zinc-200 transition-colors cursor-pointer"
+          className="md:hidden flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors cursor-pointer"
           onClick={() => setMobileOpen((prev) => !prev)}
           aria-label="Toggle Menu"
         >
@@ -97,33 +104,33 @@ export function Navbar() {
 
         {/* Mobile Glassmorphism Dropdown Menu */}
         {mobileOpen && (
-          <div className="absolute top-16 left-0 right-0 z-50 rounded-3xl bg-white/95 backdrop-blur-xl border border-zinc-200/90 p-5 shadow-2xl shadow-black/10 animate-in fade-in slide-in-from-top-3 duration-200 text-left flex flex-col gap-3">
+          <div className="absolute top-16 left-0 right-0 z-50 rounded-3xl bg-white/95 backdrop-blur-xl border border-gray-200/80 p-5 shadow-2xl shadow-black/10 animate-in fade-in slide-in-from-top-3 duration-200 text-left flex flex-col gap-3">
             <Link
-              href="/pricing"
+              href="/features"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-gray-800 hover:text-[#00BC7D] transition px-3 py-2 rounded-xl hover:bg-gray-50"
             >
               Features
             </Link>
             <Link
-              href="/demo"
+              href="/examples"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-gray-800 hover:text-[#00BC7D] transition px-3 py-2 rounded-xl hover:bg-gray-50"
             >
               Examples
             </Link>
             <Link
               href="/pricing"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-gray-800 hover:text-[#00BC7D] transition px-3 py-2 rounded-xl hover:bg-gray-50"
             >
               Pricing
             </Link>
-            <div className="my-1 border-t border-zinc-100" />
+            <div className="my-1 border-t border-gray-100" />
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-semibold text-zinc-800 hover:text-emerald-800 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-gray-800 hover:text-[#00BC7D] transition px-3 py-2 rounded-xl hover:bg-gray-50"
             >
               Log in
             </Link>
@@ -132,7 +139,8 @@ export function Navbar() {
                 setMobileOpen(false);
                 handleCtaClick(e);
               }}
-              className="w-full bg-emerald-900 hover:bg-emerald-800 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-emerald-950/20 transition flex items-center justify-center gap-1.5 cursor-pointer"
+              style={{ backgroundColor: "#00BC7D" }}
+              className="w-full text-white font-semibold rounded-full py-3 text-sm shadow-md shadow-[#00BC7D]/25 hover:opacity-90 transition flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Get Started</span>
               <ArrowRight className="h-4 w-4" />
