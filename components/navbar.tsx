@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Menu, X, Sparkles } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { Logo } from "./logo";
 
 export function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -16,6 +19,15 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleCtaClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (pathname === "/pricing") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      router.push("/pricing");
+    }
+  };
 
   return (
     <header className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-5xl transition-all duration-300">
@@ -38,19 +50,19 @@ export function Navbar() {
         <nav className="hidden md:flex items-center gap-6 lg:gap-8">
           <Link
             href="/pricing"
-            className="text-xs font-extrabold text-zinc-700 hover:text-zinc-950 transition-colors"
+            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors"
           >
             Features
           </Link>
           <Link
             href="/demo"
-            className="text-xs font-extrabold text-zinc-700 hover:text-zinc-950 transition-colors"
+            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors"
           >
             Examples
           </Link>
           <Link
             href="/pricing"
-            className="text-xs font-extrabold text-zinc-700 hover:text-zinc-950 transition-colors"
+            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors"
           >
             Pricing
           </Link>
@@ -60,16 +72,18 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/login"
-            className="text-xs font-bold text-zinc-700 hover:text-zinc-950 transition-colors px-3 py-1.5"
+            className="text-[15px] font-semibold text-zinc-700 hover:text-zinc-950 transition-colors px-3 py-1.5"
           >
             Log in
           </Link>
-          <Link href="/signup">
-            <button className="rounded-full bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-black px-4 py-2 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer hover:shadow-md">
-              <span>Get Started Free</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </Link>
+
+          <button
+            onClick={handleCtaClick}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-5 py-2.5 text-sm font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Get Started</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -87,21 +101,21 @@ export function Navbar() {
             <Link
               href="/pricing"
               onClick={() => setMobileOpen(false)}
-              className="text-xs font-bold text-zinc-800 hover:text-emerald-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Features
             </Link>
             <Link
               href="/demo"
               onClick={() => setMobileOpen(false)}
-              className="text-xs font-bold text-zinc-800 hover:text-emerald-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Examples
             </Link>
             <Link
               href="/pricing"
               onClick={() => setMobileOpen(false)}
-              className="text-xs font-bold text-zinc-800 hover:text-emerald-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Pricing
             </Link>
@@ -109,16 +123,20 @@ export function Navbar() {
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="text-xs font-bold text-zinc-800 hover:text-emerald-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
+              className="text-[15px] font-semibold text-zinc-800 hover:text-blue-600 transition px-3 py-2 rounded-xl hover:bg-zinc-50"
             >
               Log in
             </Link>
-            <Link href="/signup" onClick={() => setMobileOpen(false)}>
-              <button className="w-full rounded-full bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-black py-3 shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
-                <span>Get Started Free</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </Link>
+            <button
+              onClick={(e) => {
+                setMobileOpen(false);
+                handleCtaClick(e);
+              }}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3 text-sm font-semibold shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>Get Started</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         )}
       </div>
