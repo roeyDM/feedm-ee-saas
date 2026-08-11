@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Check, Shield, Building2, Mail, Send, X, Sparkles, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { FaqAccordion, PRICING_FAQS } from "@/components/faq-accordion";
 
 export function PricingPreview() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
@@ -706,6 +707,14 @@ export function PricingPreview() {
             </div>
           </div>
         </div>
+
+        {/* Pricing Page Product & Billing FAQ Section */}
+        <FaqAccordion
+          badge="Billing &amp; Product FAQ"
+          title="Pricing &amp; Subscription FAQs"
+          subtitle="Clear, transparent answers to common questions about plans, trials, billing, and cancellations."
+          items={PRICING_FAQS}
+        />
       </div>
 
       {/* Enterprise Contact Modal */}

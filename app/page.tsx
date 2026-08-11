@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { FaqAccordion, HOMEPAGE_FAQS } from "@/components/faq-accordion";
 
 import { validateHandle, checkUsernameAvailability, sanitizeHandleInput } from "@/lib/supabase";
 
@@ -228,6 +229,14 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Homepage FAQ Section */}
+      <FaqAccordion
+        badge="Frequently Asked Questions"
+        title="Got Questions? We Have Answers."
+        subtitle="Learn how FeedM.ee transforms your link-in-bio into an interactive vertical video experience."
+        items={HOMEPAGE_FAQS}
+      />
 
       {/* Landing Page Footer */}
       <Footer />
