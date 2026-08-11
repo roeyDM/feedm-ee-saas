@@ -22,21 +22,39 @@ export async function POST(request: Request) {
     const reporterEmail = body.reporterEmail || body.email || body.reporter_email || "Anonymous Visitor";
     const details = body.details || body.additionalDetails || "No additional context provided.";
 
-    // 1. Log/Store report in Supabase DB
+    // 1. Log/Store report in Supabase DB with exact column schemas
+    const feedId = body.feedId || body.feed_id || null;
     try {
       const dbAdmin = getSupabaseAdmin();
-      await dbAdmin.from("reports").insert([
-        {
-          profile_url: profileUrl || `https://feedm.ee/${username}`,
-          username: username,
-          reason: reason,
-          reporter_email: reporterEmail,
-          details: details,
-          status: "pending",
-        },
-      ]);
+
+      const reportPayload = {
+        feed_id: feedId,
+        reported_username: username,
+        username: username,
+        profile_url: profileUrl || `https://feedm.ee/${username}`,
+        reason: reason,
+        reporter_email: reporterEmail,
+        details: details,
+        status: "pending",
+      };
+
+      const { error: insertError } = await dbAdmin.from("reports").insert([reportPayload]);
+
+      if (insertError) {
+        console.warn("⚠️ [Report DB Primary Insert Note]: Retrying fallback insert:", insertError.message);
+        await dbAdmin.from("reports").insert([
+          {
+            reported_username: username,
+            reason: reason,
+            reporter_email: reporterEmail,
+            details: details,
+          },
+        ]);
+      } else {
+        console.log("✅ [Report DB Insert Success]: Report recorded in Supabase reports table.");
+      }
     } catch (dbErr) {
-      console.warn("[Report DB Warning]: Could not record report to Supabase table:", dbErr);
+      console.warn("⚠️ [Report DB Warning]: Exception recording report to Supabase table:", dbErr);
     }
 
     // 2. Dispatch Notification Email via Resend API
