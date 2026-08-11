@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { MobilePreview } from "@/components/mobile-preview";
+import { DEMO_PROFILES } from "@/lib/demo-profiles";
 import {
   Sparkles,
   ArrowRight,
@@ -15,69 +17,28 @@ import {
   ShoppingBag,
   Briefcase,
   Users,
+  Smartphone,
 } from "lucide-react";
-
-interface ExampleCard {
-  id: string;
-  name: string;
-  handle: string;
-  category: "Creators" | "E-commerce" | "Service Providers";
-  avatar: string;
-  description: string;
-  stats: string;
-  tags: string[];
-}
-
-const EXAMPLES: ExampleCard[] = [
-  {
-    id: "alex-rivers",
-    name: "Alex Rivers Media",
-    handle: "alexrivers",
-    category: "Creators",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
-    description: "Digital content creator using 3 vertical video reels to promote masterclass courses and book 1-on-1 strategy sessions.",
-    stats: "+40% Link Conversion",
-    tags: ["Video Reels", "Masterclass CTA", "Leadform"],
-  },
-  {
-    id: "fitgym-studio",
-    name: "FitGym Studio",
-    handle: "fitgym",
-    category: "Service Providers",
-    avatar: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&h=200&fit=crop",
-    description: "Personal training studio capturing trial workout session leads directly into WhatsApp with instant 1-click messaging.",
-    stats: "+65% Lead Inquiries",
-    tags: ["WhatsApp Routing", "1-Tap Call", "CRM Sync"],
-  },
-  {
-    id: "aura-apparel",
-    name: "Aura Apparel",
-    handle: "aurastyle",
-    category: "E-commerce",
-    avatar: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=200&h=200&fit=crop",
-    description: "Sustainable fashion label showcasing new collection video drops with interactive promo deal popups.",
-    stats: "2.4x Deal Redemption",
-    tags: ["Product Tags", "Promo Popups", "Bio Links"],
-  },
-  {
-    id: "urban-bakery",
-    name: "Urban Cafe & Bakery",
-    handle: "urbancafe",
-    category: "E-commerce",
-    avatar: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&h=200&fit=crop",
-    description: "Artisanal coffee shop & bakery collecting catering and event booking leads directly from TikTok & Instagram bio links.",
-    stats: "120+ Monthly Leads",
-    tags: ["Custom Domain", "Event Booking", "WhatsApp"],
-  },
-];
 
 export default function ExamplesPage() {
   const [activeCategory, setActiveCategory] = useState<"All" | "Creators" | "E-commerce" | "Service Providers">("All");
+  const [activeProfileId, setActiveProfileId] = useState<string>("alex-rivers");
 
+  const activeProfile = DEMO_PROFILES[activeProfileId] || DEMO_PROFILES["alex-rivers"];
+
+  const exampleList = Object.values(DEMO_PROFILES);
   const filteredExamples =
     activeCategory === "All"
-      ? EXAMPLES
-      : EXAMPLES.filter((item) => item.category === activeCategory);
+      ? exampleList
+      : exampleList.filter((item) => item.category === activeCategory);
+
+  const handleSelectDemo = (profileId: string) => {
+    setActiveProfileId(profileId);
+    const demoEl = document.getElementById("demo-viewport-section");
+    if (demoEl) {
+      demoEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50/40 via-emerald-50/20 to-sky-50/30 text-zinc-900 font-sans selection:bg-emerald-500 selection:text-white">
@@ -103,7 +64,59 @@ export default function ExamplesPage() {
           </p>
         </section>
 
-        {/* ─── 2. CATEGORY FILTERS ───────────────────────────────────────── */}
+        {/* ─── 2. DYNAMIC INTERACTIVE DEMO VIEWPORT ─────────────────────── */}
+        <section id="demo-viewport-section" className="relative mx-auto max-w-6xl px-6 pt-10 pb-12">
+          <div className="text-center mb-6">
+            <div className="mx-auto mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-100/80 border border-emerald-300 px-3.5 py-1 text-[11px] font-black text-emerald-950">
+              <Smartphone className="h-3.5 w-3.5 text-[#00BC7D]" />
+              <span>Interactive Profile Preview • Live Demo Viewport</span>
+            </div>
+
+            <h2 className="text-2xl font-black text-zinc-950 sm:text-3xl">
+              Testing Demo Profile: <span className="text-[#00BC7D]">{activeProfile.name}</span> (@{activeProfile.handle})
+            </h2>
+            <p className="text-xs font-semibold text-zinc-500 mt-1 max-w-lg mx-auto">
+              Select any profile tab below to switch the interactive mobile viewport live.
+            </p>
+          </div>
+
+          {/* Quick Profile Selector Tabs */}
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            {exampleList.map((prof) => (
+              <button
+                key={prof.id}
+                onClick={() => setActiveProfileId(prof.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer border ${
+                  activeProfileId === prof.id
+                    ? "bg-zinc-950 text-white border-zinc-950 shadow-md"
+                    : "bg-white/90 text-zinc-700 border-zinc-200 hover:border-zinc-400"
+                }`}
+              >
+                <img src={prof.avatar} alt="" className="h-4 w-4 rounded-full object-cover" />
+                <span>{prof.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Interactive Mobile Viewport */}
+          <div className="flex justify-center items-center">
+            <MobilePreview
+              key={activeProfile.id}
+              profileName={activeProfile.name}
+              username={activeProfile.handle}
+              bio={activeProfile.bio}
+              avatarUrl={activeProfile.avatar}
+              customHexColor={activeProfile.themeColor}
+              socialLinks={[]}
+              customLinks={activeProfile.links}
+              reels={activeProfile.reels}
+              leadForm={activeProfile.leadForm}
+              isDemoMode={true}
+            />
+          </div>
+        </section>
+
+        {/* ─── 3. CATEGORY FILTERS ───────────────────────────────────────── */}
         <section className="relative mx-auto max-w-5xl px-6 pt-10 pb-6 flex justify-center">
           <div className="inline-flex items-center gap-1.5 p-1.5 rounded-full bg-white/90 border border-zinc-200/80 shadow-sm backdrop-blur-md">
             {(["All", "Creators", "E-commerce", "Service Providers"] as const).map((category) => (
@@ -122,13 +135,15 @@ export default function ExamplesPage() {
           </div>
         </section>
 
-        {/* ─── 3. SHOWCASE CARDS GRID ────────────────────────────────────── */}
+        {/* ─── 4. SHOWCASE CARDS GRID ────────────────────────────────────── */}
         <section className="relative mx-auto max-w-6xl px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {filteredExamples.map((item) => (
               <div
                 key={item.id}
-                className="rounded-3xl border border-zinc-200/90 bg-white/90 p-7 shadow-xl shadow-zinc-900/5 backdrop-blur-md hover:border-emerald-300 transition-all flex flex-col justify-between"
+                className={`rounded-3xl border bg-white/90 p-7 shadow-xl shadow-zinc-900/5 backdrop-blur-md transition-all flex flex-col justify-between ${
+                  activeProfileId === item.id ? "border-[#00BC7D] ring-2 ring-[#00BC7D]/20" : "border-zinc-200/90 hover:border-emerald-300"
+                }`}
               >
                 <div>
                   {/* Header: Avatar + Name + Category Badge */}
@@ -171,20 +186,20 @@ export default function ExamplesPage() {
                     <span>{item.stats}</span>
                   </div>
 
-                  <Link
-                    href={`/features`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-zinc-800 hover:text-[#00BC7D] transition"
+                  <button
+                    onClick={() => handleSelectDemo(item.id)}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-zinc-900 bg-zinc-100 hover:bg-[#00BC7D] hover:text-white px-3.5 py-1.5 rounded-full transition shadow-xs cursor-pointer"
                   >
                     <span>View Interactive Demo</span>
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ─── 4. FEATURED CREATOR CASE STUDY SECTION ─────────────────────── */}
+        {/* ─── 5. FEATURED CREATOR CASE STUDY SECTION ─────────────────────── */}
         <section className="relative mx-auto max-w-4xl px-6 py-12">
           <div className="rounded-3xl border border-zinc-200/90 bg-white/90 p-8 sm:p-10 shadow-xl shadow-zinc-900/5 backdrop-blur-md relative overflow-hidden text-center">
             <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-100/80 border border-emerald-300 px-3.5 py-1 text-[11px] font-black text-emerald-950">
@@ -210,7 +225,7 @@ export default function ExamplesPage() {
           </div>
         </section>
 
-        {/* ─── 5. BOTTOM CTA BANNER ───────────────────────────────────────── */}
+        {/* ─── 6. BOTTOM CTA BANNER ───────────────────────────────────────── */}
         <section className="relative mx-auto max-w-5xl px-6 pt-6 pb-12">
           <div className="rounded-3xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 p-10 text-white text-center shadow-2xl relative overflow-hidden">
             <div className="relative z-10 max-w-2xl mx-auto space-y-4">
