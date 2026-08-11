@@ -68,7 +68,7 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative mx-auto max-w-5xl px-6 pt-16 pb-12 text-center lg:pt-28 lg:pb-20">
+      <section className="relative mx-auto max-w-5xl px-6 pt-28 pb-12 text-center lg:pt-36 lg:pb-20">
         
         {/* Glow Badge */}
         <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-white/80 border border-zinc-200/80 shadow-sm px-4 py-1.5 text-xs font-bold text-zinc-800 backdrop-blur-md">
