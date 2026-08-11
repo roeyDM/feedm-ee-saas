@@ -159,27 +159,27 @@ function SignupFormContent() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden relative w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4 py-8">
+    <div className="h-screen w-full flex flex-col justify-center items-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4 py-2 relative select-none">
       {/* Background orbs */}
       <div className="pointer-events-none absolute top-[-10%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-10%] left-[-5%] w-[40%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[120px]" />
 
-      <div className="relative w-full max-w-sm max-w-full">
+      <div className="relative w-full max-w-sm my-auto">
         {/* Logo */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 shadow-lg shadow-emerald-500/20 mb-3">
-            <Film className="h-6 w-6 text-white stroke-[2.5]" />
+        <div className="mb-4 sm:mb-5 flex flex-col items-center text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 shadow-lg shadow-emerald-500/20 mb-2">
+            <Film className="h-5 w-5 text-white stroke-[2.5]" />
           </div>
-          <h1 className="text-2xl font-black text-zinc-950 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
             Join FeedM<span className="text-emerald-600">.ee</span>
           </h1>
-          <p className="text-xs font-semibold text-zinc-500 mt-1">
+          <p className="text-[11px] sm:text-xs font-semibold text-zinc-500 mt-0.5">
             {isFreePlan ? "Create your free account & launch your bio page in minutes" : "Claim your creator handle and launch your page in minutes"}
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-8 shadow-xl shadow-zinc-900/5 backdrop-blur-md">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-5 sm:p-6 shadow-xl shadow-zinc-900/5 backdrop-blur-md">
           {/* Plan Context Callout Badge */}
           <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-cyan-500/10 border border-emerald-300/80 px-3.5 py-2.5 text-xs font-black text-emerald-950 shadow-2xs">
             <Sparkles className="h-4 w-4 text-emerald-600 animate-pulse shrink-0" />
@@ -362,7 +362,7 @@ function SignupFormContent() {
         </div>
 
         {/* Footer link */}
-        <p className="mt-5 text-center text-xs font-semibold text-zinc-500">
+        <p className="mt-3 text-center text-xs font-semibold text-zinc-500">
           Already have an account?{" "}
           <Link href="/login" className="font-bold text-emerald-700 hover:text-emerald-900 underline-offset-2 hover:underline">
             Sign in
