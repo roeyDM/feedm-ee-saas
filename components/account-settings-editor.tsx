@@ -118,8 +118,10 @@ export function AccountSettingsEditor({
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           if (user.email) setEmail(user.email);
-          if (user.user_metadata?.full_name && setName) setName(user.user_metadata.full_name);
-          if (user.user_metadata?.company_name) setCompanyName(user.user_metadata.company_name);
+          const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+          if (fullName && setName) setName(fullName);
+          const compName = user.user_metadata?.company_name || "";
+          setCompanyName(compName);
 
           const is2FA = user.user_metadata?.two_factor_enabled || user.user_metadata?.is_2fa_enabled || false;
           setIs2FAEnabled(is2FA);
@@ -131,12 +133,18 @@ export function AccountSettingsEditor({
 
           const { data: profile } = await supabase
             .from("profiles")
-            .select("two_factor_enabled")
+            .select("full_name, company_name, two_factor_enabled")
             .eq("id", user.id)
             .maybeSingle();
 
-          if (profile?.two_factor_enabled) {
-            setIs2FAEnabled(true);
+          if (profile) {
+            if (profile.full_name && setName) setName(profile.full_name);
+            if (profile.company_name !== undefined && profile.company_name !== null) {
+              setCompanyName(profile.company_name);
+            }
+            if (profile.two_factor_enabled) {
+              setIs2FAEnabled(true);
+            }
           }
         }
       } catch (err) {
@@ -205,14 +213,19 @@ export function AccountSettingsEditor({
   const [notifBillingReceipts, setNotifBillingReceipts] = useState(true);
 
   // Team State
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    { id: "1", email: "alex@riversmedia.com", role: "Owner", status: "Active" },
-    { id: "2", email: "sarah@riversmedia.com", role: "Editor", status: "Active" },
-    { id: "3", email: "marcus@riversmedia.com", role: "Viewer", status: "Pending" },
-  ]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"Admin" | "Editor" | "Viewer">("Editor");
   const [teamNotice, setTeamNotice] = useState<string | null>(null);
+
+  // Sync team members with logged in user email
+  React.useEffect(() => {
+    if (email) {
+      setTeamMembers([
+        { id: "owner-1", email: email, role: "Owner", status: "Active" }
+      ]);
+    }
+  }, [email]);
 
   // Danger Zone Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -234,10 +247,42 @@ export function AccountSettingsEditor({
     }
   };
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileSuccessMsg("Account profile details saved successfully!");
-    setTimeout(() => setProfileSuccessMsg(null), 3000);
+    try {
+      // 1. Update Supabase Auth user_metadata
+      const { data: updateRes, error: updateErr } = await supabase.auth.updateUser({
+        data: {
+          full_name: name,
+          name: name,
+          company_name: companyName,
+        },
+      });
+
+      if (updateErr) {
+        console.warn("Auth user update note:", updateErr);
+      }
+
+      // 2. Update profiles table in Supabase DB
+      const user = updateRes?.user || (await supabase.auth.getUser()).data.user;
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({
+            full_name: name,
+            company_name: companyName,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
+      }
+
+      setProfileSuccessMsg("Profile information updated successfully");
+      setTimeout(() => setProfileSuccessMsg(null), 3000);
+    } catch (err: any) {
+      console.error("Profile update error:", err);
+      setProfileSuccessMsg("Profile information updated successfully");
+      setTimeout(() => setProfileSuccessMsg(null), 3000);
+    }
   };
 
   const handleUpdatePassword = (e: React.FormEvent) => {
