@@ -13,6 +13,8 @@ import { sanitizeLeadForm } from "@/lib/sanitizers";
 import { trackAnalyticsEvent } from "@/lib/analytics-tracker";
 
 interface ProfileData {
+  id?: string;
+  feedId?: string;
   name: string;
   bio: string;
   avatarUrl: string;
@@ -38,7 +40,7 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
   // Fire page_view analytics tracking on mount
   useEffect(() => {
     if (handleKey && profile) {
-      trackAnalyticsEvent(handleKey, "page_view");
+      trackAnalyticsEvent(handleKey, "page_view", { feedId: profile.feedId || profile.id });
     }
   }, [handleKey, profile]);
 

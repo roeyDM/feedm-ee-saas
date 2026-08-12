@@ -8,6 +8,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+const isValidUUID = (str?: string | null): boolean =>
+  Boolean(str && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str));
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
@@ -15,6 +18,8 @@ export async function OPTIONS() {
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
+    console.log("[Analytics Ingest Request]:", body);
+
     const { feed_id, username, event_type, item_id, link_url, link_title, reel_id, metadata } = body;
 
     if (!event_type || (!username && !feed_id)) {
@@ -27,28 +32,28 @@ export async function POST(req: Request) {
     const cleanUsername = username ? String(username).toLowerCase().trim() : "";
     const normalizedType = (event_type === "page_view" || event_type === "view") ? "view" : (event_type === "link_click" || event_type === "click") ? "click" : event_type;
 
-    console.log(`[Analytics Track API] Event: "${normalizedType}" for feed_id: ${feed_id || "none"} username: @${cleanUsername || "none"}`);
-
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://slyjhprwovcwxfcnxjpn.supabase.co";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    // Supabase Service Role Admin Client to bypass RLS limits
+    const supabaseAdmin = createClient(supabaseUrl, supabaseKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    let userId: string | null = body.user_id || null;
+    let userId: string | null = isValidUUID(body.user_id) ? body.user_id : null;
     let profData: { id: string; views_count: number; clicks_count: number } | null = null;
-    let targetFeedId: string | null = feed_id || null;
+    let targetFeedId: string | null = isValidUUID(feed_id) ? feed_id : null;
 
+    // Lookup profile by user_id or username
     if (userId) {
-      const { data: prof } = await supabase
+      const { data: prof } = await supabaseAdmin
         .from("profiles")
         .select("id, views_count, clicks_count")
         .eq("id", userId)
         .maybeSingle();
       if (prof) profData = prof as any;
     } else if (cleanUsername) {
-      const { data: prof } = await supabase
+      const { data: prof } = await supabaseAdmin
         .from("profiles")
         .select("id, views_count, clicks_count")
         .ilike("username", cleanUsername)
@@ -59,33 +64,55 @@ export async function POST(req: Request) {
       }
     }
 
-    // Lookup feed_id from pages table if not supplied
-    const { data: pageData } = await supabase
-      .from("pages")
-      .select("id, views, clicks")
-      .or(`id.eq.${targetFeedId || "00000000-0000-0000-0000-000000000000"},username.eq.${cleanUsername},handle.eq.${cleanUsername}`)
-      .maybeSingle();
+    // Lookup feed_id from pages table if not valid UUID
+    let pageData: any = null;
+    const lookupHandle = cleanUsername || (feed_id && !isValidUUID(feed_id) ? String(feed_id).toLowerCase().trim() : "");
 
-    if (!targetFeedId && pageData?.id) {
+    if (lookupHandle) {
+      const { data: page } = await supabaseAdmin
+        .from("pages")
+        .select("id, user_id, views, clicks")
+        .or(`username.eq.${lookupHandle},handle.eq.${lookupHandle}`)
+        .maybeSingle();
+      if (page) pageData = page;
+    } else if (targetFeedId) {
+      const { data: page } = await supabaseAdmin
+        .from("pages")
+        .select("id, user_id, views, clicks")
+        .eq("id", targetFeedId)
+        .maybeSingle();
+      if (page) pageData = page;
+    }
+
+    if (!targetFeedId && pageData?.id && isValidUUID(pageData.id)) {
       targetFeedId = pageData.id;
     }
-
-    if (!targetFeedId) {
-      targetFeedId = userId || profData?.id || null;
+    if (!targetFeedId && isValidUUID(userId)) {
+      targetFeedId = userId;
+    }
+    if (!targetFeedId && isValidUUID(profData?.id)) {
+      targetFeedId = profData!.id;
     }
 
-    // 1. Insert into feed_analytics table
-    if (targetFeedId) {
-      try {
-        await supabase.from("feed_analytics").insert({
+    // 1. Insert into feed_analytics table with service role client & error logging
+    if (targetFeedId && isValidUUID(targetFeedId)) {
+      console.log(`[Analytics Ingest] Attempting insert into feed_analytics: feed_id=${targetFeedId}, event_type=${normalizedType}, item_id=${item_id || link_url || link_title || null}`);
+      const { data: insertRes, error: insertErr } = await supabaseAdmin.from("feed_analytics").insert([
+        {
           feed_id: targetFeedId,
           event_type: normalizedType,
           item_id: item_id || link_url || link_title || null,
           created_at: new Date().toISOString(),
-        });
-      } catch (err: any) {
-        console.warn("[Analytics Track API] feed_analytics insert note:", err?.message || err);
+        },
+      ]).select();
+
+      if (insertErr) {
+        console.error("[Analytics Insert Error on feed_analytics]:", insertErr.message, insertErr.details, insertErr.hint);
+      } else {
+        console.log("[Analytics Insert Success on feed_analytics]:", insertRes);
       }
+    } else {
+      console.warn(`[Analytics Ingest Warning]: Could not resolve valid UUID feed_id (passed: ${feed_id}, username: @${cleanUsername})`);
     }
 
     // 2. Insert into analytics_events table & fallback store
@@ -102,8 +129,10 @@ export async function POST(req: Request) {
 
     saveInMemoryEvent(insertPayload);
     try {
-      await supabase.from("analytics_events").insert(insertPayload);
-    } catch (e) {}
+      await supabaseAdmin.from("analytics_events").insert([insertPayload]);
+    } catch (e: any) {
+      console.warn("[Analytics Track API] analytics_events insert note:", e?.message || e);
+    }
 
     // 3. Increment aggregate views & clicks in pages & profiles tables
     try {
@@ -114,17 +143,17 @@ export async function POST(req: Request) {
 
       if (normalizedType === "view") {
         if (pageData?.id) {
-          await supabase.from("pages").update({ views: pageViews + 1 }).eq("id", pageData.id);
+          await supabaseAdmin.from("pages").update({ views: pageViews + 1 }).eq("id", pageData.id);
         }
         if (userId || profData?.id) {
-          await supabase.from("profiles").update({ views_count: profViews + 1 }).eq("id", userId || profData!.id);
+          await supabaseAdmin.from("profiles").update({ views_count: profViews + 1 }).eq("id", userId || profData!.id);
         }
       } else if (normalizedType === "click") {
         if (pageData?.id) {
-          await supabase.from("pages").update({ clicks: pageClicks + 1 }).eq("id", pageData.id);
+          await supabaseAdmin.from("pages").update({ clicks: pageClicks + 1 }).eq("id", pageData.id);
         }
         if (userId || profData?.id) {
-          await supabase.from("profiles").update({ clicks_count: profClicks + 1 }).eq("id", userId || profData!.id);
+          await supabaseAdmin.from("profiles").update({ clicks_count: profClicks + 1 }).eq("id", userId || profData!.id);
         }
       }
     } catch (e) {
@@ -136,7 +165,7 @@ export async function POST(req: Request) {
       { headers: corsHeaders }
     );
   } catch (err: any) {
-    console.error("[Analytics Track API Error]:", err);
+    console.error("[Analytics Track API Exception]:", err);
     return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500, headers: corsHeaders });
   }
 }

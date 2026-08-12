@@ -109,6 +109,8 @@ async function fetchPublicProfile(handleKey: string) {
     .filter((r: any) => r.videoUrl);
 
   return {
+    id:       profile.id,
+    feedId:   profile.id,
     name:     profile.name || handleKey,
     bio:      profile.bio  || "",
     avatarUrl:
