@@ -111,6 +111,8 @@ export function AccountSettingsEditor({
   const [totpSecret, setTotpSecret] = useState("JBSWY3DPEHPK3PXP");
   const [totpCode, setTotpCode] = useState("");
   const [totpError, setTotpError] = useState<string | null>(null);
+  const [enrolledFactorId, setEnrolledFactorId] = useState<string | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Load Auth User Data & 2FA Status on mount
@@ -156,6 +158,56 @@ export function AccountSettingsEditor({
     loadAuthUserData();
   }, []);
 
+  const handleStart2FASetup = async () => {
+    setTotpError(null);
+    try {
+      // 1. Purge any unverified factors first to avoid conflicts
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const unverified = factors?.totp?.filter((f) => (f.status as string) !== "verified");
+      if (unverified && unverified.length > 0) {
+        for (const uf of unverified) {
+          await supabase.auth.mfa.unenroll({ factorId: uf.id }).catch(() => {});
+        }
+      }
+
+      // 2. Enroll new TOTP factor
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: "totp",
+        issuer: "FeedM.ee",
+        friendlyName: username || "FeedMee User",
+      });
+
+      if (error) throw error;
+
+      if (data?.id) {
+        setEnrolledFactorId(data.id);
+        if (data.totp?.secret) setTotpSecret(data.totp.secret);
+        if (data.totp?.qr_code) setQrCodeDataUrl(data.totp.qr_code);
+      }
+      setShow2FAModal(true);
+    } catch (err: any) {
+      console.error("2FA Enroll Error:", err);
+      setTotpError(err.message || "Failed to start 2FA setup.");
+      setShow2FAModal(true);
+    }
+  };
+
+  const handleCancel2FASetup = async () => {
+    setShow2FAModal(false);
+    setTotpError(null);
+    setTotpCode("");
+
+    if (enrolledFactorId) {
+      try {
+        await supabase.auth.mfa.unenroll({ factorId: enrolledFactorId });
+        console.log("[2FA Setup Cancelled]: Unenrolled unverified factor", enrolledFactorId);
+      } catch (e) {
+        console.warn("Unenroll note:", e);
+      }
+      setEnrolledFactorId(null);
+    }
+  };
+
   const handleActivate2FA = async () => {
     if (!totpCode || totpCode.trim().length < 6) {
       setTotpError("Please enter a valid 6-digit code.");
@@ -164,6 +216,34 @@ export function AccountSettingsEditor({
     setTotpError(null);
 
     try {
+      let factorIdToVerify = enrolledFactorId;
+
+      if (!factorIdToVerify) {
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const unverified = factors?.totp?.find((f) => (f.status as string) !== "verified");
+        if (unverified) factorIdToVerify = unverified.id;
+      }
+
+      if (!factorIdToVerify) {
+        throw new Error("No pending 2FA setup found. Please restart setup.");
+      }
+
+      // 1. Create challenge
+      const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: factorIdToVerify });
+      if (challengeErr) throw challengeErr;
+
+      // 2. Verify code
+      const { error: verifyErr } = await supabase.auth.mfa.verify({
+        factorId: factorIdToVerify,
+        challengeId: challengeData.id,
+        code: totpCode.trim(),
+      });
+
+      if (verifyErr) {
+        throw new Error(verifyErr.message || "Invalid 6-digit code from authenticator app.");
+      }
+
+      // 3. Success -> Mark active
       await supabase.auth.updateUser({
         data: { two_factor_enabled: true, is_2fa_enabled: true }
       });
@@ -175,12 +255,13 @@ export function AccountSettingsEditor({
 
       setIs2FAEnabled(true);
       setShow2FAModal(false);
+      setEnrolledFactorId(null);
       setTotpCode("");
       setSecurityNotice("Two-Factor Authentication is now active on your account!");
       setTimeout(() => setSecurityNotice(null), 3000);
     } catch (err: any) {
       console.error("2FA Activation Error:", err);
-      setTotpError("Verification failed. Please try again.");
+      setTotpError(err.message || "Verification failed. Please try again.");
     }
   };
 
@@ -623,7 +704,7 @@ export function AccountSettingsEditor({
                             handleDisable2FA();
                           }
                         } else {
-                          setShow2FAModal(true);
+                          handleStart2FASetup();
                         }
                       }}
                       className={cn("rounded-xl text-xs font-bold px-4 py-2 cursor-pointer", !is2FAEnabled && "bg-violet-600 hover:bg-violet-700 text-white")}
@@ -1157,10 +1238,7 @@ export function AccountSettingsEditor({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-zinc-200 space-y-5 animate-in zoom-in-95 duration-200 relative">
             <button
-              onClick={() => {
-                setShow2FAModal(false);
-                setTotpError(null);
-              }}
+              onClick={handleCancel2FASetup}
               className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700 p-1 rounded-full hover:bg-zinc-100 transition"
             >
               <X className="h-4 w-4" />
@@ -1220,10 +1298,7 @@ export function AccountSettingsEditor({
                   <div className="flex justify-end gap-2 pt-2">
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        setShow2FAModal(false);
-                        setTotpError(null);
-                      }}
+                      onClick={handleCancel2FASetup}
                       className="rounded-xl text-xs font-bold"
                     >
                       Cancel
