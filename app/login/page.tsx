@@ -28,7 +28,23 @@ export default function LoginPage() {
     const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError(error.message);
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("user_not_found") || msg.includes("user not found") || msg.includes("email not found")) {
+        setError("No account found with this email. Please check your spelling or sign up.");
+      } else if (msg.includes("invalid login credentials") || msg.includes("invalid credentials")) {
+        try {
+          const { data: prof } = await supabase.from("profiles").select("id").eq("email", email.toLowerCase().trim()).maybeSingle();
+          if (!prof) {
+            setError("No account found with this email. Please check your spelling or sign up.");
+          } else {
+            setError("Incorrect password. Please try again or click 'Forgot Password?' to reset.");
+          }
+        } catch (e) {
+          setError("Incorrect password. Please try again or click 'Forgot Password?' to reset.");
+        }
+      } else {
+        setError(error.message || "Invalid login credentials. Please try again.");
+      }
       setLoading(false);
       return;
     }
@@ -209,7 +225,15 @@ export default function LoginPage() {
 
               {/* Password */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-zinc-700">Password</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-zinc-700">Password</label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
                   <input
