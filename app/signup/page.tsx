@@ -27,7 +27,7 @@ function SignupFormContent() {
   // Determine if signup context is Starter Free Plan
   const isFreePlan = planParam === "free" || planParam === "starter" || !searchParams.has("plan");
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState(() => sanitizeHandleInput(handleParam));
   const [showPw, setShowPw] = useState(false);
@@ -44,7 +44,11 @@ function SignupFormContent() {
       const clean = sanitizeHandleInput(handleParam);
       setUsername(clean);
     }
-  }, [handleParam]);
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [handleParam, searchParams]);
 
   // Debounced real-time handle check
   useEffect(() => {

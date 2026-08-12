@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight, ShieldCheck, KeyRound } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, ArrowRight, ShieldCheck, KeyRound, UserPlus } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +14,10 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Magic Link & Non-Existent User State
+  const [magicLinkSuccess, setMagicLinkSuccess] = useState(false);
+  const [nonExistentUserEmail, setNonExistentUserEmail] = useState<string | null>(null);
 
   // 2FA Interception State
   const [requires2FA, setRequires2FA] = useState(false);
@@ -24,6 +28,8 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setMagicLinkSuccess(false);
+    setNonExistentUserEmail(null);
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -111,20 +117,64 @@ export default function LoginPage() {
   };
 
   const handleMagicLink = async () => {
-    if (!email) {
-      setError("Please enter your email first to receive a Magic Link.");
+    if (!email || !email.trim() || !email.includes("@")) {
+      setError("Please enter a valid email address first.");
       return;
     }
     setLoading(true);
     setError(null);
+    setMagicLinkSuccess(false);
+    setNonExistentUserEmail(null);
 
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) {
-      setError(error.message);
-    } else {
-      alert(`Magic Link sent to ${email}! Check your inbox.`);
+    try {
+      const cleanEmail = email.toLowerCase().trim();
+
+      // 1. First check if profile/account exists
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id")
+        .or(`email.eq.${cleanEmail},id.eq.${cleanEmail}`)
+        .maybeSingle();
+
+      if (!prof) {
+        setNonExistentUserEmail(cleanEmail);
+        setLoading(false);
+        return;
+      }
+
+      // 2. User exists -> Dispatch Magic Link
+      const getURL = () => {
+        let url =
+          process?.env?.NEXT_PUBLIC_SITE_URL ??
+          process?.env?.NEXT_PUBLIC_VERCEL_URL ??
+          "https://feedm.ee";
+        url = url.includes("http") ? url : `https://${url}`;
+        url = url.endsWith("/") ? url : `${url}/`;
+        return `${url}dashboard`;
+      };
+
+      const { error: magicErr } = await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: getURL(),
+        },
+      });
+
+      if (magicErr) {
+        if (magicErr.message?.toLowerCase().includes("rate limit")) {
+          setError("Email rate limit reached. Please sign in with password or try again shortly.");
+        } else {
+          setError(magicErr.message);
+        }
+      } else {
+        setMagicLinkSuccess(true);
+      }
+    } catch (err: any) {
+      console.error("Magic link error:", err);
+      setError(err.message || "Failed to send Magic Link.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -155,6 +205,31 @@ export default function LoginPage() {
             <div className="mb-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {magicLinkSuccess && (
+            <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 text-xs font-bold text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span>Magic Link sent! Check your inbox to sign in with 1-click.</span>
+            </div>
+          )}
+
+          {nonExistentUserEmail && (
+            <div className="mb-3 rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-amber-900 space-y-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                <p className="text-xs font-bold leading-tight">
+                  No account found with <span className="font-mono text-amber-950 underline">{nonExistentUserEmail}</span>. Would you like to create one?
+                </p>
+              </div>
+              <Link
+                href={`/signup?email=${encodeURIComponent(nonExistentUserEmail)}`}
+                className="flex items-center justify-center gap-1.5 w-full rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 text-xs font-black py-2 shadow-sm transition cursor-pointer"
+              >
+                <UserPlus className="h-3.5 w-3.5" />
+                <span>Create Free Account</span>
+              </Link>
             </div>
           )}
 
@@ -286,9 +361,13 @@ export default function LoginPage() {
                 type="button"
                 onClick={handleMagicLink}
                 disabled={loading}
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 py-2 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition disabled:opacity-60 cursor-pointer"
               >
-                Send Instant Magic Link
+                {loading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-600" />
+                ) : (
+                  "Send Instant Magic Link"
+                )}
               </button>
             </>
           )}
