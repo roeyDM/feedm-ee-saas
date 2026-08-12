@@ -325,7 +325,7 @@ export default function LoginPage() {
                 disabled={isSendingEmail}
                 className="mt-4 text-sm text-emerald-600 hover:underline font-medium block text-center w-full cursor-pointer disabled:opacity-50"
               >
-                {isSendingEmail ? "Sending code..." : "Didn't receive a code? Send code to my email"}
+                {isSendingEmail ? "Sending code..." : "Use email code instead"}
               </button>
 
               <button
