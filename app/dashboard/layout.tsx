@@ -23,9 +23,12 @@ export default function DashboardLayout({
 
         if (isMounted) {
           if (user && !error) {
-            // Check 2FA Assurance Level (aal1 vs aal2)
+            // Check 2FA Assurance Level & Email OTP verification timestamp
+            const email2FAVerifiedAt = user.user_metadata?.email_2fa_verified_at;
+            const isEmail2FAVerified = Boolean(email2FAVerifiedAt && (new Date().getTime() - new Date(email2FAVerifiedAt).getTime() < 24 * 60 * 60 * 1000));
+
             const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-            if (aalData?.currentLevel === "aal1" && aalData?.nextLevel === "aal2") {
+            if (!isEmail2FAVerified && aalData?.currentLevel === "aal1" && aalData?.nextLevel === "aal2") {
               console.warn("[DashboardLayout] 2FA verification required (aal1 session level)");
               setIsAuthenticated(false);
               router.push("/login?mfa_required=true");

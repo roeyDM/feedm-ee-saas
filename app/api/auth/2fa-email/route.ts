@@ -81,12 +81,13 @@ export async function POST(req: Request) {
         );
       }
 
-      // Clear code after successful verification
+      // Clear code and mark email 2FA verified after successful verification
       await supabaseAdmin.auth.admin.updateUserById(userId, {
         user_metadata: {
           ...currentUserMetadata,
           email_otp_code: null,
           email_otp_expires_at: null,
+          email_2fa_verified_at: new Date().toISOString(),
         },
       }).catch(() => {});
 
@@ -108,14 +109,8 @@ export async function POST(req: Request) {
       },
     });
 
-    // 2. Dispatch email via Resend / Supabase OTP fallback
+    // 2. Dispatch ONLY ONE single clean HTML email via Resend
     const emailResult = await send2FAOtpEmail({ email: userEmail, code: otpCode });
-
-    // Also trigger Supabase OTP as fallback
-    await supabaseAdmin.auth.signInWithOtp({
-      email: userEmail,
-      options: { shouldCreateUser: false },
-    }).catch(() => {});
 
     console.log(`[2FA Email API]: OTP ${otpCode} sent to ${userEmail} (Resend Success: ${emailResult.success})`);
 
