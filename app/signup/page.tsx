@@ -70,9 +70,9 @@ function SignupFormContent() {
         setHandleReason(null);
       } else {
         setHandleStatus("taken");
-        setHandleReason(result.reason || "Handle is already taken. Please choose another.");
+        setHandleReason(result.reason || "Handle is already taken");
       }
-    }, 350);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [username]);
@@ -245,15 +245,15 @@ function SignupFormContent() {
               {handleStatus === "checking" ? (
                 <p className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />
-                  Checking availability...
+                  Checking handle availability...
                 </p>
               ) : handleStatus === "available" ? (
                 <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
-                  ✓ feedm.ee/{username} is available!
+                  ✓ Handle is available!
                 </p>
               ) : handleStatus === "taken" ? (
                 <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1">
-                  ✕ {handleReason || "Handle is already taken. Please choose another."}
+                  ✕ {handleReason || "Handle is already taken"}
                 </p>
               ) : username ? (
                 <p className="text-[11px] font-semibold text-zinc-400">feedm.ee/{username}</p>

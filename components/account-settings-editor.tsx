@@ -384,9 +384,9 @@ export function AccountSettingsEditor({
 
   return (
     <div className="w-full flex flex-col lg:flex-row items-start min-h-[calc(100vh-3.5rem)] animate-in fade-in duration-300">
-      {/* COLUMN 2: VERTICAL SUB-NAV MENU (Attached to Column 1 Left Sidebar, zero gap) */}
-      <aside className="w-full lg:w-64 shrink-0 bg-white border-r border-zinc-200 p-4 space-y-1 lg:sticky lg:top-14 lg:min-h-[calc(100vh-3.5rem)]">
-        <div className="px-3 py-2 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
+      {/* COLUMN 2: VERTICAL SUB-NAV MENU (Tightly attached to Column 1 Primary Left Sidebar) */}
+      <aside className="w-full lg:w-60 shrink-0 bg-white border-r border-zinc-200 py-3 px-2 lg:px-2.5 space-y-1 lg:sticky lg:top-0 lg:min-h-[calc(100vh-3.5rem)]">
+        <div className="px-2.5 py-1.5 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
           Account Settings
         </div>
         {navItems.map((item) => {
