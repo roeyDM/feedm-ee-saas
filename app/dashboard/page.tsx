@@ -198,21 +198,18 @@ function DashboardContent() {
       setIsProfileLoading(true);
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        let fallbackUser = "";
-        let fallbackName = "";
 
-        if (user) {
-          if (user.email) setUserEmail(user.email);
-          fallbackUser = (user.user_metadata?.username || user.email?.split("@")[0] || "").toLowerCase();
-          fallbackName = user.user_metadata?.display_name || user.user_metadata?.name || (fallbackUser ? fallbackUser.charAt(0).toUpperCase() + fallbackUser.slice(1) : "");
-        } else {
-          // Check query params if unauthenticated local preview
-          const urlHandle = searchParams.get("handle");
-          if (urlHandle) {
-            fallbackUser = urlHandle.toLowerCase();
-            fallbackName = urlHandle.charAt(0).toUpperCase() + urlHandle.slice(1);
-          }
+        if (!user) {
+          setIsProfileLoading(false);
+          return;
         }
+
+        if (user.email) setUserEmail(user.email);
+        const userHandle = (user.user_metadata?.username || user.user_metadata?.handle || user.email?.split("@")[0] || "").toLowerCase();
+        const userName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || (userHandle ? userHandle.charAt(0).toUpperCase() + userHandle.slice(1) : "Creator");
+
+        if (userHandle) setUsername(userHandle);
+        if (userName) setName(userName);
 
         // Check for ?checkout=success parameter
         if (searchParams.get("checkout") === "success") {
@@ -221,18 +218,11 @@ function DashboardContent() {
           setTimeout(() => setSaveStatus("idle"), 6000);
         }
 
-        // Default initial values before DB load
-        if (fallbackUser) setUsername(fallbackUser);
-        if (fallbackName) setName(fallbackName);
-
-        // Fetch profile row from Supabase
-        const targetUsername = fallbackUser || username;
-        if (!targetUsername) return;
-
+        // Fetch profile row from Supabase for authenticated user
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("*")
-          .or(`username.eq.${targetUsername.toLowerCase()}${user ? `,id.eq.${user.id}` : ""}`)
+          .or(`id.eq.${user.id},username.eq.${userHandle.toLowerCase()}`)
           .maybeSingle();
 
         if (profile && !error) {
@@ -286,7 +276,7 @@ function DashboardContent() {
           // Appearance Persistence with localStorage fallback
           let loadedAppearance = profile.appearance;
           if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
-            const localApp = localStorage.getItem(`feedmee_appearance_${(profile.username || targetUsername).toLowerCase()}`);
+            const localApp = localStorage.getItem(`feedmee_appearance_${(profile.username || userHandle).toLowerCase()}`);
             if (localApp) {
               try { loadedAppearance = JSON.parse(localApp); } catch(e) {}
             }
@@ -297,7 +287,7 @@ function DashboardContent() {
           }
 
           setSavedSnapshot(JSON.stringify({
-            name: profile.name || fallbackName,
+            name: profile.name || userName,
             bio: profile.bio || "",
             avatarUrl: profile.avatar_url || "",
             customHexColor: loadedAppearance?.bgColor || profile.custom_hex_color || "#bad1cb",
