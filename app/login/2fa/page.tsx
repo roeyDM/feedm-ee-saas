@@ -16,6 +16,7 @@ export default function TwoFactorPage() {
 
   // Mount Check: Fetch session email & verify TOTP status
   useEffect(() => {
+    console.log("[2FA UI Active]: Rendering 2FA Verification Form from file: app/login/2fa/page.tsx");
     async function checkAuthAndFactors() {
       try {
         const { data: { user } } = await supabase.auth.getUser();

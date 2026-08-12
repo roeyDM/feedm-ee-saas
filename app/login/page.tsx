@@ -23,6 +23,8 @@ export default function LoginPage() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [totpCode, setTotpCode] = useState("");
   const [factorId, setFactorId] = useState<string | null>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,37 +57,16 @@ export default function LoginPage() {
       return;
     }
 
-    // Check if account has 2FA TOTP enabled (via Supabase MFA, assurance level, or profile metadata)
+    // Check if account strictly has VERIFIED 2FA factor enabled
     try {
-      const user = authData?.user;
-      let is2FAActive = false;
-
-      // 1. Check Supabase MFA assurance level
-      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aalData?.currentLevel === "aal1" && aalData?.nextLevel === "aal2") {
-        is2FAActive = true;
-      }
-
-      // 2. Check enrolled TOTP factors
       const { data: mfaFactors } = await supabase.auth.mfa.listFactors();
       const verifiedFactor = mfaFactors?.totp?.find((f) => f.status === "verified");
 
       if (verifiedFactor) {
-        is2FAActive = true;
         setFactorId(verifiedFactor.id);
-      }
-
-      // 3. Fallback: Check profile or user metadata
-      if (!is2FAActive && user?.id) {
-        const { data: prof } = await supabase.from("profiles").select("two_factor_enabled").eq("id", user.id).maybeSingle();
-        if (prof?.two_factor_enabled || user?.user_metadata?.two_factor_enabled || user?.user_metadata?.totp_enabled) {
-          is2FAActive = true;
-        }
-      }
-
-      if (is2FAActive) {
         setRequires2FA(true);
         setLoading(false);
+        console.log("[2FA UI Active]: Rendering 2FA Verification Form from file: app/login/page.tsx");
         return;
       }
 
@@ -96,42 +77,104 @@ export default function LoginPage() {
     }
   };
 
+  const handleSendEmailCode = async () => {
+    setIsSendingEmail(true);
+    setError(null);
+    setEmailNotice(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || "";
+
+      const res = await fetch("/api/auth/2fa-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action: "send", email }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error || "Failed to send email code.");
+      }
+
+      setEmailNotice("Verification code sent to your email inbox!");
+    } catch (err: any) {
+      console.error("[Send Email Code Error]:", err);
+      setError("Failed to send email code. Please try again.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setEmailNotice(null);
     setLoading(true);
 
+    const cleanCode = totpCode.trim();
+    if (!cleanCode || cleanCode.length < 6) {
+      setError("Please enter a valid 6-digit verification code.");
+      setLoading(false);
+      return;
+    }
+
+    let verifiedSuccess = false;
+
+    // 1. Try TOTP authenticator code first
     try {
-      const { data: factors, error: factorError } = await supabase.auth.mfa.listFactors();
-      if (factorError || !factors?.totp?.length) {
-        throw new Error("No 2FA factor found for this account.");
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const verifiedFactor = factors?.totp?.find((f) => f.status === "verified");
+
+      if (verifiedFactor) {
+        const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedFactor.id });
+        if (!challengeError) {
+          const { error: verifyError } = await supabase.auth.mfa.verify({
+            factorId: verifiedFactor.id,
+            challengeId: challenge.id,
+            code: cleanCode,
+          });
+
+          if (!verifyError) {
+            verifiedSuccess = true;
+          }
+        }
       }
+    } catch (err) {
+      console.warn("[2FA TOTP verify note]:", err);
+    }
 
-      const targetFactorId = factors.totp[0].id;
+    // 2. Try Email OTP verification if TOTP failed
+    if (!verifiedSuccess) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token || "";
 
-      // 1. Create Challenge
-      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: targetFactorId });
-      if (challengeError) throw challengeError;
+        const res = await fetch("/api/auth/2fa-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ action: "verify", code: cleanCode, email }),
+        });
 
-      // 2. Verify Code
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: targetFactorId,
-        challengeId: challenge.id,
-        code: totpCode.trim(),
-      });
-
-      if (verifyError) {
-        // STOP EXECUTION IMMEDIATELY - DO NOT REDIRECT
-        setError("Invalid authenticator code. Please try again.");
-        setLoading(false);
-        return;
+        const json = await res.json();
+        if (res.ok && json.success) {
+          verifiedSuccess = true;
+        }
+      } catch (emailErr) {
+        console.warn("[2FA Email verify note]:", emailErr);
       }
+    }
 
-      // 3. ONLY ON SUCCESS -> REDIRECT
+    if (verifiedSuccess) {
       window.location.href = "/dashboard";
-    } catch (err: any) {
-      console.error("[2FA Verification Exception]:", err);
-      setError(err.message || "Invalid authenticator code. Please try again.");
+    } else {
+      setError("Invalid verification code. Please check your authenticator app or email inbox.");
       setLoading(false);
     }
   };
@@ -149,11 +192,10 @@ export default function LoginPage() {
     try {
       const cleanEmail = email.toLowerCase().trim();
 
-      // 1. First check if profile/account exists
       const { data: prof } = await supabase
         .from("profiles")
         .select("id")
-        .or(`email.eq.${cleanEmail},id.eq.${cleanEmail}`)
+        .eq("email", cleanEmail)
         .maybeSingle();
 
       if (!prof) {
@@ -162,31 +204,20 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. User exists -> Dispatch Magic Link pointing to /auth/callback
-      const getCallbackURL = () => {
-        const origin = typeof window !== "undefined" ? window.location.origin : "https://feedm.ee";
-        return `${origin}/auth/callback?next=/dashboard`;
-      };
-
       const { error: magicErr } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
-          emailRedirectTo: getCallbackURL(),
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         },
       });
 
       if (magicErr) {
-        if (magicErr.message?.toLowerCase().includes("rate limit")) {
-          setError("Email rate limit reached. Please sign in with password or try again shortly.");
-        } else {
-          setError(magicErr.message);
-        }
+        setError(magicErr.message);
       } else {
         setMagicLinkSuccess(true);
       }
     } catch (err: any) {
-      console.error("Magic link error:", err);
-      setError(err.message || "Failed to send Magic Link.");
+      setError("Failed to send Magic Link. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -194,12 +225,10 @@ export default function LoginPage() {
 
   return (
     <div className="h-screen w-full flex flex-col justify-center items-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-cyan-50 px-4 py-2 relative select-none">
-      {/* Background orbs */}
       <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[40%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-10%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[120px]" />
 
       <div className="relative w-full max-w-sm my-auto">
-        {/* Logo & Header */}
         <div className="mb-4 sm:mb-5 flex flex-col items-center text-center">
           <Link href="/" className="mb-2 flex items-center justify-center p-1.5 rounded-2xl bg-white shadow-sm border border-zinc-200/80 hover:scale-105 transition-transform">
             <LogoIconOnly />
@@ -209,12 +238,11 @@ export default function LoginPage() {
           </h1>
           <p className="text-[11px] sm:text-xs font-semibold text-zinc-500 mt-0.5">
             {requires2FA
-              ? "Enter the 6-digit verification code from your authenticator app."
-              : "Sign in to your Creator Studio"}
+              ? "Enter 6-digit code from authenticator app or email."
+              : "Sign in to manage your video link-in-bio & creator tools"}
           </p>
         </div>
 
-        {/* Card */}
         <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-5 sm:p-6 shadow-xl shadow-zinc-900/5 backdrop-blur-md">
           {error && (
             <div className="mb-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700">
@@ -223,20 +251,25 @@ export default function LoginPage() {
             </div>
           )}
 
+          {emailNotice && (
+            <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span>{emailNotice}</span>
+            </div>
+          )}
+
           {magicLinkSuccess && (
-            <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2.5 text-xs font-bold text-emerald-800">
+            <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
               <span>Magic Link sent! Check your inbox to sign in with 1-click.</span>
             </div>
           )}
 
           {nonExistentUserEmail && (
-            <div className="mb-3 rounded-2xl bg-amber-50 border border-amber-200 p-3.5 text-amber-900 space-y-2">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-                <p className="text-xs font-bold leading-tight">
-                  No account found with <span className="font-mono text-amber-950 underline">{nonExistentUserEmail}</span>. Would you like to create one?
-                </p>
+            <div className="mb-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                <span>No account found with this email address.</span>
               </div>
               <Link
                 href={`/signup?email=${encodeURIComponent(nonExistentUserEmail)}`}
@@ -254,7 +287,7 @@ export default function LoginPage() {
               <div className="p-2.5 rounded-2xl bg-violet-50 border border-violet-200 text-violet-950 flex items-center gap-2.5">
                 <ShieldCheck className="h-4 w-4 text-violet-600 shrink-0" />
                 <p className="text-[11px] font-semibold leading-tight">
-                  Two-Factor Protection Active. Enter TOTP code from authenticator app.
+                  Two-Factor Protection Active. Enter TOTP code or email verification code.
                 </p>
               </div>
 
@@ -286,6 +319,16 @@ export default function LoginPage() {
                 )}
               </button>
 
+              {/* Email Fallback Link Directly in Form */}
+              <button
+                type="button"
+                onClick={handleSendEmailCode}
+                disabled={isSendingEmail}
+                className="mt-4 text-sm text-emerald-600 hover:underline font-medium block text-center w-full cursor-pointer disabled:opacity-50"
+              >
+                {isSendingEmail ? "Sending code..." : "Didn't receive a code? Send code to my email"}
+              </button>
+
               <button
                 type="button"
                 onClick={() => setRequires2FA(false)}
@@ -308,7 +351,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2 pl-9 pr-3 text-xs sm:text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2 pl-9 pr-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 font-medium"
                   />
                 </div>
               </div>
@@ -319,7 +362,7 @@ export default function LoginPage() {
                   <label className="text-[11px] font-bold text-zinc-700">Password</label>
                   <Link
                     href="/forgot-password"
-                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline cursor-pointer"
+                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition"
                   >
                     Forgot Password?
                   </Link>
@@ -332,7 +375,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2 pl-9 pr-9 text-xs sm:text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                    className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2 pl-9 pr-9 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 font-medium"
                   />
                   <button
                     type="button"
@@ -344,57 +387,43 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Sign In Button */}
+              {/* Standard Password Submit CTA */}
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-60 cursor-pointer mt-1"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-60 cursor-pointer mt-4"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <>Sign In <ArrowRight className="h-4 w-4" /></>
+                  <>Log In to Creator Studio <ArrowRight className="h-4 w-4" /></>
                 )}
               </button>
+
+              {/* Instant Magic Link Fallback */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={handleMagicLink}
+                  disabled={loading}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline transition cursor-pointer disabled:opacity-50"
+                >
+                  Send Instant Magic Link (1-Click Login)
+                </button>
+              </div>
             </form>
           )}
 
-          {!requires2FA && (
-            <>
-              {/* Divider */}
-              <div className="relative my-3 sm:my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-zinc-200" />
-                </div>
-                <div className="relative flex justify-center text-[10px] sm:text-[11px] font-bold text-zinc-400">
-                  <span className="bg-white px-2.5">or use a Magic Link</span>
-                </div>
-              </div>
-
-              {/* Magic Link Action */}
-              <button
-                type="button"
-                onClick={handleMagicLink}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 py-2 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition disabled:opacity-60 cursor-pointer"
-              >
-                {loading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-600" />
-                ) : (
-                  "Send Instant Magic Link"
-                )}
-              </button>
-            </>
-          )}
+          {/* Bottom Signup Navigation */}
+          <div className="mt-4 pt-3 border-t border-zinc-100 text-center">
+            <p className="text-xs font-semibold text-zinc-500">
+              Don&apos;t have a creator feed yet?{" "}
+              <Link href="/signup" className="font-extrabold text-emerald-600 hover:underline">
+                Create Free Account
+              </Link>
+            </p>
+          </div>
         </div>
-
-        {/* Footer link */}
-        <p className="mt-3 text-center text-xs font-semibold text-zinc-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-extrabold text-emerald-600 hover:text-emerald-700 underline underline-offset-2">
-            Create Free Feed
-          </Link>
-        </p>
       </div>
     </div>
   );
