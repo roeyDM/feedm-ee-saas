@@ -595,7 +595,7 @@ export function MobilePreview({
           rel="noreferrer" 
           style={iconStyle} 
           className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}
-          onClick={() => trackAnalyticsEvent(username, "link_click", { linkUrl: link.url, linkTitle: link.label || link.platform })}
+          onClick={() => trackAnalyticsEvent(username, "link_click", { itemId: link.id || link.label || link.platform, linkUrl: link.url, linkTitle: link.label || link.platform })}
         >
           {iconElement}
           <span className="text-[10px] font-bold" style={{ color: customIconColor }}>{link.label}</span>
@@ -611,7 +611,7 @@ export function MobilePreview({
         rel="noreferrer" 
         style={iconStyle} 
         className={iconClass}
-        onClick={() => trackAnalyticsEvent(username, "link_click", { linkUrl: link.url, linkTitle: link.platform })}
+        onClick={() => trackAnalyticsEvent(username, "link_click", { itemId: link.id || link.platform, linkUrl: link.url, linkTitle: link.platform })}
       >
         {iconElement}
       </a>
@@ -865,7 +865,7 @@ export function MobilePreview({
               href={link.url}
               target="_blank"
               rel="noreferrer"
-              onClick={() => trackAnalyticsEvent(username, "link_click", { linkUrl: link.url, linkTitle: link.title })}
+              onClick={() => trackAnalyticsEvent(username, "link_click", { itemId: link.id || link.title, linkUrl: link.url, linkTitle: link.title })}
               style={{
                 backgroundColor: activeAppearance.cardBgColor || "rgba(255, 255, 255, 0.85)",
                 color: activeAppearance.cardTextColor || "#09090b",

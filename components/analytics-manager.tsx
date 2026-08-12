@@ -119,6 +119,7 @@ export function AnalyticsManager({
       const { data: { user } } = await supabase.auth.getUser();
       let activeUsername = propUsername ? propUsername.toLowerCase().trim() : "";
       let activeUserId = user?.id || null;
+      let activePageId: string | null = null;
       let profileCounts = { views: 0, clicks: 0 };
 
       // Attempt fetching from /api/analytics/stats API route
@@ -171,6 +172,7 @@ export function AnalyticsManager({
           .maybeSingle();
 
         if (page) {
+          if (page.id) activePageId = page.id;
           profileCounts = {
             views: Math.max(profileCounts.views, Number(page.views || 0)),
             clicks: Math.max(profileCounts.clicks, Number(page.clicks || 0)),
@@ -189,12 +191,51 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Fetch Real Analytics Events (views, clicks, reel_play, form_open) with time-range filtering
+      // 2. Query feed_analytics & analytics_events tables with time-range filtering
       try {
         const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - daysCount);
         const startDateISO = startDate.toISOString();
+
+        let feedIdToQuery = activePageId || activeUserId;
+
+        if (feedIdToQuery) {
+          const { data: feedAnalyticsRows } = await supabase
+            .from("feed_analytics")
+            .select("*")
+            .eq("feed_id", feedIdToQuery)
+            .gte("created_at", startDateISO)
+            .order("created_at", { ascending: false });
+
+          if (feedAnalyticsRows && feedAnalyticsRows.length > 0) {
+            const feedViews = feedAnalyticsRows.filter((r) => r.event_type === "view" || r.event_type === "page_view").length;
+            const feedClicks = feedAnalyticsRows.filter((r) => r.event_type === "click" || r.event_type === "link_click").length;
+
+            totalViews = Math.max(totalViews, feedViews);
+            totalClicks = Math.max(totalClicks, feedClicks);
+
+            // Compute top links from feed_analytics item_id
+            const clickRows = feedAnalyticsRows.filter((r) => r.event_type === "click" || r.event_type === "link_click");
+            const feedLinkMap: Record<string, number> = {};
+            clickRows.forEach((r) => {
+              const label = r.item_id || "Outbound Link";
+              feedLinkMap[label] = (feedLinkMap[label] || 0) + 1;
+            });
+
+            if (Object.keys(feedLinkMap).length > 0) {
+              const totalFeedClicks = clickRows.length || 1;
+              topLinks = Object.entries(feedLinkMap)
+                .map(([name, clicks]) => ({
+                  name,
+                  clicks,
+                  percentage: Math.round((clicks / totalFeedClicks) * 100),
+                }))
+                .sort((a, b) => b.clicks - a.clicks)
+                .slice(0, 5);
+            }
+          }
+        }
 
         let eventsQuery = supabase
           .from("analytics_events")
