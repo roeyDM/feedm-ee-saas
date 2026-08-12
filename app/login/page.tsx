@@ -98,42 +98,40 @@ export default function LoginPage() {
 
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!totpCode || totpCode.trim().length < 6) {
-      setError("Please enter a valid 6-digit code.");
-      return;
-    }
+    setError("");
     setLoading(true);
-    setError(null);
 
     try {
-      let targetFactorId = factorId;
-
-      if (!targetFactorId) {
-        const { data: mfaFactors } = await supabase.auth.mfa.listFactors();
-        const verifiedFactor = mfaFactors?.totp?.find((f) => f.status === "verified");
-        if (verifiedFactor) {
-          targetFactorId = verifiedFactor.id;
-          setFactorId(verifiedFactor.id);
-        }
+      const { data: factors, error: factorError } = await supabase.auth.mfa.listFactors();
+      if (factorError || !factors?.totp?.length) {
+        throw new Error("No 2FA factor found for this account.");
       }
 
-      if (targetFactorId) {
-        const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: targetFactorId });
-        if (challengeErr) throw challengeErr;
+      const targetFactorId = factors.totp[0].id;
 
-        const { error: verifyErr } = await supabase.auth.mfa.verify({
-          factorId: targetFactorId,
-          challengeId: challengeData.id,
-          code: totpCode.trim(),
-        });
+      // 1. Create Challenge
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: targetFactorId });
+      if (challengeError) throw challengeError;
 
-        if (verifyErr) throw verifyErr;
+      // 2. Verify Code
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: targetFactorId,
+        challengeId: challenge.id,
+        code: totpCode.trim(),
+      });
+
+      if (verifyError) {
+        // STOP EXECUTION IMMEDIATELY - DO NOT REDIRECT
+        setError("Invalid authenticator code. Please try again.");
+        setLoading(false);
+        return;
       }
 
-      router.push("/dashboard");
+      // 3. ONLY ON SUCCESS -> REDIRECT
+      window.location.href = "/dashboard";
     } catch (err: any) {
-      console.error("2FA Verification Error:", err);
-      setError(err.message || "Invalid 2FA code. Please try again.");
+      console.error("[2FA Verification Exception]:", err);
+      setError(err.message || "Invalid authenticator code. Please try again.");
       setLoading(false);
     }
   };
