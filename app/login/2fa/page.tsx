@@ -4,12 +4,12 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
-import { ShieldCheck, KeyRound, AlertCircle, CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
+import { ShieldCheck, KeyRound, AlertCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 
 export default function TwoFactorPage() {
   const [totpCode, setTotpCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
@@ -42,8 +42,8 @@ export default function TwoFactorPage() {
     checkAuthAndFactors();
   }, []);
 
-  const handleSendEmailOtp = async () => {
-    setEmailSending(true);
+  const handleSendEmailCode = async () => {
+    setIsSendingEmail(true);
     setError(null);
     setEmailNotice(null);
 
@@ -62,15 +62,15 @@ export default function TwoFactorPage() {
 
       const json = await res.json();
       if (!res.ok || json.error) {
-        throw new Error(json.error || "Failed to send email OTP code.");
+        throw new Error(json.error || "Failed to send email code.");
       }
 
-      setEmailNotice(json.message || "A 6-digit verification code was sent to your email address.");
+      setEmailNotice("Verification code sent to your email inbox!");
     } catch (err: any) {
-      console.error("[Email OTP Send Error]:", err);
-      setError(err.message || "Failed to send email verification code.");
+      console.error("[Send Email Code Error]:", err);
+      setError("Failed to send email code. Please try again.");
     } finally {
-      setEmailSending(false);
+      setIsSendingEmail(false);
     }
   };
 
@@ -211,18 +211,15 @@ export default function TwoFactorPage() {
               )}
             </button>
 
-            {/* Email Fallback Option */}
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                disabled={emailSending}
-                onClick={handleSendEmailOtp}
-                className="text-xs font-bold text-violet-600 hover:text-violet-700 underline cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                <span>{emailSending ? "Sending code to email..." : "Didn't receive a code? Send one-time verification code to my email"}</span>
-              </button>
-            </div>
+            {/* Email Fallback Link Directly in Form */}
+            <button
+              type="button"
+              onClick={handleSendEmailCode}
+              disabled={isSendingEmail}
+              className="mt-4 text-sm text-emerald-600 hover:underline font-medium block text-center w-full cursor-pointer disabled:opacity-50"
+            >
+              {isSendingEmail ? "Sending code..." : "Didn't receive a code? Send code to my email"}
+            </button>
 
             <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 pt-2 border-t border-zinc-100">
               <Link href="/login" className="hover:text-zinc-900 transition">
