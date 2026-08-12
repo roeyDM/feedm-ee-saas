@@ -371,8 +371,9 @@ function DashboardContent() {
       return;
     }
 
-    // Validation 3: Check for target email in leadForm
-    if (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@")) {
+    // Validation 3: Check for target email in leadForm (ONLY when Lead Form is Enabled)
+    const isLeadFormEnabled = leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false;
+    if (isLeadFormEnabled && (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@"))) {
       setSaveStatus("error");
       setStatusMsg("Please enter a valid email address to receive lead notifications.");
       return;

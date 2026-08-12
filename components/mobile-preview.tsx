@@ -652,14 +652,14 @@ export function MobilePreview({
   const getButtonShapeClass = () => {
     switch (activeAppearance.buttonShape) {
       case "sharp":
-        return "rounded-none bg-white/90 border border-white/60 shadow-md text-zinc-900";
+        return "rounded-none border shadow-md";
       case "pill":
-        return "rounded-full bg-white/90 border border-white/60 shadow-md text-zinc-900 px-5";
+        return "rounded-full border shadow-md px-5";
       case "outline":
-        return "rounded-2xl bg-white/10 backdrop-blur-md border-2 border-white/80 text-white shadow-md hover:bg-white/20";
+        return "rounded-2xl backdrop-blur-md border-2 shadow-md hover:bg-white/20";
       case "rounded":
       default:
-        return "rounded-2xl bg-white/85 border border-white/60 shadow-md text-zinc-900";
+        return "rounded-2xl border shadow-md";
     }
   };
 

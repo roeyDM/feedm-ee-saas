@@ -871,52 +871,25 @@ export function ProfileEditor({
                   {leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false ? "Enabled" : "Disabled"}
                 </span>
               </label>
-              {planType === "free" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
-                  <Lock className="h-3 w-3" /> Pro Feature
-                </span>
-              )}
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-5">
-          {planType === "free" ? (
-            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-900 flex flex-col items-center text-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-zinc-950 shadow-md">
-                <Lock className="h-6 w-6" />
-              </div>
-              <div>
-                <h4 className="text-sm font-black">Lead Capture Form is Locked</h4>
-                <p className="text-xs font-semibold text-amber-800 mt-1 max-w-md">
-                  Lead capture forms are available on the Pro plan ($7/mo). Upgrade to collect names, phone numbers, and email leads directly from your video feed.
-                </p>
-              </div>
-              <Button
-                type="button"
-                onClick={() => setShowUpgradeModal(true)}
-                className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-10 px-5 rounded-xl gap-2 cursor-pointer shadow-sm mt-1"
-              >
-                <Zap className="h-4 w-4 fill-current" />
-                <span>Unlock Lead Capture Form</span>
-              </Button>
+          {/* Section 1: Form Content */}
+          <div className="space-y-3.5">
+            <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
+              Form Content
+            </h4>
+            
+            <div className="space-y-1">
+              <Label className="text-xs font-bold text-zinc-700">Form Title</Label>
+              <Input
+                value={leadForm.title}
+                onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
+                placeholder="Get in Touch"
+                className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
+              />
             </div>
-          ) : (
-            <>
-              {/* Section 1: Form Content */}
-              <div className="space-y-3.5">
-                <h4 className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-1.5">
-                  Form Content
-                </h4>
-                
-                <div className="space-y-1">
-                  <Label className="text-xs font-bold text-zinc-700">Form Title</Label>
-                  <Input
-                    value={leadForm.title}
-                    onChange={(e) => setLeadForm({ ...leadForm, title: e.target.value })}
-                    placeholder="Get in Touch"
-                    className="bg-zinc-50 border-zinc-200 text-xs text-zinc-900"
-                  />
-                </div>
 
             <div className="space-y-1">
               <Label className="text-xs font-bold text-zinc-700">Form Subtitle / Description</Label>
@@ -995,7 +968,7 @@ export function ProfileEditor({
             </h4>
             
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-zinc-700">Target Email (For Form Submissions) *</Label>
+              <Label className="text-xs font-bold text-zinc-700">Target Email (For Form Submissions)</Label>
               <Input
                 type="email"
                 value={leadForm.target || ""}
@@ -1003,12 +976,12 @@ export function ProfileEditor({
                 placeholder="mail@domain.com"
                 className={cn(
                   "bg-zinc-50 text-xs text-zinc-900 font-mono",
-                  (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@"))
+                  (leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false && (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@")))
                     ? "border-rose-400 focus:ring-rose-500/30"
                     : "border-zinc-200"
                 )}
               />
-              {(!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@")) ? (
+              {(leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false && (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@"))) ? (
                 <p className="text-[11px] font-extrabold text-rose-600 flex items-center gap-1 mt-1">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                   Please enter a valid email address to receive lead notifications.
@@ -1018,8 +991,6 @@ export function ProfileEditor({
               )}
             </div>
           </div>
-        </>
-      )}
       </CardContent>
       </Card>
 
