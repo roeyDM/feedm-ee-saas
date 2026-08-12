@@ -67,20 +67,39 @@ export async function POST(req: Request) {
       console.log(`[Analytics Track API Success] Registered ${event_type} for @${cleanUsername} (user_id: ${userId || "none"})`);
     }
 
-    // 2. Also increment aggregate views_count/clicks_count on profiles table for bulletproof fallback
+    // 2. Increment aggregate views & clicks in both profiles AND pages tables
     try {
-      const targetId = userId || profData?.id;
-      if (targetId) {
-        if (event_type === "page_view") {
-          const currentViews = profData?.views_count || 0;
-          await supabase.from("profiles").update({ views_count: currentViews + 1 }).eq("id", targetId);
-        } else if (event_type === "link_click") {
-          const currentClicks = profData?.clicks_count || 0;
-          await supabase.from("profiles").update({ clicks_count: currentClicks + 1 }).eq("id", targetId);
+      const isView = event_type === "page_view" || event_type === "view";
+      const isClick = event_type === "link_click" || event_type === "click";
+
+      const { data: pageData } = await supabase
+        .from("pages")
+        .select("id, views, clicks")
+        .or(`username.eq.${cleanUsername},handle.eq.${cleanUsername}`)
+        .maybeSingle();
+
+      const pageViews = Number(pageData?.views || 0);
+      const pageClicks = Number(pageData?.clicks || 0);
+      const profViews = Number(profData?.views_count || 0);
+      const profClicks = Number(profData?.clicks_count || 0);
+
+      if (isView) {
+        if (pageData?.id) {
+          await supabase.from("pages").update({ views: pageViews + 1 }).eq("id", pageData.id);
+        }
+        if (userId || profData?.id) {
+          await supabase.from("profiles").update({ views_count: profViews + 1 }).eq("id", userId || profData!.id);
+        }
+      } else if (isClick) {
+        if (pageData?.id) {
+          await supabase.from("pages").update({ clicks: pageClicks + 1 }).eq("id", pageData.id);
+        }
+        if (userId || profData?.id) {
+          await supabase.from("profiles").update({ clicks_count: profClicks + 1 }).eq("id", userId || profData!.id);
         }
       }
     } catch (e) {
-      console.warn("[Analytics Track API] Profile counter update note:", e);
+      console.warn("[Analytics Track API] Counter update note:", e);
     }
 
     return NextResponse.json({ success: true, username: cleanUsername, event_type });

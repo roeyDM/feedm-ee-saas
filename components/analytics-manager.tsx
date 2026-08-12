@@ -163,6 +163,20 @@ export function AnalyticsManager({
           activeUserId = prof.id;
         }
 
+        // Fetch live counts from pages table as well
+        const { data: page } = await supabase
+          .from("pages")
+          .select("id, views, clicks")
+          .or(`user_id.eq.${user.id},username.eq.${activeUsername},handle.eq.${activeUsername}`)
+          .maybeSingle();
+
+        if (page) {
+          profileCounts = {
+            views: Math.max(profileCounts.views, Number(page.views || 0)),
+            clicks: Math.max(profileCounts.clicks, Number(page.clicks || 0)),
+          };
+        }
+
         const leadsRes = await supabase
           .from("leads")
           .select("id, created_at", { count: "exact" })

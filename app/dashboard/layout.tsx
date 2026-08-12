@@ -23,6 +23,14 @@ export default function DashboardLayout({
 
         if (isMounted) {
           if (user && !error) {
+            // Check 2FA Assurance Level (aal1 vs aal2)
+            const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+            if (aalData?.currentLevel === "aal1" && aalData?.nextLevel === "aal2") {
+              console.warn("[DashboardLayout] 2FA verification required (aal1 session level)");
+              setIsAuthenticated(false);
+              router.push("/login?mfa_required=true");
+              return;
+            }
             setIsAuthenticated(true);
           } else {
             setIsAuthenticated(false);

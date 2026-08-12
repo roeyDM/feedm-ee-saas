@@ -55,21 +55,32 @@ export default function LoginPage() {
       return;
     }
 
-    // Check if account has 2FA TOTP enabled (via DB profile, user metadata, or Supabase MFA)
+    // Check if account has 2FA TOTP enabled (via Supabase MFA, assurance level, or profile metadata)
     try {
       const user = authData?.user;
       let is2FAActive = false;
 
-      if (user?.user_metadata?.totp_enabled || user?.app_metadata?.totp_enabled) {
+      // 1. Check Supabase MFA assurance level
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aalData?.currentLevel === "aal1" && aalData?.nextLevel === "aal2") {
         is2FAActive = true;
       }
 
+      // 2. Check enrolled TOTP factors
       const { data: mfaFactors } = await supabase.auth.mfa.listFactors();
       const verifiedFactor = mfaFactors?.totp?.find((f) => f.status === "verified");
 
       if (verifiedFactor) {
         is2FAActive = true;
         setFactorId(verifiedFactor.id);
+      }
+
+      // 3. Fallback: Check profile or user metadata
+      if (!is2FAActive && user?.id) {
+        const { data: prof } = await supabase.from("profiles").select("two_factor_enabled").eq("id", user.id).maybeSingle();
+        if (prof?.two_factor_enabled || user?.user_metadata?.two_factor_enabled || user?.user_metadata?.totp_enabled) {
+          is2FAActive = true;
+        }
       }
 
       if (is2FAActive) {
@@ -88,19 +99,30 @@ export default function LoginPage() {
   const handleVerify2FA = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!totpCode || totpCode.trim().length < 6) {
-      setError("Invalid code. Please try again.");
+      setError("Please enter a valid 6-digit code.");
       return;
     }
     setLoading(true);
     setError(null);
 
     try {
-      if (factorId) {
-        const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId });
+      let targetFactorId = factorId;
+
+      if (!targetFactorId) {
+        const { data: mfaFactors } = await supabase.auth.mfa.listFactors();
+        const verifiedFactor = mfaFactors?.totp?.find((f) => f.status === "verified");
+        if (verifiedFactor) {
+          targetFactorId = verifiedFactor.id;
+          setFactorId(verifiedFactor.id);
+        }
+      }
+
+      if (targetFactorId) {
+        const { data: challengeData, error: challengeErr } = await supabase.auth.mfa.challenge({ factorId: targetFactorId });
         if (challengeErr) throw challengeErr;
 
         const { error: verifyErr } = await supabase.auth.mfa.verify({
-          factorId,
+          factorId: targetFactorId,
           challengeId: challengeData.id,
           code: totpCode.trim(),
         });
@@ -111,7 +133,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err: any) {
       console.error("2FA Verification Error:", err);
-      setError("Invalid code. Please try again.");
+      setError(err.message || "Invalid 2FA code. Please try again.");
       setLoading(false);
     }
   };
