@@ -84,33 +84,20 @@ function RegisterForm() {
 
       const user = authData.user;
       if (user) {
-        // 3. Provision profile record in Supabase
-        const now = new Date();
-        const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-        const profileData = {
-          id: user.id,
-          username: cleanHandle,
-          name: name || cleanHandle,
-          plan_type: plan,
-          subscription_status: isFreePlan ? "active" : "trialing",
-          trial_ends_at: isFreePlan ? null : trialEnd,
-          avatar_url: `https://api.dicebear.com/7.x/shapes/svg?seed=${cleanHandle}`,
-          updated_at: now.toISOString(),
-        };
-
-        const { error: profErr } = await supabase.from("profiles").upsert(profileData);
-        if (profErr) {
-          console.warn("[Registration Profile Note]:", profErr.message);
-        }
-
-        // Dispatch Free Welcome Email via Resend API
-        if (isFreePlan && email) {
-          fetch("/api/auth/free-welcome", {
+        try {
+          await fetch("/api/auth/signup-upsert", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, name: cleanHandle }),
-          }).catch((err) => console.warn("[Free Welcome Dispatch Warning]:", err));
+            body: JSON.stringify({
+              userId: user.id,
+              email,
+              fullName: name || cleanHandle,
+              handle: cleanHandle,
+              plan,
+            }),
+          });
+        } catch (err) {
+          console.warn("[Register UPSERT API Warning]:", err);
         }
       }
 

@@ -11,7 +11,6 @@ const DEFAULT_FROM = process.env.RESEND_FROM_EMAIL || "FeedM <welcome@feedm.ee>"
 const FALLBACK_FROM = "onboarding@resend.dev";
 
 function getFromAddress(): string {
-  // If domain is unverified in testing, fallback to onboarding@resend.dev
   if (process.env.NODE_ENV === "development" && !process.env.RESEND_FROM_EMAIL) {
     return FALLBACK_FROM;
   }
@@ -21,14 +20,18 @@ function getFromAddress(): string {
 export async function sendFreeWelcomeEmail({
   email,
   name,
+  handle,
 }: {
   email: string;
   name?: string;
+  handle?: string;
 }) {
   if (!resend) {
     console.warn("[Resend Warning]: RESEND_API_KEY is missing. Free welcome email skipped.");
     return { success: false, error: "RESEND_API_KEY missing" };
   }
+
+  console.log(`[Resend] Sending Welcome Email to: ${email} (Name: ${name || "Creator"}, Handle: @${handle || "creator"})`);
 
   try {
     const html = renderFreeWelcomeHtml({
@@ -36,16 +39,34 @@ export async function sendFreeWelcomeEmail({
       loginUrl: "https://feedm.ee/dashboard",
     });
 
-    const data = await resend.emails.send({
-      from: getFromAddress(),
-      to: [email],
-      subject: "Welcome to FeedM — Your 5-Page Video Bio is Ready",
-      html,
-    });
+    let fromAddress = getFromAddress();
+    let data;
 
+    try {
+      data = await resend.emails.send({
+        from: fromAddress,
+        to: [email],
+        subject: "Welcome to FeedM — Your 5-Page Video Bio is Ready",
+        html,
+      });
+    } catch (sendErr: any) {
+      if (sendErr.message?.toLowerCase().includes("domain") || sendErr.statusCode === 403) {
+        console.warn(`[Resend Warning]: Primary sender '${fromAddress}' failed domain check. Retrying with '${FALLBACK_FROM}'...`);
+        data = await resend.emails.send({
+          from: FALLBACK_FROM,
+          to: [email],
+          subject: "Welcome to FeedM — Your 5-Page Video Bio is Ready",
+          html,
+        });
+      } else {
+        throw sendErr;
+      }
+    }
+
+    console.log("[Resend Success]: Welcome Email dispatched successfully:", data);
     return { success: true, data };
   } catch (error: any) {
-    console.error("[Resend Free Welcome Error]:", error);
+    console.error("[Resend Error]: Failed to dispatch welcome email:", error);
     return { success: false, error: error.message || error };
   }
 }
@@ -66,6 +87,8 @@ export async function sendTrialStartedEmail({
     return { success: false, error: "RESEND_API_KEY missing" };
   }
 
+  console.log(`[Resend] Sending Trial Started Email to: ${email} (Plan: ${planName})`);
+
   try {
     const html = renderTrialStartedHtml({
       name: name || "Creator",
@@ -74,16 +97,34 @@ export async function sendTrialStartedEmail({
       dashboardUrl: "https://feedm.ee/dashboard",
     });
 
-    const data = await resend.emails.send({
-      from: getFromAddress(),
-      to: [email],
-      subject: `Welcome to Your 7-Day ${planName} Trial | FeedM`,
-      html,
-    });
+    let fromAddress = getFromAddress();
+    let data;
 
+    try {
+      data = await resend.emails.send({
+        from: fromAddress,
+        to: [email],
+        subject: `Welcome to Your 7-Day ${planName} Trial | FeedM`,
+        html,
+      });
+    } catch (sendErr: any) {
+      if (sendErr.message?.toLowerCase().includes("domain") || sendErr.statusCode === 403) {
+        console.warn(`[Resend Warning]: Primary sender '${fromAddress}' failed domain check. Retrying with '${FALLBACK_FROM}'...`);
+        data = await resend.emails.send({
+          from: FALLBACK_FROM,
+          to: [email],
+          subject: `Welcome to Your 7-Day ${planName} Trial | FeedM`,
+          html,
+        });
+      } else {
+        throw sendErr;
+      }
+    }
+
+    console.log("[Resend Success]: Trial Started Email dispatched successfully:", data);
     return { success: true, data };
   } catch (error: any) {
-    console.error("[Resend Trial Started Error]:", error);
+    console.error("[Resend Error]: Failed to dispatch trial started email:", error);
     return { success: false, error: error.message || error };
   }
 }
@@ -104,6 +145,8 @@ export async function sendSubscriptionActiveEmail({
     return { success: false, error: "RESEND_API_KEY missing" };
   }
 
+  console.log(`[Resend] Sending Subscription Active Email to: ${email} (Plan: ${planName})`);
+
   try {
     const html = renderSubscriptionActiveHtml({
       name: name || "Creator",
@@ -112,16 +155,34 @@ export async function sendSubscriptionActiveEmail({
       dashboardUrl: "https://feedm.ee/dashboard",
     });
 
-    const data = await resend.emails.send({
-      from: getFromAddress(),
-      to: [email],
-      subject: `Payment Confirmed — Welcome to FeedM ${planName}`,
-      html,
-    });
+    let fromAddress = getFromAddress();
+    let data;
 
+    try {
+      data = await resend.emails.send({
+        from: fromAddress,
+        to: [email],
+        subject: `Payment Confirmed — Welcome to FeedM ${planName}`,
+        html,
+      });
+    } catch (sendErr: any) {
+      if (sendErr.message?.toLowerCase().includes("domain") || sendErr.statusCode === 403) {
+        console.warn(`[Resend Warning]: Primary sender '${fromAddress}' failed domain check. Retrying with '${FALLBACK_FROM}'...`);
+        data = await resend.emails.send({
+          from: FALLBACK_FROM,
+          to: [email],
+          subject: `Payment Confirmed — Welcome to FeedM ${planName}`,
+          html,
+        });
+      } else {
+        throw sendErr;
+      }
+    }
+
+    console.log("[Resend Success]: Subscription Active Email dispatched successfully:", data);
     return { success: true, data };
   } catch (error: any) {
-    console.error("[Resend Subscription Active Error]:", error);
+    console.error("[Resend Error]: Failed to dispatch subscription active email:", error);
     return { success: false, error: error.message || error };
   }
 }

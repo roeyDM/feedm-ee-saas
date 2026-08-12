@@ -110,33 +110,26 @@ function SignupFormContent() {
       return;
     }
 
-    // Persist real user profile data in Supabase profiles table
+    // Trigger robust UPSERT for profiles and pages tables via Admin API, then dispatch welcome email
     if (data.user) {
       try {
-        await supabase.from("profiles").upsert({
-          id: data.user.id,
-          username: cleanUsername,
-          name: formattedName,
-          bio: "",
-          avatar_url: "",
-          plan_type: isFreePlan ? "free" : planParam,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "id" });
-      } catch (err) {
-        console.warn("Failed to create profile record on signup:", err);
-      }
-
-      // Dispatch Free Welcome Email via Resend API
-      if (isFreePlan && email) {
-        fetch("/api/auth/free-welcome", {
+        await fetch("/api/auth/signup-upsert", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, name: formattedName }),
-        }).catch((err) => console.warn("[Free Welcome Dispatch Warning]:", err));
+          body: JSON.stringify({
+            userId: data.user.id,
+            email,
+            fullName: formattedName,
+            handle: cleanUsername,
+            plan: isFreePlan ? "free" : planParam,
+          }),
+        });
+      } catch (err) {
+        console.warn("[Signup UPSERT API Warning]:", err);
       }
     }
 
-    // If user auto-confirmed (no email verification required), redirect immediately
+    // Redirect user to dashboard
     if (data.session) {
       router.push("/dashboard");
     } else {
