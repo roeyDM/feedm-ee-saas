@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase, sanitizeHandleInput } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
-import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
@@ -24,12 +24,47 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Handle Availability State ('idle' | 'checking' | 'available' | 'taken')
+  const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+
   React.useEffect(() => {
     const emailParam = searchParams.get("email");
     if (emailParam) {
       setEmail(emailParam);
     }
   }, [searchParams]);
+
+  // 400ms Debounced Handle Availability Check against Supabase pages & profiles tables
+  React.useEffect(() => {
+    const cleanHandle = handle.toLowerCase().trim().replace(/^@+/, "").replace(/[^a-z0-9_-]/g, "");
+    if (!cleanHandle || cleanHandle.length < 2) {
+      setHandleStatus("idle");
+      return;
+    }
+
+    setHandleStatus("checking");
+    const timer = setTimeout(async () => {
+      const { data: pageData } = await supabase
+        .from("pages")
+        .select("id")
+        .or(`handle.eq.${cleanHandle},username.eq.${cleanHandle}`)
+        .maybeSingle();
+
+      const { data: profData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", cleanHandle)
+        .maybeSingle();
+
+      if (pageData || profData) {
+        setHandleStatus("taken");
+      } else {
+        setHandleStatus("available");
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [handle]);
 
   const badgeText =
     isFreePlan
@@ -59,15 +94,8 @@ function RegisterForm() {
     }
 
     try {
-      // 1. Check if handle is already taken in Supabase profiles
-      const { data: existingProf } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("username", cleanHandle)
-        .maybeSingle();
-
-      if (existingProf) {
-        setError(`Handle @${cleanHandle} is already registered. Please choose another.`);
+      if (handleStatus === "taken") {
+        setError("Handle is already taken. Choose another.");
         setLoading(false);
         return;
       }
@@ -182,9 +210,38 @@ function RegisterForm() {
                   value={handle}
                   onChange={(e) => setHandle(sanitizeHandleInput(e.target.value))}
                   placeholder="yourhandle"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-20 pr-4 text-sm font-bold text-emerald-950 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-20 pr-9 text-sm font-bold text-emerald-950 placeholder-zinc-400 focus:outline-none focus:ring-2 ${
+                    handleStatus === "available"
+                      ? "border-emerald-500 focus:ring-emerald-500/30"
+                      : handleStatus === "taken"
+                      ? "border-rose-500 focus:ring-rose-500/30"
+                      : "border-zinc-200 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  }`}
                 />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {handleStatus === "checking" && <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />}
+                  {handleStatus === "available" && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                  {handleStatus === "taken" && <XCircle className="h-4 w-4 text-rose-600" />}
+                </div>
               </div>
+
+              {/* Status Message */}
+              {handleStatus === "checking" && (
+                <span className="text-gray-500 text-xs font-semibold flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin text-gray-500" />
+                  Checking availability...
+                </span>
+              )}
+              {handleStatus === "available" && (
+                <span className="text-green-600 text-xs font-semibold flex items-center gap-1">
+                  ✓ Handle is available!
+                </span>
+              )}
+              {handleStatus === "taken" && (
+                <span className="text-red-600 text-xs font-semibold flex items-center gap-1">
+                  ✗ Handle is already taken. Choose another.
+                </span>
+              )}
             </div>
 
             {/* Email */}
@@ -230,7 +287,7 @@ function RegisterForm() {
             {/* Submit CTA */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || handleStatus === "taken" || handleStatus === "checking"}
               className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs cursor-pointer shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-50"
             >
               {loading ? (

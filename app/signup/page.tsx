@@ -72,7 +72,7 @@ function SignupFormContent() {
         setHandleStatus("taken");
         setHandleReason(result.reason || "Handle is already taken");
       }
-    }, 300);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [username]);
@@ -242,22 +242,22 @@ function SignupFormContent() {
               </div>
 
               {/* Status Message */}
-              {handleStatus === "checking" ? (
-                <p className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />
-                  Checking handle availability...
-                </p>
-              ) : handleStatus === "available" ? (
-                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+              {handleStatus === "checking" && (
+                <span className="text-gray-500 text-xs font-semibold flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin text-gray-500" />
+                  Checking availability...
+                </span>
+              )}
+              {handleStatus === "available" && (
+                <span className="text-green-600 text-xs font-semibold flex items-center gap-1">
                   ✓ Handle is available!
-                </p>
-              ) : handleStatus === "taken" ? (
-                <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1">
-                  ✕ {handleReason || "Handle is already taken"}
-                </p>
-              ) : username ? (
-                <p className="text-[11px] font-semibold text-zinc-400">feedm.ee/{username}</p>
-              ) : null}
+                </span>
+              )}
+              {handleStatus === "taken" && (
+                <span className="text-red-600 text-xs font-semibold flex items-center gap-1">
+                  ✗ Handle is already taken. Choose another.
+                </span>
+              )}
             </div>
 
             {/* Email */}
