@@ -4,14 +4,17 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
-import { ShieldCheck, KeyRound, AlertCircle, Loader2, ArrowRight } from "lucide-react";
+import { ShieldCheck, KeyRound, AlertCircle, CheckCircle2, Loader2, ArrowRight, Mail } from "lucide-react";
 
 export default function TwoFactorPage() {
   const [totpCode, setTotpCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
 
-  // Mount Fail-Safe Guard: If account has no verified TOTP factor, auto-redirect to /dashboard
+  // Mount Check: Fetch session email & verify TOTP status
   useEffect(() => {
     async function checkAuthAndFactors() {
       try {
@@ -20,6 +23,8 @@ export default function TwoFactorPage() {
           window.location.href = "/login";
           return;
         }
+
+        if (user.email) setUserEmail(user.email);
 
         const { data: factors, error: factorError } = await supabase.auth.mfa.listFactors();
         const verifiedFactor = factors?.totp?.find((f) => f.status === "verified");
@@ -37,46 +42,104 @@ export default function TwoFactorPage() {
     checkAuthAndFactors();
   }, []);
 
+  const handleSendEmailOtp = async () => {
+    setEmailSending(true);
+    setError(null);
+    setEmailNotice(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || "";
+
+      const res = await fetch("/api/auth/2fa-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action: "send", email: userEmail }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error || "Failed to send email OTP code.");
+      }
+
+      setEmailNotice(json.message || "A 6-digit verification code was sent to your email address.");
+    } catch (err: any) {
+      console.error("[Email OTP Send Error]:", err);
+      setError(err.message || "Failed to send email verification code.");
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setEmailNotice(null);
     setLoading(true);
 
+    const cleanCode = totpCode.trim();
+    if (!cleanCode || cleanCode.length < 6) {
+      setError("Please enter a valid 6-digit verification code.");
+      setLoading(false);
+      return;
+    }
+
+    let verifiedSuccess = false;
+
+    // 1. First, attempt Authenticator TOTP verification if factor exists
     try {
-      const { data: factors, error: factorError } = await supabase.auth.mfa.listFactors();
+      const { data: factors } = await supabase.auth.mfa.listFactors();
       const verifiedFactor = factors?.totp?.find((f) => f.status === "verified");
 
-      if (factorError || !verifiedFactor) {
-        console.warn("[2FA Auto-Bypass]: No verified 2FA factor found. Granting standard access.");
-        window.location.href = "/dashboard";
-        return;
+      if (verifiedFactor) {
+        const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedFactor.id });
+        if (!challengeError) {
+          const { error: verifyError } = await supabase.auth.mfa.verify({
+            factorId: verifiedFactor.id,
+            challengeId: challenge.id,
+            code: cleanCode,
+          });
+
+          if (!verifyError) {
+            verifiedSuccess = true;
+          }
+        }
       }
+    } catch (totpErr) {
+      console.warn("[2FA TOTP verify note]:", totpErr);
+    }
 
-      const factorId = verifiedFactor.id;
+    // 2. If TOTP didn't pass, attempt Email OTP verification via API
+    if (!verifiedSuccess) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token || "";
 
-      // 1. Create Challenge
-      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
-      if (challengeError) throw challengeError;
+        const res = await fetch("/api/auth/2fa-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ action: "verify", code: cleanCode, email: userEmail }),
+        });
 
-      // 2. Verify Code
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId: challenge.id,
-        code: totpCode.trim(),
-      });
-
-      if (verifyError) {
-        // STOP EXECUTION IMMEDIATELY - DO NOT REDIRECT ON BAD CODE
-        setError("Invalid authenticator code. Please try again.");
-        setLoading(false);
-        return;
+        const json = await res.json();
+        if (res.ok && json.success) {
+          verifiedSuccess = true;
+        }
+      } catch (emailVerifyErr) {
+        console.warn("[2FA Email OTP verify note]:", emailVerifyErr);
       }
+    }
 
-      // 3. ONLY ON SUCCESS -> REDIRECT TO DASHBOARD
+    if (verifiedSuccess) {
       window.location.href = "/dashboard";
-    } catch (err: any) {
-      console.error("[2FA Verification Error]:", err);
-      setError(err.message || "Failed to verify 2FA code.");
+    } else {
+      setError("Invalid verification code. Please check your authenticator app or email inbox.");
       setLoading(false);
     }
   };
@@ -93,15 +156,22 @@ export default function TwoFactorPage() {
           </Link>
           <h1 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">Two-Factor Authentication</h1>
           <p className="text-[11px] sm:text-xs font-semibold text-zinc-500 mt-0.5">
-            Enter the 6-digit verification code from your authenticator app.
+            Enter the 6-digit code from your authenticator app or email.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-5 sm:p-6 shadow-xl shadow-zinc-900/5 backdrop-blur-md">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white/90 p-5 sm:p-6 shadow-xl shadow-zinc-900/5 backdrop-blur-md space-y-3">
           {error && (
-            <div className="mb-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700">
+            <div className="flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-bold text-rose-700">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {emailNotice && (
+            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span>{emailNotice}</span>
             </div>
           )}
 
@@ -109,7 +179,7 @@ export default function TwoFactorPage() {
             <div className="p-2.5 rounded-2xl bg-violet-50 border border-violet-200 text-violet-950 flex items-center gap-2.5">
               <ShieldCheck className="h-4 w-4 text-violet-600 shrink-0" />
               <p className="text-[11px] font-semibold leading-tight">
-                Two-Factor Protection Active. Enter TOTP code from authenticator app.
+                Two-Factor Protection Active. Enter TOTP code or email verification code.
               </p>
             </div>
 
@@ -140,6 +210,19 @@ export default function TwoFactorPage() {
                 <>Verify &amp; Log In <ArrowRight className="h-4 w-4" /></>
               )}
             </button>
+
+            {/* Email Fallback Option */}
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                disabled={emailSending}
+                onClick={handleSendEmailOtp}
+                className="text-xs font-bold text-violet-600 hover:text-violet-700 underline cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                <span>{emailSending ? "Sending code to email..." : "Didn't receive a code? Send one-time verification code to my email"}</span>
+              </button>
+            </div>
 
             <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 pt-2 border-t border-zinc-100">
               <Link href="/login" className="hover:text-zinc-900 transition">
