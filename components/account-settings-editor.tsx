@@ -30,7 +30,8 @@ import {
   BadgeCheck,
   Scale,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +111,7 @@ export function AccountSettingsEditor({
   const [totpSecret, setTotpSecret] = useState("JBSWY3DPEHPK3PXP");
   const [totpCode, setTotpCode] = useState("");
   const [totpError, setTotpError] = useState<string | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Load Auth User Data & 2FA Status on mount
   React.useEffect(() => {
@@ -1276,18 +1278,58 @@ export function AccountSettingsEditor({
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setShowDeleteModal(false)} className="rounded-xl text-xs font-bold">
+              <Button
+                variant="outline"
+                disabled={isDeletingAccount}
+                onClick={() => setShowDeleteModal(false)}
+                className="rounded-xl text-xs font-bold"
+              >
                 Cancel
               </Button>
               <Button
-                disabled={deleteConfirmationText !== "DELETE"}
-                onClick={() => {
-                  alert("Account deletion request submitted.");
-                  setShowDeleteModal(false);
+                disabled={deleteConfirmationText !== "DELETE" || isDeletingAccount}
+                onClick={async () => {
+                  setIsDeletingAccount(true);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+
+                    const res = await fetch("/api/user/delete", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId: user?.id }),
+                    });
+
+                    const resData = await res.json();
+
+                    if (!res.ok || !resData.success) {
+                      throw new Error(resData.error || "Failed to purge account from database.");
+                    }
+
+                    // Sign out client session
+                    await supabase.auth.signOut();
+
+                    // Clear local storage cache
+                    if (typeof window !== "undefined") {
+                      localStorage.clear();
+                    }
+
+                    // Instant hard redirect to homepage
+                    window.location.href = "/";
+                  } catch (err: any) {
+                    console.error("[Account Deletion Error]:", err);
+                    alert(err.message || "Failed to delete account. Please try again.");
+                    setIsDeletingAccount(false);
+                  }
                 }}
-                className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold disabled:opacity-50"
+                className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold disabled:opacity-50 gap-2 cursor-pointer"
               >
-                Permanently Delete Account
+                {isDeletingAccount ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Deleting Account...
+                  </>
+                ) : (
+                  "Permanently Delete Account"
+                )}
               </Button>
             </div>
           </div>
