@@ -111,25 +111,35 @@ export async function checkUsernameAvailability(
   try {
     console.log("[HandleCheck] Executing Supabase query for handle:", cleanUsername);
 
-    const { data, error } = await supabase
+    // 1. Query pages table
+    const { data: pageData } = await supabase
+      .from("pages")
+      .select("id")
+      .or(`username.eq.${cleanUsername},handle.eq.${cleanUsername}`)
+      .maybeSingle();
+
+    if (pageData) {
+      console.log("[HandleCheck] Handle exists in public.pages table:", pageData);
+      return { available: false, reason: "This handle is already taken." };
+    }
+
+    // 2. Query profiles table
+    const { data: profileData, error } = await supabase
       .from("profiles")
       .select("id, username")
       .eq("username", cleanUsername)
       .maybeSingle();
 
-    console.log("[HandleCheck] Supabase query response:", { cleanUsername, data, error });
-
     if (error) {
-      console.warn("[HandleCheck] Supabase query error (e.g. RLS policy or connection issue), defaulting to available:", error);
-      return { available: true };
+      console.warn("[HandleCheck] Supabase query note:", error);
     }
 
-    if (data) {
-      console.log("[HandleCheck] Handle exists in public.profiles table:", data);
+    if (profileData) {
+      console.log("[HandleCheck] Handle exists in public.profiles table:", profileData);
       return { available: false, reason: "This handle is already taken." };
     }
 
-    console.log("[HandleCheck] Handle is available (no row in profiles table)");
+    console.log("[HandleCheck] Handle is available (no row in pages or profiles tables)");
     return { available: true };
   } catch (err) {
     console.error("[HandleCheck] Exception while checking availability:", err);

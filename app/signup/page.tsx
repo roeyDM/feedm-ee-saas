@@ -35,9 +35,10 @@ function SignupFormContent() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Availability checking state
-  const [checkingHandle, setCheckingHandle] = useState(false);
-  const [handleStatus, setHandleStatus] = useState<{ available: boolean; reason?: string } | null>(null);
+  // Availability checking state ('idle' | 'checking' | 'available' | 'taken')
+  type HandleStatusState = "idle" | "checking" | "available" | "taken";
+  const [handleStatus, setHandleStatus] = useState<HandleStatusState>("idle");
+  const [handleReason, setHandleReason] = useState<string | null>(null);
 
   useEffect(() => {
     if (handleParam) {
@@ -50,23 +51,28 @@ function SignupFormContent() {
     }
   }, [handleParam, searchParams]);
 
-  // Debounced real-time handle check
+  // Debounced real-time handle check against pages & profiles tables in Supabase
   useEffect(() => {
     const clean = sanitizeHandleInput(username);
     if (!clean || clean.length < 3) {
-      setHandleStatus(null);
-      setCheckingHandle(false);
+      setHandleStatus("idle");
+      setHandleReason(null);
       return;
     }
 
-    setCheckingHandle(true);
+    setHandleStatus("checking");
     const timer = setTimeout(async () => {
       console.log("[SignupForm] Running handle check for:", clean);
       const result = await checkUsernameAvailability(clean);
       console.log("[SignupForm] Handle check result:", { clean, result });
-      setHandleStatus(result);
-      setCheckingHandle(false);
-    }, 300);
+      if (result.available) {
+        setHandleStatus("available");
+        setHandleReason(null);
+      } else {
+        setHandleStatus("taken");
+        setHandleReason(result.reason || "Handle is already taken. Please choose another.");
+      }
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [username]);
@@ -82,8 +88,8 @@ function SignupFormContent() {
       return;
     }
 
-    if (handleStatus && !handleStatus.available) {
-      setError(handleStatus.reason || "This handle is not available.");
+    if (handleStatus === "taken") {
+      setError(handleReason || "This handle is already taken.");
       setLoading(false);
       return;
     }
@@ -217,39 +223,38 @@ function SignupFormContent() {
                   placeholder="yourhandle"
                   maxLength={30}
                   className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-20 pr-9 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 ${
-                    handleStatus
-                      ? handleStatus.available
-                        ? "border-emerald-500 focus:ring-emerald-500/30"
-                        : "border-rose-500 focus:ring-rose-500/30"
+                    handleStatus === "available"
+                      ? "border-emerald-500 focus:ring-emerald-500/30"
+                      : handleStatus === "taken"
+                      ? "border-rose-500 focus:ring-rose-500/30"
                       : "border-zinc-200 focus:ring-emerald-500/40 focus:border-emerald-500"
                   }`}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {checkingHandle ? (
+                  {handleStatus === "checking" ? (
                     <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                  ) : handleStatus ? (
-                    handleStatus.available ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-rose-600" />
-                    )
+                  ) : handleStatus === "available" ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  ) : handleStatus === "taken" ? (
+                    <XCircle className="h-4 w-4 text-rose-600" />
                   ) : null}
                 </div>
               </div>
 
               {/* Status Message */}
-              {checkingHandle ? (
-                <p className="text-[11px] font-semibold text-zinc-400">Checking availability...</p>
-              ) : handleStatus ? (
-                handleStatus.available ? (
-                  <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
-                    ✓ feedm.ee/{username} is available!
-                  </p>
-                ) : (
-                  <p className="text-[11px] font-bold text-rose-600">
-                    ✕ Handle is already taken. Please choose another.
-                  </p>
-                )
+              {handleStatus === "checking" ? (
+                <p className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />
+                  Checking availability...
+                </p>
+              ) : handleStatus === "available" ? (
+                <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1">
+                  ✓ feedm.ee/{username} is available!
+                </p>
+              ) : handleStatus === "taken" ? (
+                <p className="text-[11px] font-bold text-rose-600 flex items-center gap-1">
+                  ✕ {handleReason || "Handle is already taken. Please choose another."}
+                </p>
               ) : username ? (
                 <p className="text-[11px] font-semibold text-zinc-400">feedm.ee/{username}</p>
               ) : null}
@@ -297,7 +302,7 @@ function SignupFormContent() {
             {/* Submit CTA Button */}
             <button
               type="submit"
-              disabled={loading || (handleStatus ? !handleStatus.available : false)}
+              disabled={loading || handleStatus === "checking" || handleStatus === "taken"}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
