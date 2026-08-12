@@ -206,17 +206,17 @@ function SignupFormContent() {
           <form onSubmit={handleSignup} className="space-y-4">
             {/* Username with Real-time Check */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-700">Your Creator Handle</label>
+              <label className="text-xs font-bold text-zinc-700">Desired Handle URL</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-zinc-400">@</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">feedm.ee/</span>
                 <input
                   type="text"
                   required
                   value={username}
                   onChange={(e) => setUsername(sanitizeHandleInput(e.target.value))}
-                  placeholder="yourname"
+                  placeholder="yourhandle"
                   maxLength={30}
-                  className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-8 pr-9 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 ${
+                  className={`w-full rounded-xl border bg-zinc-50 py-2.5 pl-20 pr-9 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 ${
                     handleStatus
                       ? handleStatus.available
                         ? "border-emerald-500 focus:ring-emerald-500/30"
@@ -247,7 +247,7 @@ function SignupFormContent() {
                   </p>
                 ) : (
                   <p className="text-[11px] font-bold text-rose-600">
-                    ✕ {handleStatus.reason || "Handle unavailable"}
+                    ✕ Handle is already taken. Please choose another.
                   </p>
                 )
               ) : username ? (

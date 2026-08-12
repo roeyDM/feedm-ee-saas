@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase, sanitizeHandleInput } from "@/lib/supabase";
 import { LogoIconOnly } from "@/components/logo";
-import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
@@ -20,6 +20,7 @@ function RegisterForm() {
   const [handle, setHandle] = useState("");
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,14 +175,14 @@ function RegisterForm() {
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-700">Desired Handle URL</label>
               <div className="relative flex items-center">
-                <span className="absolute left-3 text-xs font-bold text-zinc-400 select-none">feedm.ee/@</span>
+                <span className="absolute left-3 text-xs font-bold text-zinc-400 select-none">feedm.ee/</span>
                 <input
                   type="text"
                   required
                   value={handle}
                   onChange={(e) => setHandle(sanitizeHandleInput(e.target.value))}
-                  placeholder="username"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-24 pr-4 text-sm font-bold text-emerald-950 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  placeholder="yourhandle"
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-20 pr-4 text-sm font-bold text-emerald-950 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -208,14 +209,21 @@ function RegisterForm() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                 <input
-                  type="password"
+                  type={showPw ? "text" : "password"}
                   required
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-4 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-10 pr-10 text-sm font-medium text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer"
+                >
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
