@@ -142,21 +142,16 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. User exists -> Dispatch Magic Link
-      const getURL = () => {
-        let url =
-          process?.env?.NEXT_PUBLIC_SITE_URL ??
-          process?.env?.NEXT_PUBLIC_VERCEL_URL ??
-          "https://feedm.ee";
-        url = url.includes("http") ? url : `https://${url}`;
-        url = url.endsWith("/") ? url : `${url}/`;
-        return `${url}dashboard`;
+      // 2. User exists -> Dispatch Magic Link pointing to /auth/callback
+      const getCallbackURL = () => {
+        const origin = typeof window !== "undefined" ? window.location.origin : "https://feedm.ee";
+        return `${origin}/auth/callback?next=/dashboard`;
       };
 
       const { error: magicErr } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
-          emailRedirectTo: getURL(),
+          emailRedirectTo: getCallbackURL(),
         },
       });
 
