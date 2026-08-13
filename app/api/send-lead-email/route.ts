@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     let feedOwnerUserId: string | null = null;
     let ownerProfile: any = null;
 
-    // 1. Resolve Feed Owner's user_id from feeds OR profiles table
+    // 1. Resolve Feed Owner's user_id from feeds OR profiles table (without non-existent email column)
     try {
       const feedIdParam = body.feedId || body.feed_id || cleanHandle;
       if (feedIdParam) {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       if (!feedOwnerUserId && cleanHandle) {
         let profQuery = dbAdmin
           .from("profiles")
-          .select("id, username, email, full_name, plan_type, warning_email_sent_month, limit_email_sent_month");
+          .select("id, username, full_name, plan_type, warning_email_sent_month, limit_email_sent_month");
 
         if (isUUID(cleanHandle)) {
           profQuery = profQuery.eq("id", cleanHandle);
@@ -82,13 +82,26 @@ export async function POST(request: Request) {
       if (feedOwnerUserId && !ownerProfile) {
         const { data: prof } = await dbAdmin
           .from("profiles")
-          .select("id, username, email, full_name, plan_type, warning_email_sent_month, limit_email_sent_month")
+          .select("id, username, full_name, plan_type, warning_email_sent_month, limit_email_sent_month")
           .eq("id", feedOwnerUserId)
           .maybeSingle();
         ownerProfile = prof;
       }
     } catch (resolveErr) {
       console.warn("[Lead Resolver Note]: Could not resolve user_id for handle/feed:", cleanHandle, resolveErr);
+    }
+
+    // Resolve owner email from Supabase Auth admin if targetEmail is missing
+    let recipientEmail = targetEmail;
+    if (!recipientEmail && feedOwnerUserId) {
+      try {
+        const { data: authUser } = await dbAdmin.auth.admin.getUserById(feedOwnerUserId);
+        if (authUser?.user?.email) {
+          recipientEmail = authUser.user.email;
+        }
+      } catch (authErr) {
+        console.warn("[Auth User Email Lookup Note]:", authErr);
+      }
     }
 
     // Resolve strictly valid 36-character UUID for feed_id column
@@ -129,9 +142,8 @@ export async function POST(request: Request) {
 
     const newTotalLeadCount = currentMonthlyLeadCount + 1;
     const isLocked = !isUnlimited && newTotalLeadCount > limit;
-    const assignedStatus = isLocked ? "locked" : "active";
 
-    // 3. Perform Database Insertion BEFORE Email Dispatch
+    // 3. Perform Database Insertion BEFORE Email Dispatch (using status: 'new' to satisfy leads_status_check constraint)
     try {
       const leadPayload: any = {
         user_id: isUUID(feedOwnerUserId) ? feedOwnerUserId : null,
@@ -140,8 +152,8 @@ export async function POST(request: Request) {
         full_name: fullName || body.name || "Visitor",
         email: email || targetEmail || "",
         phone: phone || "",
-        target_email: targetEmail || ownerProfile?.email || "",
-        status: assignedStatus,
+        target_email: recipientEmail || "",
+        status: "new",
         created_at: new Date().toISOString(),
       };
 
@@ -153,12 +165,12 @@ export async function POST(request: Request) {
         .select();
 
       if (dbError) {
-        console.error("[Lead DB Insert Failed]: Supabase leads insert error:", dbError.message, dbError.details);
+        console.error("[Lead Insert Failed]: Supabase leads insert error:", dbError.message, dbError.details);
       } else {
-        console.log("✅ [Lead DB Insert Success]: Lead row created in Supabase leads table:", insertedData);
+        console.log("✅ [Lead Insert Success]: Lead row created in Supabase leads table:", insertedData);
       }
     } catch (dbErr) {
-      console.error("[Lead DB Insert Failed]: Exception during lead insert:", dbErr);
+      console.error("[Lead Insert Failed]: Exception during lead insert:", dbErr);
     }
 
     // 4. Record form_submit event in feed_analytics
@@ -186,7 +198,6 @@ export async function POST(request: Request) {
 
     const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.URL || "https://feedm.ee";
     const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee <updates@feedm.ee>";
-    const recipientEmail = targetEmail || ownerProfile?.email || "";
 
     const sendResendMail = async (toEmail: string, emailSubject: string, htmlBody: string) => {
       if (!apiKey) {
@@ -325,7 +336,7 @@ export async function POST(request: Request) {
 
           <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0 16px 0;" />
           <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">
-            Sent via <a href="${BASE_URL}" style="color: #059669; text-decoration: none; font-weight: bold;">FeedM.ee</a> Video Link-in-Bio Platform
+            Sent via <a href="${BASE_URL}" style="color: #059669; text-decoration: none; font-weight: bold;">FeedM.ee</a> Video Link-inBio Platform
           </p>
         </div>
       `;
@@ -336,10 +347,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "Thank you! Your submission has been received.",
-      status: assignedStatus,
+      status: "new",
     });
   } catch (err: any) {
-    console.error("[Lead Processing Error]: Exception during lead submission:", err);
+    console.error("[Lead Insert Failed]: Exception during lead submission:", err);
     return NextResponse.json(
       { success: false, error: err.message || "Internal server error during lead submission" },
       { status: 500 }
