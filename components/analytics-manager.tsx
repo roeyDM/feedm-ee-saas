@@ -209,17 +209,26 @@ export function AnalyticsManager({
             .order("created_at", { ascending: false });
 
           if (feedAnalyticsRows && feedAnalyticsRows.length > 0) {
-            const feedViews = feedAnalyticsRows.filter((r) => r.event_type === "view" || r.event_type === "page_view").length;
-            const feedClicks = feedAnalyticsRows.filter((r) => r.event_type === "click" || r.event_type === "link_click").length;
+            const isView = (t: string) => ["view", "page_view", "video_view"].includes(t);
+            const isClick = (t: string) => ["click", "link_click", "social_click", "call_click", "whatsapp_click", "share", "form_submit"].includes(t);
+
+            const feedViews = feedAnalyticsRows.filter((r) => isView(r.event_type)).length;
+            const feedClicks = feedAnalyticsRows.filter((r) => isClick(r.event_type)).length;
 
             totalViews = Math.max(totalViews, feedViews);
             totalClicks = Math.max(totalClicks, feedClicks);
 
+            const feedReelPlays = feedAnalyticsRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play").length;
+            const feedFormOpens = feedAnalyticsRows.filter((r) => r.event_type === "form_submit" || r.event_type === "form_open").length;
+
+            if (feedReelPlays > 0) reelPlays = Math.max(reelPlays, feedReelPlays);
+            if (feedFormOpens > 0) formOpens = Math.max(formOpens, feedFormOpens);
+
             // Compute top links from feed_analytics item_id
-            const clickRows = feedAnalyticsRows.filter((r) => r.event_type === "click" || r.event_type === "link_click");
+            const clickRows = feedAnalyticsRows.filter((r) => isClick(r.event_type));
             const feedLinkMap: Record<string, number> = {};
             clickRows.forEach((r) => {
-              const label = r.item_id || "Outbound Link";
+              const label = r.item_id || "Outbound Action";
               feedLinkMap[label] = (feedLinkMap[label] || 0) + 1;
             });
 

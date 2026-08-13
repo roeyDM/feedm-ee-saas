@@ -1,9 +1,23 @@
 /**
  * Client-Side Analytics Tracker Utility
- * Sends view, click, page_view, and link_click events to /api/analytics/track
+ * Sends view, click, social_click, call_click, whatsapp_click, video_view, video_like, share, form_submit events to /api/analytics/track
  */
 
-export type AnalyticsEventType = "page_view" | "link_click" | "reel_play" | "form_open" | "lead_submit" | "view" | "click";
+export type AnalyticsEventType =
+  | "view"
+  | "click"
+  | "page_view"
+  | "link_click"
+  | "social_click"
+  | "call_click"
+  | "whatsapp_click"
+  | "video_view"
+  | "video_like"
+  | "share"
+  | "form_submit"
+  | "reel_play"
+  | "form_open"
+  | "lead_submit";
 
 export async function trackAnalyticsEvent(
   username: string,
@@ -20,10 +34,9 @@ export async function trackAnalyticsEvent(
   if (!username && !extraData?.feedId) return;
 
   const cleanUsername = username ? username.toLowerCase().trim() : "";
-  const normType = eventType === "page_view" ? "view" : eventType === "link_click" ? "click" : eventType;
 
   try {
-    console.log(`[Analytics Client] Firing event "${normType}" for feed_id: ${extraData?.feedId || "N/A"} @${cleanUsername}`, extraData || "");
+    console.log(`[Analytics Client] Firing event "${eventType}" for feed_id: ${extraData?.feedId || "N/A"} @${cleanUsername}`, extraData || "");
 
     fetch("/api/analytics/track", {
       method: "POST",
@@ -31,7 +44,7 @@ export async function trackAnalyticsEvent(
       body: JSON.stringify({
         feed_id: extraData?.feedId,
         username: cleanUsername,
-        event_type: normType,
+        event_type: eventType,
         item_id: extraData?.itemId || extraData?.linkUrl || extraData?.linkTitle || null,
         link_url: extraData?.linkUrl,
         link_title: extraData?.linkTitle,

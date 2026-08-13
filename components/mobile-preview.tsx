@@ -421,6 +421,13 @@ export function MobilePreview({
   // Debounce / lock tracking to prevent double-firing like toggles
   const lastLikeClickRef = useRef<Record<string, number>>({});
 
+  useEffect(() => {
+    if (activeTab === "reels" && displayReels[currentReelIndex]) {
+      const activeReel = displayReels[currentReelIndex];
+      trackAnalyticsEvent(username, "video_view", { reelId: activeReel.id, itemId: activeReel.id });
+    }
+  }, [activeTab, currentReelIndex, username, displayReels]);
+
   const toggleLike = (reelId: string, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -437,6 +444,10 @@ export function MobilePreview({
     const newLikedState = !isCurrentlyLiked;
 
     setLikedReels((prev) => ({ ...prev, [reelId]: newLikedState }));
+    if (newLikedState) {
+      trackAnalyticsEvent(username, "video_like", { reelId, itemId: reelId });
+    }
+
     setLikeCounts((prev) => {
       const currentCount = prev[reelId] ?? (displayReels.find((r) => r.id === reelId)?.likes || 142);
       return {
@@ -447,6 +458,7 @@ export function MobilePreview({
   };
 
   const handleShare = async (title: string = "") => {
+    trackAnalyticsEvent(username, "share", { itemId: title || "profile_share" });
     if (navigator.share) {
       try {
         await navigator.share({
@@ -595,7 +607,10 @@ export function MobilePreview({
           rel="noreferrer" 
           style={iconStyle} 
           className={cn("group flex items-center gap-2", iconClass, "w-auto px-3")}
-          onClick={() => trackAnalyticsEvent(username, "link_click", { itemId: link.id || link.label || link.platform, linkUrl: link.url, linkTitle: link.label || link.platform })}
+          onClick={() => {
+            const evtType = link.platform === "whatsapp" ? "whatsapp_click" : "social_click";
+            trackAnalyticsEvent(username, evtType, { itemId: link.platform || link.id || link.label, linkUrl: link.url, linkTitle: link.label || link.platform });
+          }}
         >
           {iconElement}
           <span className="text-[10px] font-bold" style={{ color: customIconColor }}>{link.label}</span>
@@ -611,7 +626,10 @@ export function MobilePreview({
         rel="noreferrer" 
         style={iconStyle} 
         className={iconClass}
-        onClick={() => trackAnalyticsEvent(username, "link_click", { itemId: link.id || link.platform, linkUrl: link.url, linkTitle: link.platform })}
+        onClick={() => {
+          const evtType = link.platform === "whatsapp" ? "whatsapp_click" : "social_click";
+          trackAnalyticsEvent(username, evtType, { itemId: link.platform || link.id, linkUrl: link.url, linkTitle: link.platform });
+        }}
       >
         {iconElement}
       </a>
@@ -1111,7 +1129,10 @@ export function MobilePreview({
                 }
                 target="_blank"
                 rel="noreferrer"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  trackAnalyticsEvent(username, "whatsapp_click", { itemId: "whatsapp_button" });
+                }}
                 className="flex flex-col items-center gap-1 group"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 transition duration-300 group-hover:scale-110">
@@ -1129,6 +1150,10 @@ export function MobilePreview({
                     ? `tel:+${(leadForm.phoneCountryCode || "1").replace(/[^0-9]/g, "")}${leadForm.phoneTarget.replace(/^0+/, "").replace(/[^0-9]/g, "")}` 
                     : "#"
                 }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  trackAnalyticsEvent(username, "call_click", { itemId: "call_button" });
+                }}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500 text-white border border-cyan-400 shadow-lg shadow-cyan-500/30 transition hover:scale-110"
               >
                 <Phone className="h-5 w-5 fill-current" />
