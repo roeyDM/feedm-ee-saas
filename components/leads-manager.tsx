@@ -335,11 +335,10 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
             <table className="w-full min-w-full text-left border-collapse table-auto">
               <thead>
                 <tr className="border-b border-zinc-100 bg-zinc-50/70 text-[11px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  <th className="py-4 px-6 w-[20%]">Lead Details</th>
-                  <th className="py-4 px-6 w-[30%]">Contact Links</th>
-                  <th className="py-4 px-6 w-[15%]">Source Feed</th>
-                  <th className="py-4 px-6 w-[15%]">Date Submitted</th>
-                  <th className="py-4 px-6 w-[12%]">Status</th>
+                  <th className="py-4 px-6 w-[25%]">Lead Details</th>
+                  <th className="py-4 px-6 w-[35%]">Contact Links</th>
+                  <th className="py-4 px-6 w-[18%]">Date Submitted</th>
+                  <th className="py-4 px-6 w-[14%]">Status</th>
                   <th className="py-4 px-6 w-[8%] text-right">Actions</th>
                 </tr>
               </thead>
@@ -405,13 +404,6 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
                             <span className="text-zinc-400 italic text-[11px]">No phone</span>
                           )}
                         </div>
-                      </td>
-
-                      {/* Source Feed */}
-                      <td className="py-4 px-6">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 text-zinc-700 font-bold text-[11px] border border-zinc-200/80">
-                          @{lead.username || lead.feed_id || username || "main"}
-                        </span>
                       </td>
 
                       {/* Date */}
