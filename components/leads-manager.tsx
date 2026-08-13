@@ -51,11 +51,12 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
       const currentEmail = (user?.email || targetEmail || "").toLowerCase().trim();
       const currentUid = user?.id;
       const currentHandle = (username || "").toLowerCase().trim();
+      const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
       let data: LeadItem[] | null = null;
 
       // 1. Direct query by authenticated user_id OR null user_id
-      if (currentUid) {
+      if (currentUid && isUUID(currentUid)) {
         const uidRes = await supabase
           .from("leads")
           .select("*")
@@ -67,16 +68,18 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         }
       }
 
-      // 2. Query by feed_id / username / target_email
+      // 2. Query by feed_id (strictly UUID) / feed_handle / email
       if (!data || data.length === 0) {
         const conditions: string[] = [];
-        if (currentHandle) {
+        if (currentHandle && isUUID(currentHandle)) {
           conditions.push(`feed_id.eq.${currentHandle}`);
+        } else if (currentHandle) {
+          conditions.push(`feed_handle.ilike.%${currentHandle}%`);
         }
         if (currentEmail) {
-          conditions.push(`target_email.eq.${currentEmail}`);
+          conditions.push(`email.ilike.${currentEmail}`);
         }
-        if (currentUid) {
+        if (currentUid && isUUID(currentUid)) {
           conditions.push(`user_id.eq.${currentUid}`);
         }
 

@@ -125,32 +125,13 @@ export function AnalyticsManager({
       if (user) {
         const { data: prof } = await supabase
           .from("profiles")
-          .select("id, username, views_count, clicks_count")
+          .select("id, username")
           .eq("id", user.id)
           .maybeSingle();
 
         if (prof) {
           if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
-          profileCounts = {
-            views: prof.views_count || 0,
-            clicks: prof.clicks_count || 0,
-          };
           activeUserId = prof.id;
-        }
-
-        // Fetch live counts from pages table as well
-        const { data: page } = await supabase
-          .from("pages")
-          .select("id, views, clicks")
-          .or(`user_id.eq.${user.id},username.eq.${activeUsername},handle.eq.${activeUsername}`)
-          .maybeSingle();
-
-        if (page) {
-          if (page.id) activePageId = page.id;
-          profileCounts = {
-            views: Math.max(profileCounts.views, Number(page.views || 0)),
-            clicks: Math.max(profileCounts.clicks, Number(page.clicks || 0)),
-          };
         }
 
         const leadsRes = await supabase
