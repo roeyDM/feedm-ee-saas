@@ -5,7 +5,9 @@ import { renderLeadLimitReachedEmail } from "@/lib/email/templates/lead-limit-re
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
+    console.log("[Lead Ingestion Request]:", body);
+
     const targetEmail = body.targetEmail || body.target_email || "";
     const fullName = body.fullName || body.name || "";
     const email = body.email || "";
@@ -21,7 +23,8 @@ export async function POST(request: Request) {
     const isTestMode =
       body.is_test === true ||
       body.isTest === true ||
-      body.source === "simulator";
+      body.source === "simulator" ||
+      body.is_preview === true;
 
     if (isTestMode) {
       console.log("🧪 [Simulator Test Lead]: Bypassing DB quotas, CRM lead lists, and Resend emails.");
@@ -33,6 +36,7 @@ export async function POST(request: Request) {
     }
 
     if (!targetEmail || typeof targetEmail !== "string" || !targetEmail.includes("@")) {
+      console.error("[Lead Ingestion Error]: Invalid target recipient email address:", targetEmail);
       return NextResponse.json(
         { success: false, error: "Invalid target recipient email address" },
         { status: 400 }
@@ -116,7 +120,7 @@ export async function POST(request: Request) {
     const isLocked = !isUnlimited && newTotalLeadCount > limit;
     const assignedStatus = isLocked ? "locked" : "active";
 
-    // 3. Perform DB Insertion with assigned status
+    // 3. Perform DB Insertion into leads table using dbAdmin (Service Role Key)
     try {
       const leadPayload: any = {
         user_id: feedOwnerUserId || null,
@@ -126,14 +130,15 @@ export async function POST(request: Request) {
         email: email,
         phone: phone,
         status: assignedStatus,
+        created_at: new Date().toISOString(),
       };
 
-      console.log("📝 SUBMITTING LEAD PAYLOAD TO SUPABASE:", leadPayload);
+      console.log("📝 [Lead Ingestion] Inserting lead into Supabase leads table:", leadPayload);
 
       const { error: insertError } = await dbAdmin.from("leads").insert([leadPayload]);
 
       if (insertError) {
-        console.error("❌ SUPABASE LEAD INSERT ERROR:", JSON.stringify(insertError, null, 2));
+        console.error("[Lead Ingestion Error]: Supabase leads insert failed:", insertError.message);
         // Fallback insert if schema has fewer columns
         await dbAdmin.from("leads").insert([
           {
@@ -143,9 +148,28 @@ export async function POST(request: Request) {
             status: assignedStatus,
           },
         ]);
+      } else {
+        console.log("✅ [Lead Ingestion Success]: Lead row created in Supabase leads table.");
       }
     } catch (dbErr) {
-      console.error("❌ SUPABASE LEAD INSERT EXCEPTION:", dbErr);
+      console.error("[Lead Ingestion Error]: Exception inserting lead into DB:", dbErr);
+    }
+
+    // Record form_submit event in feed_analytics
+    try {
+      const targetAnalyticsFeedId = feedOwnerUserId || body.feedId || body.feed_id;
+      if (targetAnalyticsFeedId) {
+        await dbAdmin.from("feed_analytics").insert([
+          {
+            feed_id: targetAnalyticsFeedId,
+            event_type: "form_submit",
+            item_id: "lead_form",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      }
+    } catch (analyticsErr) {
+      console.warn("[Lead Analytics Ingest Note]:", analyticsErr);
     }
 
     // 4. Dispatch Resend Email Helper
@@ -159,7 +183,10 @@ export async function POST(request: Request) {
     const ownerEmailAddress = ownerProfile?.email || targetEmail;
 
     const sendResendMail = async (toEmail: string, emailSubject: string, htmlBody: string) => {
-      if (!apiKey) return;
+      if (!apiKey) {
+        console.warn("[Resend Warning]: Missing RESEND_API_KEY. Email notification skipped.");
+        return;
+      }
       try {
         let res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -193,14 +220,14 @@ export async function POST(request: Request) {
             }),
           });
         }
+        console.log(`✉️ [Resend Success]: Notification email sent to ${toEmail}`);
       } catch (e) {
-        console.warn("[Resend Dispatch Note]:", e);
+        console.error("[Lead Ingestion Error]: Resend dispatch exception:", e);
       }
     };
 
     // 5. Threshold & Capacity Email Triggers (Idempotent per Month)
     if (!isUnlimited && feedOwnerUserId) {
-      // 80% Capacity Warning Email
       if (
         newTotalLeadCount >= warningThreshold &&
         newTotalLeadCount <= limit &&
@@ -224,7 +251,6 @@ export async function POST(request: Request) {
         console.log(`[Resend Capacity Alert]: 80% warning email sent to ${ownerEmailAddress}`);
       }
 
-      // 100% Capacity Limit Reached Email
       if (
         newTotalLeadCount >= limit &&
         ownerProfile?.limit_email_sent_month !== currentMonthKey
@@ -249,7 +275,7 @@ export async function POST(request: Request) {
     }
 
     // 6. Standard Lead Notification Email (Sent only if lead is active)
-    if (!isLocked && apiKey) {
+    if (!isLocked) {
       const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
       const standardSubject = `🎉 New Lead Captured on FeedM.ee! (${fullName || "Visitor"})`;
 
@@ -301,14 +327,13 @@ export async function POST(request: Request) {
       await sendResendMail(targetEmail, standardSubject, standardHtml);
     }
 
-    // 7. Always Return Standard HTTP 200 Success Response to Public Visitor
     return NextResponse.json({
       success: true,
       message: "Thank you! Your submission has been received.",
       status: assignedStatus,
     });
   } catch (err: any) {
-    console.error("[Email Error]: Exception during lead submission:", err);
+    console.error("[Lead Ingestion Error]: Exception during lead submission:", err);
     return NextResponse.json(
       { success: false, error: err.message || "Internal server error during lead submission" },
       { status: 500 }

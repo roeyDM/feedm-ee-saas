@@ -511,8 +511,7 @@ export function MobilePreview({
     try {
       if (onTestLeadSubmit) {
         await onTestLeadSubmit(targetEmail, { name: cleanName, phone: cleanPhone, email: cleanEmail });
-      } else {
-        const res = await fetch("/api/send-lead-email", {
+        await fetch("/api/send-lead-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -525,6 +524,22 @@ export function MobilePreview({
             is_test: true,
             isTest: true,
             source: "simulator",
+          }),
+        }).catch(() => {});
+      } else {
+        const res = await fetch("/api/send-lead-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: cleanName,
+            email: cleanEmail,
+            phone: cleanPhone,
+            targetEmail,
+            feedHandle: username || profileName || "main",
+            username: username || "main",
+            is_test: false,
+            isTest: false,
+            source: "public_feed",
           }),
         });
 
