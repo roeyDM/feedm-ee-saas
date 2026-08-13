@@ -164,6 +164,7 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
 
       {/* ── Public Feed: pre-populated server-rendered profile ── */}
       <MobilePreview
+        feedId={profile.feedId || profile.id}
         profileName={profile.name}
         username={handleKey}
         bio={profile.bio}
@@ -176,7 +177,6 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
         appearance={profile.appearance}
         fontFamily={profile.appearance?.fontFamily}
         isDemoMode={false}
-        onTestLeadSubmit={handleLeadSubmitEvent}
       />
     </>
   );

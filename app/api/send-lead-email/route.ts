@@ -6,6 +6,7 @@ import { renderLeadLimitReachedEmail } from "@/lib/email/templates/lead-limit-re
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
+    console.log("[Lead API Body Received]:", body);
     console.log("[Lead Submitted]:", body);
 
     const targetEmail = body.targetEmail || body.target_email || "";

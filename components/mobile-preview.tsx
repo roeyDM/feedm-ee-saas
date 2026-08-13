@@ -236,6 +236,7 @@ export { sanitizeLeadForm } from "@/lib/sanitizers";
 
 
 interface MobilePreviewProps {
+  feedId?: string;
   profileName: string;
   username: string;
   bio: string;
@@ -318,6 +319,7 @@ function PromoOverlay({ reel, isActive }: { reel: VideoReel; isActive: boolean }
 }
 
 export function MobilePreview({
+  feedId,
   profileName,
   username,
   bio,
@@ -500,6 +502,8 @@ export function MobilePreview({
 
     const targetEmail = (leadForm.target || "").trim();
     const payload = {
+      feed_id: feedId || username,
+      feedId: feedId || username,
       fullName: cleanName,
       name: cleanName,
       email: cleanEmail,
@@ -513,20 +517,20 @@ export function MobilePreview({
       source: onTestLeadSubmit ? "simulator" : "public_feed",
     };
     
-    console.log("[Client Lead Submit Dispatch]:", payload);
+    console.log("[Client Lead Submit]:", payload);
     setFormSubmitted(true);
     trackAnalyticsEvent(username, "lead_submit", { metadata: { name: cleanName, email: cleanEmail } });
 
     try {
       if (onTestLeadSubmit) {
         await onTestLeadSubmit(targetEmail, { name: cleanName, phone: cleanPhone, email: cleanEmail });
-        await fetch("/api/send-lead-email", {
+        await fetch("/api/leads", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         }).catch(() => {});
       } else {
-        const res = await fetch("/api/send-lead-email", {
+        const res = await fetch("/api/leads", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
