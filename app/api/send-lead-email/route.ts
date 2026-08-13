@@ -3,6 +3,9 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { renderLeadWarningEmail } from "@/lib/email/templates/lead-warning-email";
 import { renderLeadLimitReachedEmail } from "@/lib/email/templates/lead-limit-reached-email";
 
+const isUUID = (str: any): boolean =>
+  typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -45,24 +48,31 @@ export async function POST(request: Request) {
     try {
       const feedIdParam = body.feedId || body.feed_id || cleanHandle;
       if (feedIdParam) {
-        const { data: feed } = await dbAdmin
-          .from("feeds")
-          .select("user_id, handle, id")
-          .or(`id.eq.${feedIdParam},handle.eq.${feedIdParam.toLowerCase()}`)
-          .maybeSingle();
+        let query = dbAdmin.from("feeds").select("user_id, handle, id");
+        if (isUUID(feedIdParam)) {
+          query = query.or(`id.eq.${feedIdParam},user_id.eq.${feedIdParam}`);
+        } else {
+          query = query.eq("handle", feedIdParam.toLowerCase());
+        }
 
+        const { data: feed } = await query.maybeSingle();
         if (feed?.user_id) {
           feedOwnerUserId = feed.user_id;
         }
       }
 
       if (!feedOwnerUserId && cleanHandle) {
-        const { data: profile } = await dbAdmin
+        let profQuery = dbAdmin
           .from("profiles")
-          .select("id, username, email, full_name, plan_type, warning_email_sent_month, limit_email_sent_month")
-          .or(`username.eq.${cleanHandle.toLowerCase()},id.eq.${cleanHandle}`)
-          .maybeSingle();
+          .select("id, username, email, full_name, plan_type, warning_email_sent_month, limit_email_sent_month");
 
+        if (isUUID(cleanHandle)) {
+          profQuery = profQuery.eq("id", cleanHandle);
+        } else {
+          profQuery = profQuery.ilike("username", cleanHandle.toLowerCase());
+        }
+
+        const { data: profile } = await profQuery.maybeSingle();
         if (profile?.id) {
           feedOwnerUserId = profile.id;
           ownerProfile = profile;
@@ -80,6 +90,13 @@ export async function POST(request: Request) {
     } catch (resolveErr) {
       console.warn("[Lead Resolver Note]: Could not resolve user_id for handle/feed:", cleanHandle, resolveErr);
     }
+
+    // Resolve strictly valid 36-character UUID for feed_id column
+    let feedIdUUID: string | null = null;
+    if (isUUID(body.feed_id)) feedIdUUID = String(body.feed_id).trim();
+    else if (isUUID(body.feedId)) feedIdUUID = String(body.feedId).trim();
+    else if (isUUID(feedOwnerUserId)) feedIdUUID = feedOwnerUserId;
+    else if (isUUID(ownerProfile?.id)) feedIdUUID = ownerProfile.id;
 
     // 2. Calculate Monthly Lead Count & Enforce Plan Thresholds
     const ownerPlan = (ownerProfile?.plan_type || "free").toLowerCase();
@@ -114,44 +131,39 @@ export async function POST(request: Request) {
     const isLocked = !isUnlimited && newTotalLeadCount > limit;
     const assignedStatus = isLocked ? "locked" : "active";
 
-    // 3. Perform DB Insertion into leads table using dbAdmin (Service Role Key)
+    // 3. Perform Database Insertion BEFORE Email Dispatch
     try {
       const leadPayload: any = {
-        user_id: feedOwnerUserId || null,
-        feed_id: body.feedId || body.feed_id || cleanHandle || null,
+        user_id: isUUID(feedOwnerUserId) ? feedOwnerUserId : null,
+        feed_id: feedIdUUID,
         feed_handle: formattedFeedHandle || "@default",
-        full_name: fullName,
-        email: email,
-        phone: phone,
+        full_name: fullName || body.name || "Visitor",
+        email: email || targetEmail || "",
+        phone: phone || "",
+        target_email: targetEmail || ownerProfile?.email || "",
         status: assignedStatus,
         created_at: new Date().toISOString(),
       };
 
-      console.log("📝 [Lead Ingestion] Inserting lead into Supabase leads table:", leadPayload);
+      console.log("📝 [Lead Ingestion] Executing Supabase leads insert:", leadPayload);
 
-      const { error: insertError } = await dbAdmin.from("leads").insert([leadPayload]);
+      const { data: insertedData, error: dbError } = await dbAdmin
+        .from("leads")
+        .insert([leadPayload])
+        .select();
 
-      if (insertError) {
-        console.error("[Lead Processing Error]: Supabase leads insert failed:", insertError.message);
-        // Fallback insert if schema has fewer columns
-        await dbAdmin.from("leads").insert([
-          {
-            full_name: fullName,
-            email: email,
-            phone: phone,
-            status: assignedStatus,
-          },
-        ]);
+      if (dbError) {
+        console.error("[Lead DB Insert Failed]: Supabase leads insert error:", dbError.message, dbError.details);
       } else {
-        console.log("✅ [Lead Ingestion Success]: Lead row created in Supabase leads table.");
+        console.log("✅ [Lead DB Insert Success]: Lead row created in Supabase leads table:", insertedData);
       }
     } catch (dbErr) {
-      console.error("[Lead Processing Error]: Exception inserting lead into DB:", dbErr);
+      console.error("[Lead DB Insert Failed]: Exception during lead insert:", dbErr);
     }
 
-    // Record form_submit event in feed_analytics
+    // 4. Record form_submit event in feed_analytics
     try {
-      const targetAnalyticsFeedId = feedOwnerUserId || body.feedId || body.feed_id;
+      const targetAnalyticsFeedId = feedIdUUID || (isUUID(feedOwnerUserId) ? feedOwnerUserId : null);
       if (targetAnalyticsFeedId) {
         await dbAdmin.from("feed_analytics").insert([
           {
@@ -166,7 +178,7 @@ export async function POST(request: Request) {
       console.warn("[Lead Analytics Ingest Note]:", analyticsErr);
     }
 
-    // 4. Dispatch Resend Email Helper
+    // 5. Dispatch Resend Email Notification
     const apiKey =
       process.env.RESEND_API_KEY ||
       process.env.NEXT_PUBLIC_RESEND_API_KEY ||
@@ -203,7 +215,6 @@ export async function POST(request: Request) {
 
         let data = await res.json();
 
-        // Fallback to onboarding@resend.dev if unverified domain error
         if (!res.ok && (res.status === 403 || data.message?.includes("domain") || data.message?.includes("Verify"))) {
           res = await fetch("https://api.resend.com/emails", {
             method: "POST",
@@ -225,7 +236,7 @@ export async function POST(request: Request) {
       }
     };
 
-    // 5. Threshold & Capacity Email Triggers (Idempotent per Month)
+    // 6. Threshold & Capacity Email Triggers
     if (!isUnlimited && feedOwnerUserId && recipientEmail) {
       if (
         newTotalLeadCount >= warningThreshold &&
@@ -246,8 +257,6 @@ export async function POST(request: Request) {
           .from("profiles")
           .update({ warning_email_sent_month: currentMonthKey })
           .eq("id", feedOwnerUserId);
-
-        console.log(`[Resend Capacity Alert]: 80% warning email sent to ${recipientEmail}`);
       }
 
       if (
@@ -268,12 +277,10 @@ export async function POST(request: Request) {
           .from("profiles")
           .update({ limit_email_sent_month: currentMonthKey })
           .eq("id", feedOwnerUserId);
-
-        console.log(`[Resend Capacity Alert]: 100% limit email sent to ${recipientEmail}`);
       }
     }
 
-    // 6. Standard Lead Notification Email (Sent only if lead is active)
+    // 7. Standard Lead Notification Email
     if (!isLocked && recipientEmail) {
       const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
       const standardSubject = `🎉 New Lead Captured on FeedM.ee! (${fullName || "Visitor"})`;
