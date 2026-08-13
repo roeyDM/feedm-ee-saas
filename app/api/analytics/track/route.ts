@@ -31,8 +31,11 @@ export async function POST(req: Request) {
 
     const cleanUsername = username ? String(username).toLowerCase().trim() : "";
     const rawType = String(event_type).trim();
-    const isViewType = ["view", "page_view", "video_view"].includes(rawType);
-    const isClickType = ["click", "link_click", "social_click", "call_click", "whatsapp_click", "share", "form_submit"].includes(rawType);
+    // Standardize 'view' to 'page_view'
+    const storedType = rawType === "view" ? "page_view" : rawType;
+
+    const isViewType = ["page_view", "view", "video_view"].includes(storedType);
+    const isClickType = ["click", "link_click", "social_click", "call_click", "whatsapp_click", "share", "form_submit"].includes(storedType);
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://slyjhprwovcwxfcnxjpn.supabase.co";
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
@@ -98,11 +101,11 @@ export async function POST(req: Request) {
 
     // 1. Insert into feed_analytics table with service role client & error logging
     if (targetFeedId && isValidUUID(targetFeedId)) {
-      console.log(`[Analytics Ingest] Attempting insert into feed_analytics: feed_id=${targetFeedId}, event_type=${rawType}, item_id=${item_id || link_url || link_title || null}`);
+      console.log(`[Analytics Ingest] Attempting insert into feed_analytics: feed_id=${targetFeedId}, event_type=${storedType}, item_id=${item_id || link_url || link_title || null}`);
       const { data: insertRes, error: insertErr } = await supabaseAdmin.from("feed_analytics").insert([
         {
           feed_id: targetFeedId,
-          event_type: rawType,
+          event_type: storedType,
           item_id: item_id || link_url || link_title || null,
           created_at: new Date().toISOString(),
         },
@@ -120,7 +123,7 @@ export async function POST(req: Request) {
     // 2. Insert into analytics_events table & fallback store
     const insertPayload: any = {
       username: cleanUsername || "user",
-      event_type: rawType,
+      event_type: storedType,
       link_url: link_url || item_id || null,
       link_title: link_title || null,
       reel_id: reel_id || null,
@@ -163,7 +166,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { success: true, feed_id: targetFeedId, username: cleanUsername, event_type: rawType },
+      { success: true, feed_id: targetFeedId, username: cleanUsername, event_type: storedType },
       { headers: corsHeaders }
     );
   } catch (err: any) {

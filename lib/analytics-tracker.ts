@@ -1,6 +1,6 @@
 /**
  * Client-Side Analytics Tracker Utility
- * Sends view, click, social_click, call_click, whatsapp_click, video_view, video_like, share, form_submit events to /api/analytics/track
+ * Sends page_view, click, social_click, call_click, whatsapp_click, video_view, video_like, share, form_submit events to /api/analytics/track
  */
 
 export type AnalyticsEventType =
@@ -34,17 +34,20 @@ export async function trackAnalyticsEvent(
   if (!username && !extraData?.feedId) return;
 
   const cleanUsername = username ? username.toLowerCase().trim() : "";
+  // Standardize event types: 'view' -> 'page_view'
+  const normType = eventType === "view" ? "page_view" : eventType;
 
   try {
-    console.log(`[Analytics Client] Firing event "${eventType}" for feed_id: ${extraData?.feedId || "N/A"} @${cleanUsername}`, extraData || "");
+    console.log(`[Analytics Client] Firing event "${normType}" for feed_id: ${extraData?.feedId || "N/A"} @${cleanUsername}`, extraData || "");
 
     fetch("/api/analytics/track", {
       method: "POST",
+      keepalive: true,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         feed_id: extraData?.feedId,
         username: cleanUsername,
-        event_type: eventType,
+        event_type: normType,
         item_id: extraData?.itemId || extraData?.linkUrl || extraData?.linkTitle || null,
         link_url: extraData?.linkUrl,
         link_title: extraData?.linkTitle,

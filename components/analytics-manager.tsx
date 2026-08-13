@@ -209,20 +209,51 @@ export function AnalyticsManager({
             .order("created_at", { ascending: false });
 
           if (feedAnalyticsRows && feedAnalyticsRows.length > 0) {
-            const isView = (t: string) => ["view", "page_view", "video_view"].includes(t);
-            const isClick = (t: string) => ["click", "link_click", "social_click", "call_click", "whatsapp_click", "share", "form_submit"].includes(t);
+            const isPageView = (t: string) => t === "page_view" || t === "view";
+            const isClick = (t: string) => ["click", "link_click", "social_click", "call_click", "whatsapp_click"].includes(t);
 
-            const feedViews = feedAnalyticsRows.filter((r) => isView(r.event_type)).length;
+            const feedViews = feedAnalyticsRows.filter((r) => isPageView(r.event_type)).length;
             const feedClicks = feedAnalyticsRows.filter((r) => isClick(r.event_type)).length;
 
             totalViews = Math.max(totalViews, feedViews);
             totalClicks = Math.max(totalClicks, feedClicks);
 
-            const feedReelPlays = feedAnalyticsRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play").length;
+            const feedReelPlays = feedAnalyticsRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play" || r.event_type === "video_like").length;
             const feedFormOpens = feedAnalyticsRows.filter((r) => r.event_type === "form_submit" || r.event_type === "form_open").length;
 
             if (feedReelPlays > 0) reelPlays = Math.max(reelPlays, feedReelPlays);
             if (feedFormOpens > 0) formOpens = Math.max(formOpens, feedFormOpens);
+
+            // Compute daily time-series data from feed_analytics
+            const dayMap: Record<string, { views: number; clicks: number }> = {};
+            for (let i = daysCount - 1; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(d.getDate() - i);
+              const key = d.toISOString().split("T")[0];
+              dayMap[key] = { views: 0, clicks: 0 };
+            }
+
+            feedAnalyticsRows.forEach((r) => {
+              if (!r.created_at) return;
+              const key = new Date(r.created_at).toISOString().split("T")[0];
+              if (dayMap[key]) {
+                if (isPageView(r.event_type)) dayMap[key].views += 1;
+                if (isClick(r.event_type)) dayMap[key].clicks += 1;
+              }
+            });
+
+            const maxViews = Math.max(...Object.values(dayMap).map((d) => d.views), 1);
+            const maxClicks = Math.max(...Object.values(dayMap).map((d) => d.clicks), 1);
+
+            dailyData = Object.entries(dayMap).map(([dateStr, counts]) => {
+              const dateObj = new Date(dateStr);
+              const label = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              return {
+                day: label,
+                views: Math.round((counts.views / maxViews) * 100) || (counts.views > 0 ? 10 : 0),
+                clicks: Math.round((counts.clicks / maxClicks) * 100) || (counts.clicks > 0 ? 10 : 0),
+              };
+            });
 
             // Compute top links from feed_analytics item_id
             const clickRows = feedAnalyticsRows.filter((r) => isClick(r.event_type));
