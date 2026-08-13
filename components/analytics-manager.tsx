@@ -182,20 +182,21 @@ export function AnalyticsManager({
           }
 
           if (activeRows.length > 0) {
-            const isPageView = (t: string) => t === "page_view" || t === "view" || t === "video_view";
+            const isPageView = (t: string) => t === "page_view" || t === "view";
             const isClick = (t: string) => ["click", "link_click", "social_click", "call_click", "whatsapp_click", "share"].includes(t);
+            const isEngagement = (t: string) => ["video_view", "video_like", "video_share", "form_opened", "form_open", "form_submit", "lead_submit", "reel_play"].includes(t);
 
             const feedViews = activeRows.filter((r) => isPageView(r.event_type)).length;
             const feedClicks = activeRows.filter((r) => isClick(r.event_type)).length;
 
-            totalViews = Math.max(totalViews, feedViews, profileCounts.views);
-            totalClicks = Math.max(totalClicks, feedClicks, profileCounts.clicks);
+            totalViews = feedViews;
+            totalClicks = feedClicks;
 
-            const feedReelPlays = activeRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play" || r.event_type === "video_like").length;
-            const feedFormOpens = activeRows.filter((r) => r.event_type === "form_submit" || r.event_type === "form_open").length;
+            const feedReelPlays = activeRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play" || r.event_type === "video_like" || r.event_type === "video_share").length;
+            const feedFormOpens = activeRows.filter((r) => r.event_type === "form_submit" || r.event_type === "form_opened" || r.event_type === "form_open" || r.event_type === "lead_submit").length;
 
-            if (feedReelPlays > 0) reelPlays = Math.max(reelPlays, feedReelPlays);
-            if (feedFormOpens > 0) formOpens = Math.max(formOpens, feedFormOpens);
+            if (feedReelPlays > 0) reelPlays = feedReelPlays;
+            if (feedFormOpens > 0) formOpens = feedFormOpens;
 
             // Compute daily time-series data from activeRows
             const dayMap: Record<string, { views: number; clicks: number }> = {};
@@ -253,10 +254,6 @@ export function AnalyticsManager({
       } catch (err) {
         console.warn("[Analytics Aggregation Error]:", err);
       }
-
-      // 3. Fall back to profile accumulator counters if event count is 0
-      if (totalViews === 0 && profileCounts.views > 0) totalViews = profileCounts.views;
-      if (totalClicks === 0 && profileCounts.clicks > 0) totalClicks = profileCounts.clicks;
 
       console.log(`[Analytics Fetch Success] @${activeUsername || "user"} (id: ${activeUserId}) views: ${totalViews}, clicks: ${totalClicks}, leads: ${leadsCount}`);
 
