@@ -269,87 +269,8 @@ export function AnalyticsManager({
             }
           }
         }
-
-        const defaultStartDate = new Date(Date.now() - (dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30) * 86400000).toISOString();
-        let eventsQuery = supabase
-          .from("analytics_events")
-          .select("*")
-          .gte("created_at", defaultStartDate)
-          .order("created_at", { ascending: false });
-
-        if (activeUserId && activeUsername) {
-          eventsQuery = eventsQuery.or(`user_id.eq.${activeUserId},username.ilike.${activeUsername}`);
-        } else if (activeUserId) {
-          eventsQuery = eventsQuery.eq("user_id", activeUserId);
-        } else if (activeUsername) {
-          eventsQuery = eventsQuery.ilike("username", activeUsername);
-        }
-
-        const { data: events, error: eventsErr } = await eventsQuery;
-
-        if (eventsErr) {
-          console.warn("[Analytics Fetch Note]: analytics_events query message:", eventsErr.message);
-        }
-
-        if (events && events.length > 0) {
-          totalViews = events.filter((e) => e.event_type === "page_view").length;
-          totalClicks = events.filter((e) => e.event_type === "link_click").length;
-          reelPlays = events.filter((e) => e.event_type === "reel_play").length;
-          formOpens = events.filter((e) => e.event_type === "form_open").length;
-
-          // Compute daily time-series data
-          const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
-          const dayMap: Record<string, { views: number; clicks: number }> = {};
-
-          for (let i = daysCount - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const key = d.toISOString().split("T")[0]; // YYYY-MM-DD
-            dayMap[key] = { views: 0, clicks: 0 };
-          }
-
-          events.forEach((ev) => {
-            if (!ev.created_at) return;
-            const key = new Date(ev.created_at).toISOString().split("T")[0];
-            if (dayMap[key]) {
-              if (ev.event_type === "page_view") dayMap[key].views += 1;
-              if (ev.event_type === "link_click") dayMap[key].clicks += 1;
-            }
-          });
-
-          const maxViews = Math.max(...Object.values(dayMap).map((d) => d.views), 1);
-          const maxClicks = Math.max(...Object.values(dayMap).map((d) => d.clicks), 1);
-
-          dailyData = Object.entries(dayMap).map(([dateStr, counts]) => {
-            const dateObj = new Date(dateStr);
-            const label = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            return {
-              day: label,
-              views: Math.round((counts.views / maxViews) * 100) || (counts.views > 0 ? 10 : 0),
-              clicks: Math.round((counts.clicks / maxClicks) * 100) || (counts.clicks > 0 ? 10 : 0),
-            };
-          });
-
-          // Compute Top Links
-          const linkClickEvents = events.filter((e) => e.event_type === "link_click");
-          const linkMap: Record<string, number> = {};
-          linkClickEvents.forEach((ev) => {
-            const label = ev.link_title || ev.link_url || "Outbound Link";
-            linkMap[label] = (linkMap[label] || 0) + 1;
-          });
-
-          const totalLinkClicks = linkClickEvents.length || 1;
-          topLinks = Object.entries(linkMap)
-            .map(([name, clicks]) => ({
-              name,
-              clicks,
-              percentage: Math.round((clicks / totalLinkClicks) * 100),
-            }))
-            .sort((a, b) => b.clicks - a.clicks)
-            .slice(0, 5);
-        }
       } catch (err) {
-        console.warn("[Analytics Events Fetch Warning]:", err);
+        console.warn("[Analytics Aggregation Error]:", err);
       }
 
       // 3. Fall back to profile accumulator counters if event count is 0

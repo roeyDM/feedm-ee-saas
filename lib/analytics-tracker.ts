@@ -36,19 +36,26 @@ export async function trackAnalyticsEvent(
   const cleanUsername = username ? username.toLowerCase().trim() : "";
   // Standardize event types: 'view' -> 'page_view'
   const normType = eventType === "view" ? "page_view" : eventType;
+  const itemId = extraData?.itemId || extraData?.linkUrl || extraData?.linkTitle || null;
 
   try {
-    console.log(`[Analytics Client] Firing event "${normType}" for feed_id: ${extraData?.feedId || "N/A"} @${cleanUsername}`, extraData || "");
+    console.log("[Analytics Dispatching]:", {
+      event_type: normType,
+      item_id: itemId,
+      feed_id: extraData?.feedId || "N/A",
+      username: cleanUsername,
+    });
 
     fetch("/api/analytics/track", {
       method: "POST",
+      mode: "cors",
       keepalive: true,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         feed_id: extraData?.feedId,
         username: cleanUsername,
         event_type: normType,
-        item_id: extraData?.itemId || extraData?.linkUrl || extraData?.linkTitle || null,
+        item_id: itemId,
         link_url: extraData?.linkUrl,
         link_title: extraData?.linkTitle,
         reel_id: extraData?.reelId,
