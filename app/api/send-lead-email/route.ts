@@ -6,8 +6,6 @@ import { renderLeadLimitReachedEmail } from "@/lib/email/templates/lead-limit-re
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    console.log("[Lead Ingestion Request]:", body);
-
     const targetEmail = body.targetEmail || body.target_email || "";
     const fullName = body.fullName || body.name || "";
     const email = body.email || "";
@@ -26,10 +24,13 @@ export async function POST(request: Request) {
       body.source === "simulator" ||
       body.is_preview === true;
 
+    console.log("[Lead Ingestion]: Processing lead", { isPreview: isTestMode, email: email || targetEmail });
+
     if (isTestMode) {
       console.log("🧪 [Simulator Test Lead]: Bypassing DB quotas, CRM lead lists, and Resend emails.");
       return NextResponse.json({
         success: true,
+        preview: true,
         isTestMode: true,
         message: "Simulator submission succeeded without affecting quotas or sending emails.",
       });
