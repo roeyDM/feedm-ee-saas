@@ -122,32 +122,6 @@ export function AnalyticsManager({
       let activePageId: string | null = null;
       let profileCounts = { views: 0, clicks: 0 };
 
-      // Attempt fetching from /api/analytics/stats API route
-      try {
-        const statsUrl = `/api/analytics/stats?timeframe=${dateRange}${propUsername ? `&username=${encodeURIComponent(propUsername)}` : ""}`;
-        const statsRes = await fetch(statsUrl, { cache: "no-store" });
-        if (statsRes.ok) {
-          const statsJson = await statsRes.json();
-          if (statsJson.stats && (statsJson.stats.totalViews > 0 || statsJson.stats.totalClicks > 0 || statsJson.stats.dailyData.length > 0)) {
-            setAnalyticsData({
-              totalViews: statsJson.stats.totalViews || 0,
-              totalClicks: statsJson.stats.totalClicks || 0,
-              reelPlays: statsJson.stats.reelPlays || 0,
-              formOpens: statsJson.stats.formOpens || 0,
-              leadsCount: statsJson.stats.leadSubmits || 0,
-              dailyData: statsJson.stats.dailyData || [],
-              topLinks: statsJson.stats.topLinks || [],
-              reelEngagement: [],
-              trafficSources: [],
-            });
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (apiErr) {
-        console.warn("[Analytics API Stats Fetch Note]: Using direct client fallback", apiErr);
-      }
-
       if (user) {
         const { data: prof } = await supabase
           .from("profiles")
@@ -191,15 +165,17 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Query feed_analytics & analytics_events tables with robust date-range fallback
+      // 2. Direct feed_analytics query using ALL candidate IDs (page.id, user.id, profile.id)
       try {
-        let feedIdToQuery = activePageId || activeUserId;
+        const feedIdsToQuery = Array.from(
+          new Set([activePageId, activeUserId, user?.id].filter((id): id is string => Boolean(id)))
+        );
 
-        if (feedIdToQuery) {
+        if (feedIdsToQuery.length > 0) {
           let query = supabase
             .from("feed_analytics")
             .select("*")
-            .eq("feed_id", feedIdToQuery)
+            .in("feed_id", feedIdsToQuery)
             .order("created_at", { ascending: false });
 
           const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
@@ -212,12 +188,12 @@ export function AnalyticsManager({
           const { data: dateFilteredRows } = await query;
           let activeRows = dateFilteredRows || [];
 
-          // If date-filtered query yields 0 rows, fetch all-time feed_analytics as fallback
+          // Fallback: If date-filtered query yields 0 rows, fetch all-time feed_analytics as fallback
           if (activeRows.length === 0) {
             const { data: allTimeRows } = await supabase
               .from("feed_analytics")
               .select("*")
-              .eq("feed_id", feedIdToQuery)
+              .in("feed_id", feedIdsToQuery)
               .order("created_at", { ascending: false });
             if (allTimeRows && allTimeRows.length > 0) {
               activeRows = allTimeRows;
@@ -382,17 +358,17 @@ export function AnalyticsManager({
 
       console.log(`[Analytics Fetch Success] @${activeUsername || "user"} (id: ${activeUserId}) views: ${totalViews}, clicks: ${totalClicks}, leads: ${leadsCount}`);
 
-      setAnalyticsData({
-        totalViews,
-        totalClicks,
-        reelPlays,
-        formOpens,
-        leadsCount,
-        dailyData,
-        topLinks,
-        reelEngagement: [],
-        trafficSources: [],
-      });
+      setAnalyticsData((prev) => ({
+        totalViews: Math.max(totalViews, prev.totalViews || 0),
+        totalClicks: Math.max(totalClicks, prev.totalClicks || 0),
+        reelPlays: Math.max(reelPlays, prev.reelPlays || 0),
+        formOpens: Math.max(formOpens, prev.formOpens || 0),
+        leadsCount: Math.max(leadsCount, prev.leadsCount || 0),
+        dailyData: dailyData.length > 0 ? dailyData : prev.dailyData,
+        topLinks: topLinks.length > 0 ? topLinks : prev.topLinks,
+        reelEngagement: prev.reelEngagement || [],
+        trafficSources: prev.trafficSources || [],
+      }));
     } catch (err) {
       console.error("[Real Analytics Fetch Error]:", err);
     } finally {
