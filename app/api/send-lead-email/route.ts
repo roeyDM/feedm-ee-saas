@@ -6,6 +6,8 @@ import { renderLeadLimitReachedEmail } from "@/lib/email/templates/lead-limit-re
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
+    console.log("[Lead Submitted]:", body);
+
     const targetEmail = body.targetEmail || body.target_email || "";
     const fullName = body.fullName || body.name || "";
     const email = body.email || "";
@@ -34,14 +36,6 @@ export async function POST(request: Request) {
         isTestMode: true,
         message: "Simulator submission succeeded without affecting quotas or sending emails.",
       });
-    }
-
-    if (!targetEmail || typeof targetEmail !== "string" || !targetEmail.includes("@")) {
-      console.error("[Lead Ingestion Error]: Invalid target recipient email address:", targetEmail);
-      return NextResponse.json(
-        { success: false, error: "Invalid target recipient email address" },
-        { status: 400 }
-      );
     }
 
     const dbAdmin = getSupabaseAdmin();
@@ -139,7 +133,7 @@ export async function POST(request: Request) {
       const { error: insertError } = await dbAdmin.from("leads").insert([leadPayload]);
 
       if (insertError) {
-        console.error("[Lead Ingestion Error]: Supabase leads insert failed:", insertError.message);
+        console.error("[Lead Processing Error]: Supabase leads insert failed:", insertError.message);
         // Fallback insert if schema has fewer columns
         await dbAdmin.from("leads").insert([
           {
@@ -153,7 +147,7 @@ export async function POST(request: Request) {
         console.log("✅ [Lead Ingestion Success]: Lead row created in Supabase leads table.");
       }
     } catch (dbErr) {
-      console.error("[Lead Ingestion Error]: Exception inserting lead into DB:", dbErr);
+      console.error("[Lead Processing Error]: Exception inserting lead into DB:", dbErr);
     }
 
     // Record form_submit event in feed_analytics
@@ -181,13 +175,18 @@ export async function POST(request: Request) {
 
     const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.URL || "https://feedm.ee";
     const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee <updates@feedm.ee>";
-    const ownerEmailAddress = ownerProfile?.email || targetEmail;
+    const recipientEmail = targetEmail || ownerProfile?.email || "";
 
     const sendResendMail = async (toEmail: string, emailSubject: string, htmlBody: string) => {
       if (!apiKey) {
         console.warn("[Resend Warning]: Missing RESEND_API_KEY. Email notification skipped.");
         return;
       }
+      if (!toEmail || !toEmail.includes("@")) {
+        console.warn("[Resend Warning]: Missing recipient email. Notification skipped.");
+        return;
+      }
+
       try {
         let res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -223,12 +222,12 @@ export async function POST(request: Request) {
         }
         console.log(`✉️ [Resend Success]: Notification email sent to ${toEmail}`);
       } catch (e) {
-        console.error("[Lead Ingestion Error]: Resend dispatch exception:", e);
+        console.error("[Lead Processing Error]: Resend dispatch exception:", e);
       }
     };
 
     // 5. Threshold & Capacity Email Triggers (Idempotent per Month)
-    if (!isUnlimited && feedOwnerUserId) {
+    if (!isUnlimited && feedOwnerUserId && recipientEmail) {
       if (
         newTotalLeadCount >= warningThreshold &&
         newTotalLeadCount <= limit &&
@@ -242,14 +241,14 @@ export async function POST(request: Request) {
           appUrl: BASE_URL,
         });
 
-        await sendResendMail(ownerEmailAddress, warningTemplate.subject, warningTemplate.html);
+        await sendResendMail(recipientEmail, warningTemplate.subject, warningTemplate.html);
 
         await dbAdmin
           .from("profiles")
           .update({ warning_email_sent_month: currentMonthKey })
           .eq("id", feedOwnerUserId);
 
-        console.log(`[Resend Capacity Alert]: 80% warning email sent to ${ownerEmailAddress}`);
+        console.log(`[Resend Capacity Alert]: 80% warning email sent to ${recipientEmail}`);
       }
 
       if (
@@ -264,19 +263,19 @@ export async function POST(request: Request) {
           appUrl: BASE_URL,
         });
 
-        await sendResendMail(ownerEmailAddress, limitTemplate.subject, limitTemplate.html);
+        await sendResendMail(recipientEmail, limitTemplate.subject, limitTemplate.html);
 
         await dbAdmin
           .from("profiles")
           .update({ limit_email_sent_month: currentMonthKey })
           .eq("id", feedOwnerUserId);
 
-        console.log(`[Resend Capacity Alert]: 100% limit email sent to ${ownerEmailAddress}`);
+        console.log(`[Resend Capacity Alert]: 100% limit email sent to ${recipientEmail}`);
       }
     }
 
     // 6. Standard Lead Notification Email (Sent only if lead is active)
-    if (!isLocked) {
+    if (!isLocked && recipientEmail) {
       const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
       const standardSubject = `🎉 New Lead Captured on FeedM.ee! (${fullName || "Visitor"})`;
 
@@ -325,7 +324,7 @@ export async function POST(request: Request) {
         </div>
       `;
 
-      await sendResendMail(targetEmail, standardSubject, standardHtml);
+      await sendResendMail(recipientEmail, standardSubject, standardHtml);
     }
 
     return NextResponse.json({
@@ -334,7 +333,7 @@ export async function POST(request: Request) {
       status: assignedStatus,
     });
   } catch (err: any) {
-    console.error("[Lead Ingestion Error]: Exception during lead submission:", err);
+    console.error("[Lead Processing Error]: Exception during lead submission:", err);
     return NextResponse.json(
       { success: false, error: err.message || "Internal server error during lead submission" },
       { status: 500 }
