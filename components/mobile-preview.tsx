@@ -499,12 +499,21 @@ export function MobilePreview({
     if (leadForm.is_email_required && !cleanEmail) return;
 
     const targetEmail = (leadForm.target || "").trim();
-    if (!targetEmail || !targetEmail.includes("@")) {
-      alert("Please enter a valid target email address in Lead Form settings.");
-      return;
-    }
+    const payload = {
+      fullName: cleanName,
+      name: cleanName,
+      email: cleanEmail,
+      phone: cleanPhone,
+      targetEmail,
+      feedHandle: username || profileName || "main",
+      username: username || "main",
+      is_preview: Boolean(onTestLeadSubmit),
+      is_test: Boolean(onTestLeadSubmit),
+      isTest: Boolean(onTestLeadSubmit),
+      source: onTestLeadSubmit ? "simulator" : "public_feed",
+    };
     
-    console.log("Form submitted", { targetEmail, fullName: cleanName, phone: cleanPhone, email: cleanEmail, username });
+    console.log("[Client Lead Submit Dispatch]:", payload);
     setFormSubmitted(true);
     trackAnalyticsEvent(username, "lead_submit", { metadata: { name: cleanName, email: cleanEmail } });
 
@@ -514,33 +523,13 @@ export function MobilePreview({
         await fetch("/api/send-lead-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fullName: cleanName,
-            email: cleanEmail,
-            phone: cleanPhone,
-            targetEmail,
-            feedHandle: username || profileName || "main",
-            username: username || "main",
-            is_test: true,
-            isTest: true,
-            source: "simulator",
-          }),
+          body: JSON.stringify(payload),
         }).catch(() => {});
       } else {
         const res = await fetch("/api/send-lead-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fullName: cleanName,
-            email: cleanEmail,
-            phone: cleanPhone,
-            targetEmail,
-            feedHandle: username || profileName || "main",
-            username: username || "main",
-            is_test: false,
-            isTest: false,
-            source: "public_feed",
-          }),
+          body: JSON.stringify(payload),
         });
 
         const data = await res.json();

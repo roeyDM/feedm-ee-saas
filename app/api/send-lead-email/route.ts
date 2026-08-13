@@ -21,10 +21,8 @@ export async function POST(request: Request) {
     const formattedFeedHandle = cleanHandle ? `@${cleanHandle}` : "@main";
 
     const isTestMode =
-      body.is_test === true ||
-      body.isTest === true ||
-      body.source === "simulator" ||
-      body.is_preview === true;
+      body.is_preview === true ||
+      body.source === "simulator";
 
     console.log("[Lead Ingestion]: Processing lead", { isPreview: isTestMode, email: email || targetEmail });
 
