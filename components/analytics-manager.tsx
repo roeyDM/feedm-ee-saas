@@ -191,49 +191,66 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Query feed_analytics & analytics_events tables with time-range filtering
+      // 2. Query feed_analytics & analytics_events tables with robust date-range fallback
       try {
-        const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - daysCount);
-        const startDateISO = startDate.toISOString();
-
         let feedIdToQuery = activePageId || activeUserId;
 
         if (feedIdToQuery) {
-          const { data: feedAnalyticsRows } = await supabase
+          let query = supabase
             .from("feed_analytics")
             .select("*")
             .eq("feed_id", feedIdToQuery)
-            .gte("created_at", startDateISO)
             .order("created_at", { ascending: false });
 
-          if (feedAnalyticsRows && feedAnalyticsRows.length > 0) {
-            const isPageView = (t: string) => t === "page_view" || t === "view";
-            const isClick = (t: string) => ["click", "link_click", "social_click", "call_click", "whatsapp_click"].includes(t);
+          const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
+          if ((dateRange as string) !== "all") {
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - daysCount);
+            query = query.gte("created_at", startDate.toISOString());
+          }
 
-            const feedViews = feedAnalyticsRows.filter((r) => isPageView(r.event_type)).length;
-            const feedClicks = feedAnalyticsRows.filter((r) => isClick(r.event_type)).length;
+          const { data: dateFilteredRows } = await query;
+          let activeRows = dateFilteredRows || [];
 
-            totalViews = Math.max(totalViews, feedViews);
-            totalClicks = Math.max(totalClicks, feedClicks);
+          // If date-filtered query yields 0 rows, fetch all-time feed_analytics as fallback
+          if (activeRows.length === 0) {
+            const { data: allTimeRows } = await supabase
+              .from("feed_analytics")
+              .select("*")
+              .eq("feed_id", feedIdToQuery)
+              .order("created_at", { ascending: false });
+            if (allTimeRows && allTimeRows.length > 0) {
+              activeRows = allTimeRows;
+            }
+          }
 
-            const feedReelPlays = feedAnalyticsRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play" || r.event_type === "video_like").length;
-            const feedFormOpens = feedAnalyticsRows.filter((r) => r.event_type === "form_submit" || r.event_type === "form_open").length;
+          if (activeRows.length > 0) {
+            const isPageView = (t: string) => t === "page_view" || t === "view" || t === "video_view";
+            const isClick = (t: string) => ["click", "link_click", "social_click", "call_click", "whatsapp_click", "share"].includes(t);
+
+            const feedViews = activeRows.filter((r) => isPageView(r.event_type)).length;
+            const feedClicks = activeRows.filter((r) => isClick(r.event_type)).length;
+
+            totalViews = Math.max(totalViews, feedViews, profileCounts.views);
+            totalClicks = Math.max(totalClicks, feedClicks, profileCounts.clicks);
+
+            const feedReelPlays = activeRows.filter((r) => r.event_type === "video_view" || r.event_type === "reel_play" || r.event_type === "video_like").length;
+            const feedFormOpens = activeRows.filter((r) => r.event_type === "form_submit" || r.event_type === "form_open").length;
 
             if (feedReelPlays > 0) reelPlays = Math.max(reelPlays, feedReelPlays);
             if (feedFormOpens > 0) formOpens = Math.max(formOpens, feedFormOpens);
 
-            // Compute daily time-series data from feed_analytics
+            // Compute daily time-series data from activeRows
             const dayMap: Record<string, { views: number; clicks: number }> = {};
-            for (let i = daysCount - 1; i >= 0; i--) {
+            const numDaysChart = Math.min(daysCount, 30);
+            for (let i = numDaysChart - 1; i >= 0; i--) {
               const d = new Date();
               d.setDate(d.getDate() - i);
               const key = d.toISOString().split("T")[0];
               dayMap[key] = { views: 0, clicks: 0 };
             }
 
-            feedAnalyticsRows.forEach((r) => {
+            activeRows.forEach((r) => {
               if (!r.created_at) return;
               const key = new Date(r.created_at).toISOString().split("T")[0];
               if (dayMap[key]) {
@@ -255,8 +272,8 @@ export function AnalyticsManager({
               };
             });
 
-            // Compute top links from feed_analytics item_id
-            const clickRows = feedAnalyticsRows.filter((r) => isClick(r.event_type));
+            // Compute top links from activeRows item_id
+            const clickRows = activeRows.filter((r) => isClick(r.event_type));
             const feedLinkMap: Record<string, number> = {};
             clickRows.forEach((r) => {
               const label = r.item_id || "Outbound Action";
@@ -277,10 +294,11 @@ export function AnalyticsManager({
           }
         }
 
+        const defaultStartDate = new Date(Date.now() - (dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30) * 86400000).toISOString();
         let eventsQuery = supabase
           .from("analytics_events")
           .select("*")
-          .gte("created_at", startDateISO)
+          .gte("created_at", defaultStartDate)
           .order("created_at", { ascending: false });
 
         if (activeUserId && activeUsername) {
