@@ -1,6 +1,6 @@
 /**
  * Client-Side Analytics Tracker Utility
- * Sends page_view, click, social_click, call_click, whatsapp_click, video_view, video_like, share, form_submit events to /api/analytics/track
+ * Sends page_view, click, social_click, call_click, whatsapp_click, video_view, video_like, share, form_opened, form_submit events to /api/analytics/track
  */
 
 export type AnalyticsEventType =
@@ -14,9 +14,10 @@ export type AnalyticsEventType =
   | "video_view"
   | "video_like"
   | "share"
+  | "form_opened"
+  | "form_open"
   | "form_submit"
   | "reel_play"
-  | "form_open"
   | "lead_submit";
 
 export async function trackAnalyticsEvent(

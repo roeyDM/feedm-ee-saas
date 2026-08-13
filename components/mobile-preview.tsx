@@ -377,6 +377,18 @@ export function MobilePreview({
   );
   const displayReels = validUserReels.length > 0 ? validUserReels.slice(0, 3) : (isDemoMode ? DEFAULT_DEMO_REELS : []);
 
+  // Fire page_view on mount
+  useEffect(() => {
+    trackAnalyticsEvent(username, "page_view", { feedId: feedId || username, itemId: feedId || username });
+  }, [username, feedId]);
+
+  // Track form_opened when navigating to contact tab or page
+  useEffect(() => {
+    if (activeTab === "contact") {
+      trackAnalyticsEvent(username, "form_opened", { feedId: feedId || username, itemId: "lead_form" });
+    }
+  }, [activeTab, username, feedId]);
+
   // Initialize like counts
   useEffect(() => {
     const initialCounts: Record<string, number> = {};

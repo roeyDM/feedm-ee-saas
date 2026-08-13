@@ -55,6 +55,7 @@ export async function POST(request: Request) {
       if (insertErr) {
         console.error("[Analytics Insert Error on feed_analytics]:", insertErr.message, insertErr.details);
       } else {
+        console.log("[Analytics Event Saved]:", { feed_id: targetFeedId, event_type: storedType, item_id: item_id || link_url || link_title || null });
         console.log("[Analytics Insert Success on feed_analytics]:", insertRes);
       }
     } else {
