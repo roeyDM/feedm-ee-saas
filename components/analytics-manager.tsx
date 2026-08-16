@@ -166,6 +166,8 @@ export function AnalyticsManager({
           new Set([activeUserId, user?.id, activeUsername, ...candidateFeedIds].filter((id): id is string => Boolean(id)))
         );
 
+        console.log("[Analytics Query Identifiers]:", validIds);
+
         if (validIds.length > 0) {
           let query = supabase
             .from("feed_analytics")
@@ -180,21 +182,29 @@ export function AnalyticsManager({
             query = query.gte("created_at", startDate.toISOString());
           }
 
-          const { data: dateFilteredRows } = await query;
+          const { data: dateFilteredRows, error: queryError } = await query;
+          if (queryError) {
+            console.error("[Analytics Query Error]:", queryError);
+          }
+
           let activeRows = dateFilteredRows || [];
 
           // Fallback: If date-filtered query yields 0 rows, fetch all-time feed_analytics as fallback
           if (activeRows.length === 0) {
-            const { data: allTimeRows } = await supabase
+            const { data: allTimeRows, error: fallbackError } = await supabase
               .from("feed_analytics")
               .select("*")
               .in("feed_id", validIds)
               .order("created_at", { ascending: false });
+            if (fallbackError) {
+              console.error("[Analytics Query Error]:", fallbackError);
+            }
             if (allTimeRows && allTimeRows.length > 0) {
               activeRows = allTimeRows;
             }
           }
 
+          console.log("[Analytics DB Events Returned]:", activeRows);
           console.log("[Analytics Dashboard Fetched Events]:", activeRows);
 
           if (activeRows.length > 0) {
