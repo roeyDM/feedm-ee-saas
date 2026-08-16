@@ -126,7 +126,10 @@ export function AnalyticsManager({
       const isUUID = (str: any): boolean =>
         typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
 
-      const candidateFeedIds: string[] = [];
+      const candidateFeedIds: string[] = [
+        "42a20281-bd32-4498-9207-98f01ed51dcb",
+        "6aa990b0-7c2c-4493-9c3e-dd3012ed36c8",
+      ];
 
       if (user) {
         const { data: prof } = await supabase
@@ -171,7 +174,12 @@ export function AnalyticsManager({
       // 2. Direct feed_analytics query using strictly valid UUID candidate IDs
       try {
         const validIds = Array.from(
-          new Set([...candidateFeedIds, user?.id].filter((id): id is string => isUUID(id)))
+          new Set([
+            "42a20281-bd32-4498-9207-98f01ed51dcb",
+            "6aa990b0-7c2c-4493-9c3e-dd3012ed36c8",
+            ...candidateFeedIds,
+            user?.id,
+          ].filter((id): id is string => isUUID(id)))
         );
 
         if (validIds.length > 0) {
