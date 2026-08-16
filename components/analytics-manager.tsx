@@ -129,7 +129,7 @@ export function AnalyticsManager({
       const candidateFeedIds: string[] = [];
 
       if (user) {
-        let profQuery = supabase.from("profiles").select("id, username");
+        let profQuery = supabase.from("profiles").select("id, username, plan_type");
         if (activeUsername) {
           profQuery = profQuery.or(`id.eq.${user.id},username.ilike.${activeUsername}`);
         } else {
@@ -143,6 +143,16 @@ export function AnalyticsManager({
           if (prof.id && isUUID(prof.id)) {
             activeUserId = prof.id;
             candidateFeedIds.push(prof.id);
+          }
+          if (prof.plan_type) {
+            const rawPlan = String(prof.plan_type).toLowerCase().trim();
+            const resolvedTier =
+              rawPlan === "pro" || rawPlan === "business"
+                ? "pro"
+                : rawPlan === "personal"
+                ? "personal"
+                : "free";
+            setInternalTier(resolvedTier);
           }
         }
 
