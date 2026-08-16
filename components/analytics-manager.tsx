@@ -223,43 +223,114 @@ export function AnalyticsManager({
             if (feedReelPlays > 0) reelPlays = feedReelPlays;
             if (feedFormOpens > 0) formOpens = feedFormOpens;
 
-            // Compute daily time-series data from activeRows
-            const dayMap: Record<string, { views: number; clicks: number }> = {};
-            const numDaysChart = Math.min(daysCount, 30);
-            for (let i = numDaysChart - 1; i >= 0; i--) {
-              const d = new Date();
-              d.setDate(d.getDate() - i);
-              const key = d.toISOString().split("T")[0];
-              dayMap[key] = { views: 0, clicks: 0 };
+            // 1. Compute chart time-series data (Daily for 7d/30d, Monthly for 90d/all)
+            if (dateRange === "90d" || dateRange === "all") {
+              // Group BY MONTH
+              const monthMap: Record<string, { views: number; clicks: number; label: string }> = {};
+
+              if (dateRange === "90d") {
+                for (let i = 2; i >= 0; i--) {
+                  const d = new Date();
+                  d.setMonth(d.getMonth() - i);
+                  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                  const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+                  monthMap[key] = { views: 0, clicks: 0, label };
+                }
+              }
+
+              activeRows.forEach((r) => {
+                if (!r.created_at) return;
+                const dateObj = new Date(r.created_at);
+                const key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+                const label = dateObj.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+
+                if (!monthMap[key]) {
+                  monthMap[key] = { views: 0, clicks: 0, label };
+                }
+                if (isPageView(r.event_type)) monthMap[key].views += 1;
+                if (isClick(r.event_type)) monthMap[key].clicks += 1;
+              });
+
+              const maxViews = Math.max(...Object.values(monthMap).map((d) => d.views), 1);
+              const maxClicks = Math.max(...Object.values(monthMap).map((d) => d.clicks), 1);
+
+              dailyData = Object.values(monthMap).map(({ label, views, clicks }) => ({
+                day: label,
+                views: Math.round((views / maxViews) * 100) || (views > 0 ? 10 : 0),
+                clicks: Math.round((clicks / maxClicks) * 100) || (clicks > 0 ? 10 : 0),
+              }));
+            } else {
+              // Group BY DAY (7d or 30d)
+              const numDays = dateRange === "7d" ? 7 : 30;
+              const dayMap: Record<string, { views: number; clicks: number; label: string }> = {};
+
+              for (let i = numDays - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().split("T")[0];
+                const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                dayMap[key] = { views: 0, clicks: 0, label };
+              }
+
+              activeRows.forEach((r) => {
+                if (!r.created_at) return;
+                const key = new Date(r.created_at).toISOString().split("T")[0];
+                if (dayMap[key]) {
+                  if (isPageView(r.event_type)) dayMap[key].views += 1;
+                  if (isClick(r.event_type)) dayMap[key].clicks += 1;
+                }
+              });
+
+              const maxViews = Math.max(...Object.values(dayMap).map((d) => d.views), 1);
+              const maxClicks = Math.max(...Object.values(dayMap).map((d) => d.clicks), 1);
+
+              dailyData = Object.values(dayMap).map(({ label, views, clicks }) => ({
+                day: label,
+                views: Math.round((views / maxViews) * 100) || (views > 0 ? 10 : 0),
+                clicks: Math.round((clicks / maxClicks) * 100) || (clicks > 0 ? 10 : 0),
+              }));
             }
 
-            activeRows.forEach((r) => {
-              if (!r.created_at) return;
-              const key = new Date(r.created_at).toISOString().split("T")[0];
-              if (dayMap[key]) {
-                if (isPageView(r.event_type)) dayMap[key].views += 1;
-                if (isClick(r.event_type)) dayMap[key].clicks += 1;
+            // 2. Compute Top Outbound Links with human-readable titles
+            const resolveLinkTitle = (r: any): string => {
+              const itemId = String(r.item_id || r.link_title || r.link_url || "").trim();
+              const lowerItem = itemId.toLowerCase();
+
+              if (lowerItem === "whatsapp" || lowerItem === "whatsapp_click") return "WhatsApp";
+              if (lowerItem === "phone" || lowerItem === "call_click") return "Phone Call";
+              if (lowerItem === "lead_form" || lowerItem === "form_submit") return "Lead Contact Form";
+              if (lowerItem === "share" || lowerItem === "profile_share") return "Profile Share";
+
+              if (r.link_title && typeof r.link_title === "string" && r.link_title.trim()) {
+                return r.link_title.trim();
               }
-            });
+              if (r.metadata?.title && typeof r.metadata.title === "string") {
+                return r.metadata.title;
+              }
+              if (r.metadata?.name && typeof r.metadata.name === "string") {
+                return r.metadata.name;
+              }
+              if (r.metadata?.platform && typeof r.metadata.platform === "string") {
+                return r.metadata.platform.charAt(0).toUpperCase() + r.metadata.platform.slice(1);
+              }
 
-            const maxViews = Math.max(...Object.values(dayMap).map((d) => d.views), 1);
-            const maxClicks = Math.max(...Object.values(dayMap).map((d) => d.clicks), 1);
+              const isUUIDStr = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
+              if (isUUIDStr) {
+                if (r.link_url) return r.link_url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0] || "Custom Link";
+                return "Custom Link";
+              }
 
-            dailyData = Object.entries(dayMap).map(([dateStr, counts]) => {
-              const dateObj = new Date(dateStr);
-              const label = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-              return {
-                day: label,
-                views: Math.round((counts.views / maxViews) * 100) || (counts.views > 0 ? 10 : 0),
-                clicks: Math.round((counts.clicks / maxClicks) * 100) || (counts.clicks > 0 ? 10 : 0),
-              };
-            });
+              if (itemId.startsWith("http://") || itemId.startsWith("https://")) {
+                return itemId.replace(/^https?:\/\/(www\.)?/, "").split("/")[0];
+              }
 
-            // Compute top links from activeRows item_id
+              return itemId || "Outbound Link";
+            };
+
             const clickRows = activeRows.filter((r) => isClick(r.event_type));
             const feedLinkMap: Record<string, number> = {};
             clickRows.forEach((r) => {
-              const label = r.item_id || "Outbound Action";
+              const label = resolveLinkTitle(r);
               feedLinkMap[label] = (feedLinkMap[label] || 0) + 1;
             });
 
