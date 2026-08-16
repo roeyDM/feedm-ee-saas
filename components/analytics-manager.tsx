@@ -158,24 +158,29 @@ export function AnalyticsManager({
         );
         validAnalyticsIds.push(...candidateIds);
 
-        // Step 4: Visual Gating & Plan State Mapping (UI Only - Data Fetching Untouched)
-        const planString = String(
+        // Fully Generic System-Wide Plan Resolution Engine
+        const currentPlan = String(
           userProfile?.plan ||
           userProfile?.plan_type ||
           userProfile?.subscription_plan ||
           currentUser?.user_metadata?.plan ||
-          "pro"
+          "free"
         ).toLowerCase().trim();
 
-        const hasActiveTrial = Boolean(
+        const isTrialActive = Boolean(
           userProfile?.is_trial ||
           userProfile?.in_trial ||
-          userProfile?.trial_ends_at ||
-          currentUser?.app_metadata?.plan === "pro"
+          (userProfile?.trial_ends_at && new Date(userProfile.trial_ends_at) > new Date())
         );
 
-        const showProUI = true; // Ensures trial/pro users see full unlocked UI
-        const resolvedTier = showProUI ? "pro" : planString === "personal" ? "personal" : "free";
+        const isPro = currentPlan.includes("pro") || currentPlan.includes("business") || isTrialActive;
+        const isPersonal = currentPlan.includes("personal");
+
+        const resolvedTier: "free" | "personal" | "pro" = isPro
+          ? "pro"
+          : isPersonal
+          ? "personal"
+          : "free";
 
         setInternalTier(resolvedTier);
 
