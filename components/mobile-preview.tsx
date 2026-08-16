@@ -753,22 +753,6 @@ export function MobilePreview({
         </div>
       )}
 
-      {/* Analytics Heatmap Hotspots Overlay (Pro / Business Tier) */}
-      {analyticsOverlayMode === "heatmap" && (
-        <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden rounded-3xl">
-          {/* Hotspot 1: Top Link */}
-          <div className="absolute top-[32%] left-[45%] -translate-x-1/2 w-48 h-16 bg-gradient-to-r from-emerald-500/60 via-teal-400/40 to-emerald-600/50 rounded-full blur-xl opacity-90 animate-pulse" />
-          {/* Hotspot 2: Lead Form CTA */}
-          <div className="absolute bottom-[22%] left-[50%] -translate-x-1/2 w-44 h-14 bg-gradient-to-r from-teal-500/60 via-emerald-400/50 to-amber-400/30 rounded-full blur-xl opacity-85 animate-pulse" />
-          {/* Hotspot 3: WhatsApp Floating Button */}
-          <div className="absolute top-[58%] right-[8%] w-24 h-12 bg-emerald-500/50 rounded-full blur-lg opacity-75 animate-pulse" />
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-zinc-950/95 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full border border-emerald-500/50 shadow-xl flex items-center gap-1.5 z-50">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>⚡ Real-Time Analytics Engine Active</span>
-          </div>
-        </div>
-      )}
-
       {/* ------------------------------------------------------------- */}
       {/* PAGE 1: THE BIO / LINKTREE VIEW */}
       {/* ------------------------------------------------------------- */}
@@ -914,13 +898,6 @@ export function MobilePreview({
                 getButtonShapeClass()
               )}
             >
-              {/* Analytics Click Bubbles Overlay (Free Tier) */}
-              {analyticsOverlayMode === "bubbles" && (
-                <div className="absolute -top-2.5 right-3 z-30 bg-emerald-600 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full shadow-lg border border-emerald-300 animate-bounce flex items-center gap-1">
-                  <span>+{idx === 0 ? 142 : idx === 1 ? 98 : idx === 2 ? 84 : 60} clicks</span>
-                </div>
-              )}
-
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 {link.thumbnailUrl?.trim() ? (
                   <div className="flex-shrink-0 h-10 w-10 overflow-hidden rounded-lg border border-zinc-200/40">

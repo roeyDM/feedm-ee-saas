@@ -114,6 +114,7 @@ export function AnalyticsManager({
       let formOpens = 0;
       let dailyData: { day: string; views: number; clicks: number }[] = [];
       let topLinks: { name: string; clicks: number; percentage: number }[] = [];
+      let trafficSources: { source: string; percent: number; count: number; color: string }[] = [];
 
       // 1. Determine active creator username, user_id, and fetch profile counts
       const { data: { user } } = await supabase.auth.getUser();
@@ -345,6 +346,47 @@ export function AnalyticsManager({
                 .sort((a, b) => b.clicks - a.clicks)
                 .slice(0, 5);
             }
+
+            // 3. Compute Traffic Sources Breakdown dynamically from activeRows referrer data
+            const trafficCounts: Record<string, number> = {};
+            activeRows.forEach((r) => {
+              const ref = String(r.metadata?.referrer || r.link_url || "").toLowerCase();
+              let sourceName = "Direct / Bio Link";
+              if (ref.includes("instagram.com")) sourceName = "Instagram";
+              else if (ref.includes("facebook.com")) sourceName = "Facebook";
+              else if (ref.includes("tiktok.com")) sourceName = "TikTok";
+              else if (ref.includes("google.")) sourceName = "Google";
+              else if (ref.includes("twitter.com") || ref.includes("t.co") || ref.includes("x.com")) sourceName = "Twitter / X";
+              else if (ref.includes("youtube.com") || ref.includes("youtu.be")) sourceName = "YouTube";
+              else if (ref && !ref.includes("feedm.ee") && !ref.includes("localhost")) sourceName = "External Referral";
+
+              trafficCounts[sourceName] = (trafficCounts[sourceName] || 0) + 1;
+            });
+
+            const totalTraffic = activeRows.length || 1;
+            const sourceColors: Record<string, string> = {
+              "Direct / Bio Link": "bg-emerald-500",
+              Instagram: "bg-pink-500",
+              Facebook: "bg-blue-600",
+              TikTok: "bg-zinc-900",
+              Google: "bg-amber-500",
+              "Twitter / X": "bg-sky-500",
+              YouTube: "bg-rose-600",
+              "External Referral": "bg-purple-500",
+            };
+
+            let trafficSourcesList = Object.entries(trafficCounts)
+              .map(([source, count]) => ({
+                source,
+                count,
+                percent: Math.round((count / totalTraffic) * 100),
+                color: sourceColors[source] || "bg-zinc-500",
+              }))
+              .sort((a, b) => b.count - a.count);
+
+            if (trafficSourcesList.length > 0) {
+              trafficSources = trafficSourcesList;
+            }
           }
         }
       } catch (err) {
@@ -362,7 +404,7 @@ export function AnalyticsManager({
         dailyData: dailyData.length > 0 ? dailyData : prev.dailyData,
         topLinks: topLinks.length > 0 ? topLinks : prev.topLinks,
         reelEngagement: prev.reelEngagement || [],
-        trafficSources: prev.trafficSources || [],
+        trafficSources: trafficSources.length > 0 ? trafficSources : prev.trafficSources || [],
       }));
     } catch (err) {
       console.error("[Real Analytics Fetch Error]:", err);

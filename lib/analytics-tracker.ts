@@ -70,7 +70,10 @@ export async function trackAnalyticsEvent(
         reel_id: extraData?.reelId,
         is_preview: isPreview,
         source: source,
-        metadata: extraData?.metadata || {},
+        metadata: {
+          referrer: typeof document !== "undefined" ? document.referrer : "",
+          ...(extraData?.metadata || {}),
+        },
       }),
     }).catch((err) => {
       console.warn("[Analytics Client Warning]: Track request failed silently:", err);
