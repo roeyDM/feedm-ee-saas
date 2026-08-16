@@ -170,8 +170,6 @@ export function AnalyticsManager({
           new Set([activeUserId, user?.id, ...candidateFeedIds].filter((id): id is string => isUUID(id)))
         );
 
-        console.log("[Analytics Query Identifiers]:", validIds);
-
         if (validIds.length > 0) {
           let query = supabase
             .from("feed_analytics")
@@ -207,9 +205,6 @@ export function AnalyticsManager({
               activeRows = allTimeRows;
             }
           }
-
-          console.log("[Analytics DB Events Returned]:", activeRows);
-          console.log("[Analytics Dashboard Fetched Events]:", activeRows);
 
           if (activeRows.length > 0) {
             const isPageView = (t: string) => t === "page_view" || t === "view";
