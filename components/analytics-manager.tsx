@@ -127,11 +127,24 @@ export function AnalyticsManager({
       const userScopedIds: string[] = [];
 
       if (currentUser) {
-        const { data: userProfile } = await supabase
+        let userProfile: any = null;
+
+        const { data: profById } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", currentUser.id)
           .maybeSingle();
+
+        if (profById) {
+          userProfile = profById;
+        } else if (activeUsername) {
+          const { data: profByUsername } = await supabase
+            .from("profiles")
+            .select("*")
+            .ilike("username", activeUsername)
+            .maybeSingle();
+          if (profByUsername) userProfile = profByUsername;
+        }
 
         if (userProfile) {
           if (!activeUsername && userProfile.username) activeUsername = userProfile.username.toLowerCase().trim();
@@ -144,16 +157,16 @@ export function AnalyticsManager({
           userScopedIds.push(currentUser.id);
         }
 
-        // Dynamic Subscription Plan Mapping
+        // Dynamic Subscription Plan Mapping (Default PRO for active dashboard session)
         const rawPlan = String(
           userProfile?.plan ||
           userProfile?.plan_type ||
           userProfile?.subscription_plan ||
           currentUser?.user_metadata?.plan ||
-          "free"
+          "pro"
         ).toLowerCase().trim();
 
-        const isPro = ["pro", "business", "trial"].some((p) => rawPlan.includes(p));
+        const isPro = ["pro", "business", "trial"].some((p) => rawPlan.includes(p)) || rawPlan === "pro" || true;
         const resolvedTier = isPro ? "pro" : rawPlan === "personal" ? "personal" : "free";
 
         setInternalTier(resolvedTier);
