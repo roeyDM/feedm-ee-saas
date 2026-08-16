@@ -122,6 +122,8 @@ export function AnalyticsManager({
       let activePageId: string | null = null;
       let profileCounts = { views: 0, clicks: 0 };
 
+      const candidateFeedIds: string[] = [];
+
       if (user) {
         const { data: prof } = await supabase
           .from("profiles")
@@ -132,6 +134,18 @@ export function AnalyticsManager({
         if (prof) {
           if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
           activeUserId = prof.id;
+          candidateFeedIds.push(prof.id);
+        }
+
+        const { data: userFeeds } = await supabase
+          .from("feeds")
+          .select("id")
+          .eq("user_id", user.id);
+
+        if (userFeeds && userFeeds.length > 0) {
+          userFeeds.forEach((f) => {
+            if (f.id) candidateFeedIds.push(f.id);
+          });
         }
 
         const leadsRes = await supabase
@@ -146,17 +160,17 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Direct feed_analytics query using ALL candidate IDs (page.id, user.id, profile.id)
+      // 2. Direct feed_analytics query using ALL candidate IDs (user.id, profile.id, feeds.id, username)
       try {
-        const feedIdsToQuery = Array.from(
-          new Set([activePageId, activeUserId, user?.id].filter((id): id is string => Boolean(id)))
+        const validIds = Array.from(
+          new Set([activeUserId, user?.id, activeUsername, ...candidateFeedIds].filter((id): id is string => Boolean(id)))
         );
 
-        if (feedIdsToQuery.length > 0) {
+        if (validIds.length > 0) {
           let query = supabase
             .from("feed_analytics")
             .select("*")
-            .in("feed_id", feedIdsToQuery)
+            .in("feed_id", validIds)
             .order("created_at", { ascending: false });
 
           const daysCount = dateRange === "7d" ? 7 : dateRange === "90d" ? 90 : 30;
@@ -174,12 +188,14 @@ export function AnalyticsManager({
             const { data: allTimeRows } = await supabase
               .from("feed_analytics")
               .select("*")
-              .in("feed_id", feedIdsToQuery)
+              .in("feed_id", validIds)
               .order("created_at", { ascending: false });
             if (allTimeRows && allTimeRows.length > 0) {
               activeRows = allTimeRows;
             }
           }
+
+          console.log("[Analytics Dashboard Fetched Events]:", activeRows);
 
           if (activeRows.length > 0) {
             const isPageView = (t: string) => t === "page_view" || t === "view";
