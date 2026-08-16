@@ -124,40 +124,51 @@ export function AnalyticsManager({
       const isUUID = (str: any): boolean =>
         typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
 
-      const userScopedIds: string[] = [];
+      const validAnalyticsIds: string[] = [];
 
       if (currentUser) {
         let userProfile: any = null;
 
-        const { data: profById } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .maybeSingle();
-
-        if (profById) {
-          userProfile = profById;
-        } else if (activeUsername) {
-          const { data: profByUsername } = await supabase
+        // Step 1: Query User Profile safely
+        try {
+          const { data: prof1 } = await supabase
             .from("profiles")
             .select("*")
-            .ilike("username", activeUsername)
+            .or(`id.eq.${currentUser.id},user_id.eq.${currentUser.id}`)
             .maybeSingle();
-          if (profByUsername) userProfile = profByUsername;
-        }
+          if (prof1) userProfile = prof1;
+        } catch (_) {}
 
-        if (userProfile) {
-          if (!activeUsername && userProfile.username) activeUsername = userProfile.username.toLowerCase().trim();
-          if (userProfile.id && isUUID(userProfile.id)) {
-            userScopedIds.push(userProfile.id);
+        if (!userProfile) {
+          const { data: prof2 } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .maybeSingle();
+          if (prof2) {
+            userProfile = prof2;
+          } else if (activeUsername) {
+            const { data: prof3 } = await supabase
+              .from("profiles")
+              .select("*")
+              .ilike("username", activeUsername)
+              .maybeSingle();
+            if (prof3) userProfile = prof3;
           }
         }
 
-        if (currentUser.id && isUUID(currentUser.id)) {
-          userScopedIds.push(currentUser.id);
+        if (userProfile && !activeUsername && userProfile.username) {
+          activeUsername = userProfile.username.toLowerCase().trim();
         }
 
-        // Dynamic Subscription Plan Mapping (Default PRO for active dashboard session)
+        // Step 2: Extract Correct Feed Identifiers
+        const feedProfileId = userProfile?.id;
+        const candidateIds = [feedProfileId, currentUser?.id, userProfile?.user_id].filter(
+          (id): id is string => isUUID(id)
+        );
+        validAnalyticsIds.push(...candidateIds);
+
+        // Step 4: Map Plan Tier & Permissions
         const rawPlan = String(
           userProfile?.plan ||
           userProfile?.plan_type ||
@@ -183,11 +194,9 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Direct feed_analytics query using ONLY userScopedIds for the logged in user
+      // Step 3: Fetch Analytics Events
       try {
-        const validIds = Array.from(
-          new Set(userScopedIds.filter((id): id is string => isUUID(id)))
-        );
+        const validIds = Array.from(new Set(validAnalyticsIds.filter((id): id is string => isUUID(id))));
 
         if (validIds.length > 0) {
           let query = supabase
