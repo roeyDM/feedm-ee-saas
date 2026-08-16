@@ -89,7 +89,7 @@ export function AnalyticsManager({
     if (onTierChange) onTierChange(tier);
   };
 
-  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d">("30d");
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "all">("all");
   const [loading, setLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     totalViews: 0,
@@ -312,7 +312,7 @@ export function AnalyticsManager({
             {/* Date Range Selector */}
             <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-zinc-200 shadow-2xs text-xs font-bold">
               <Calendar className="h-3.5 w-3.5 text-zinc-400 ml-2" />
-              {(["7d", "30d", "90d"] as const).map((rng) => (
+              {(["7d", "30d", "90d", "all"] as const).map((rng) => (
                 <button
                   key={rng}
                   onClick={() => setDateRange(rng)}
@@ -322,7 +322,7 @@ export function AnalyticsManager({
                       : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
                   }`}
                 >
-                  {rng === "7d" ? "Last 7 Days" : rng === "30d" ? "Last 30 Days" : "Last 90 Days"}
+                  {rng === "7d" ? "Last 7 Days" : rng === "30d" ? "Last 30 Days" : rng === "90d" ? "Last 90 Days" : "All Time"}
                 </button>
               ))}
             </div>
@@ -360,7 +360,7 @@ export function AnalyticsManager({
               </div>
               <div className="mt-3 flex items-baseline justify-between">
                 <span className="text-3xl font-black text-zinc-950">{totalViews.toLocaleString()}</span>
-                <span className="text-xs font-medium text-zinc-400">Live Views</span>
+                <span className="text-xs font-medium text-zinc-400">Total Views</span>
               </div>
             </div>
 
@@ -377,7 +377,7 @@ export function AnalyticsManager({
               </div>
               <div className="mt-3 flex items-baseline justify-between">
                 <span className="text-3xl font-black text-zinc-950">{totalClicks.toLocaleString()}</span>
-                <span className="text-xs font-medium text-zinc-400">Live Clicks</span>
+                <span className="text-xs font-medium text-zinc-400">Total Clicks</span>
               </div>
             </div>
 
@@ -623,7 +623,7 @@ export function AnalyticsManager({
                   </div>
                   <div className="mt-3 flex items-baseline justify-between">
                     <span className="text-4xl font-black text-emerald-400">{convRate}</span>
-                    <span className="text-xs font-bold text-zinc-400">Live Rate</span>
+                    <span className="text-xs font-bold text-zinc-400">Conversion Rate</span>
                   </div>
                 </div>
               </div>
@@ -672,7 +672,7 @@ export function AnalyticsManager({
                       <Filter className="h-4 w-4 text-purple-600" /> Conversion Funnel Analysis
                     </h3>
                     <span className="text-[10px] font-extrabold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 uppercase">
-                      Live Funnel
+                      Historic Funnel
                     </span>
                   </div>
 
