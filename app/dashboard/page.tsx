@@ -97,13 +97,11 @@ function DashboardContent() {
     }
   };
 
-  // Restore saved offline trial tier state on mount
+  // Clean up any legacy offline dev mock plan overrides on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedTier = localStorage.getItem("feedmee_subscription_tier");
-      if (savedTier === "pro") {
-        setPlanType("pro");
-      }
+      localStorage.removeItem("feedmee_subscription_tier");
+      localStorage.removeItem("feedmee_trial_active");
     }
   }, []);
 
@@ -1226,23 +1224,6 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    onClick={() => {
-                      if (typeof window !== "undefined") {
-                        localStorage.setItem("feedmee_subscription_tier", "pro");
-                        localStorage.setItem("feedmee_trial_active", "true");
-                      }
-                      setPlanType("pro");
-                      setSaveStatus("success");
-                      setStatusMsg("Pro Trial Activated! You now have full access to Video Reels & Lead Forms.");
-                      setTimeout(() => setSaveStatus("idle"), 4000);
-                    }}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-9 px-4 rounded-xl shadow-md gap-1 cursor-pointer"
-                  >
-                    <Zap className="h-3.5 w-3.5 fill-current" /> Activate Pro Trial (Dev Mock) <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
               </div>
             ) : null
           )}
