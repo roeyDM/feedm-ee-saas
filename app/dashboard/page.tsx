@@ -531,16 +531,6 @@ function DashboardContent() {
           onSave={handleSave}
           isSaving={isSaving}
           onUpgradeClick={() => setShowUpgradeModal(true)}
-          onResetToFree={() => {
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("feedmee_subscription_tier");
-              localStorage.removeItem("feedmee_trial_active");
-            }
-            setPlanType("free");
-            setSaveStatus("success");
-            setStatusMsg("Switched back to Free Tier Mode for testing.");
-            setTimeout(() => setSaveStatus("idle"), 3000);
-          }}
         />
       </div>
 

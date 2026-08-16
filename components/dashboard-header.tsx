@@ -16,7 +16,6 @@ interface DashboardHeaderProps {
   onSave?: () => void;
   isSaving?: boolean;
   onUpgradeClick?: () => void;
-  onResetToFree?: () => void;
 }
 
 export function DashboardHeader({
@@ -27,7 +26,6 @@ export function DashboardHeader({
   onSave,
   isSaving = false,
   onUpgradeClick,
-  onResetToFree,
 }: DashboardHeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white backdrop-blur-md">
@@ -58,20 +56,10 @@ export function DashboardHeader({
           ) : (
             <div className="inline-flex items-center gap-2.5 rounded-full bg-emerald-950/70 px-3.5 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/40 shadow-2xs">
               <Zap className="h-3.5 w-3.5 text-emerald-400 fill-current animate-pulse shrink-0" />
-              <span>7-Day Pro Trial Active</span>
+              <span>PRO PLAN ACTIVE</span>
               <span className="rounded bg-emerald-400/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-emerald-200 border border-emerald-400/30 shrink-0">
                 Full Access
               </span>
-              {onResetToFree && (
-                <button
-                  type="button"
-                  onClick={onResetToFree}
-                  className="ml-1 text-[10px] text-zinc-400 hover:text-rose-400 underline font-medium cursor-pointer"
-                  title="Dev Test: Reset to Free Tier"
-                >
-                  Reset
-                </button>
-              )}
             </div>
           )}
         </div>
