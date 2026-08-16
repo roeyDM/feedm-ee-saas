@@ -7,6 +7,22 @@ const isValidUUID = (str: any): boolean =>
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
+    const referer = request.headers.get("referer") || "";
+    const isSimulatorEvent =
+      body.is_preview === true ||
+      body.is_test === true ||
+      body.isTest === true ||
+      body.source === "simulator" ||
+      referer.includes("/dashboard");
+
+    if (isSimulatorEvent) {
+      console.log("🧪 [Simulator Analytics Event]: Bypassing database tracking row insert.");
+      return NextResponse.json({
+        success: true,
+        skipped: "simulator_event",
+      });
+    }
+
     console.log("[Analytics Ingest Request]:", body);
 
     const { feed_id, username, event_type, item_id, link_url, link_title, reel_id, metadata } = body;

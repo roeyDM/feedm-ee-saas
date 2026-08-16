@@ -29,6 +29,8 @@ export async function trackAnalyticsEvent(
     linkUrl?: string;
     linkTitle?: string;
     reelId?: string;
+    isPreview?: boolean;
+    source?: string;
     metadata?: Record<string, any>;
   }
 ) {
@@ -39,12 +41,18 @@ export async function trackAnalyticsEvent(
   const normType = eventType === "view" ? "page_view" : eventType;
   const itemId = extraData?.itemId || extraData?.linkUrl || extraData?.linkTitle || null;
 
+  const isDashboardContext = typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard");
+  const isPreview = extraData?.isPreview ?? isDashboardContext;
+  const source = extraData?.source ?? (isDashboardContext ? "simulator" : "public_feed");
+
   try {
     console.log("[Analytics Dispatching]:", {
       event_type: normType,
       item_id: itemId,
       feed_id: extraData?.feedId || "N/A",
       username: cleanUsername,
+      isPreview,
+      source,
     });
 
     fetch("/api/analytics/track", {
@@ -60,6 +68,8 @@ export async function trackAnalyticsEvent(
         link_url: extraData?.linkUrl,
         link_title: extraData?.linkTitle,
         reel_id: extraData?.reelId,
+        is_preview: isPreview,
+        source: source,
         metadata: extraData?.metadata || {},
       }),
     }).catch((err) => {
