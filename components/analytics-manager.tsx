@@ -130,7 +130,7 @@ export function AnalyticsManager({
         const { data: userProfile } = await supabase
           .from("profiles")
           .select("*")
-          .or(`id.eq.${currentUser.id},user_id.eq.${currentUser.id}`)
+          .eq("id", currentUser.id)
           .maybeSingle();
 
         if (userProfile) {
@@ -138,30 +138,23 @@ export function AnalyticsManager({
           if (userProfile.id && isUUID(userProfile.id)) {
             userScopedIds.push(userProfile.id);
           }
-          if (userProfile.user_id && isUUID(userProfile.user_id)) {
-            userScopedIds.push(userProfile.user_id);
-          }
         }
 
         if (currentUser.id && isUUID(currentUser.id)) {
           userScopedIds.push(currentUser.id);
         }
 
-        // Dynamic Subscription Plan Resolution (Per-User Scope)
+        // Dynamic Subscription Plan Mapping
         const rawPlan = String(
-          userProfile?.plan_type ||
           userProfile?.plan ||
+          userProfile?.plan_type ||
           userProfile?.subscription_plan ||
           currentUser?.user_metadata?.plan ||
           "free"
         ).toLowerCase().trim();
 
-        const resolvedTier =
-          rawPlan.includes("pro") || rawPlan.includes("business") || rawPlan.includes("trial")
-            ? "pro"
-            : rawPlan === "personal"
-            ? "personal"
-            : "free";
+        const isPro = ["pro", "business", "trial"].some((p) => rawPlan.includes(p));
+        const resolvedTier = isPro ? "pro" : rawPlan === "personal" ? "personal" : "free";
 
         setInternalTier(resolvedTier);
 
