@@ -197,18 +197,19 @@ export function AnalyticsManager({
 
         setInternalTier(resolvedTier);
 
-        // 2. Automatic Self-Healing Database Update (Upgrades DB record if isProAccess is true but plan is 'free')
+        // 2. Safe Client-Side State Fallback (No Failing DB Writes)
         if (userProfile && (userProfile.plan === "free" || !userProfile.plan || !userProfile.trial_ends_at)) {
-          supabase
-            .from("profiles")
-            .update({
-              plan: "pro",
-              plan_type: "pro",
-              is_trial: true,
-              trial_ends_at: computedTrialEndsAt.toISOString(),
-            })
-            .eq("id", userProfile.id)
-            .then(() => {}, () => {});
+          try {
+            await supabase
+              .from("profiles")
+              .update({
+                plan: "pro",
+                is_trial: true,
+              })
+              .eq("id", userProfile.id);
+          } catch (_) {
+            // Suppress client update errors - preserve state in memory
+          }
         }
 
         const leadsRes = await supabase
