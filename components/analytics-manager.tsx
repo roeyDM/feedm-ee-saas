@@ -138,25 +138,23 @@ export function AnalyticsManager({
         if (prof) {
           if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
           if (prof.id && isUUID(prof.id)) {
-            activeUserId = prof.id;
             candidateFeedIds.push(prof.id);
           }
-
-          const rawPlan = String(prof.plan || prof.plan_type || prof.subscription_plan || "pro").toLowerCase().trim();
-          const resolvedTier =
-            rawPlan.includes("pro") || rawPlan.includes("business") || rawPlan.includes("trial")
-              ? "pro"
-              : rawPlan === "personal"
-              ? "personal"
-              : "pro";
-          setInternalTier(resolvedTier);
-        } else {
-          setInternalTier("pro");
         }
 
         if (user.id && isUUID(user.id)) {
           candidateFeedIds.push(user.id);
         }
+
+        // Independent User Plan Resolution (Permissions Gating)
+        const rawPlan = String(prof?.plan || prof?.plan_type || prof?.subscription_plan || user?.user_metadata?.plan || "pro").toLowerCase().trim();
+        const resolvedTier =
+          rawPlan.includes("pro") || rawPlan.includes("business") || rawPlan.includes("trial") || rawPlan === "pro"
+            ? "pro"
+            : rawPlan === "personal"
+            ? "personal"
+            : "pro"; // Default active dashboard sessions to PRO PLAN
+        setInternalTier(resolvedTier);
 
         const leadsRes = await supabase
           .from("leads")
@@ -172,11 +170,8 @@ export function AnalyticsManager({
 
       // 2. Direct feed_analytics query using strictly valid UUID candidate IDs
       try {
-        const isUUID = (str: any): boolean =>
-          typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
-
         const validIds = Array.from(
-          new Set([activeUserId, user?.id, ...candidateFeedIds].filter((id): id is string => isUUID(id)))
+          new Set([...candidateFeedIds, user?.id].filter((id): id is string => isUUID(id)))
         );
 
         if (validIds.length > 0) {
