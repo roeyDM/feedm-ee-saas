@@ -158,31 +158,61 @@ export function AnalyticsManager({
         );
         validAnalyticsIds.push(...candidateIds);
 
-        // Fully Generic System-Wide Plan Resolution Engine
-        const currentPlan = String(
+        // 1. Super Admin Full Access Bypass
+        const isSuperAdmin = Boolean(
+          userProfile?.is_admin ||
+          userProfile?.role === "super_admin" ||
+          userProfile?.role === "admin" ||
+          currentUser?.app_metadata?.role === "super_admin"
+        );
+
+        // 2. Dynamic 7-Day Trial Calculation & Expiration Logic
+        const createdAt = new Date(userProfile?.created_at || currentUser?.created_at || Date.now());
+        const trialDurationDays = 7;
+        const computedTrialEndsAt = userProfile?.trial_ends_at
+          ? new Date(userProfile.trial_ends_at)
+          : new Date(createdAt.getTime() + trialDurationDays * 24 * 60 * 60 * 1000);
+
+        const now = new Date();
+        const isTrialValid = now < computedTrialEndsAt;
+
+        // 3. Dynamic Plan Resolution
+        const rawPlan = String(
           userProfile?.plan ||
           userProfile?.plan_type ||
           userProfile?.subscription_plan ||
           currentUser?.user_metadata?.plan ||
-          "free"
+          "pro"
         ).toLowerCase().trim();
 
-        const isTrialActive = Boolean(
-          userProfile?.is_trial ||
-          userProfile?.in_trial ||
-          (userProfile?.trial_ends_at && new Date(userProfile.trial_ends_at) > new Date())
-        );
+        const isProUser =
+          isSuperAdmin ||
+          (isTrialValid && (rawPlan.includes("pro") || rawPlan.includes("trial") || userProfile?.is_trial !== false)) ||
+          (rawPlan.includes("pro") && !userProfile?.is_trial);
 
-        const isPro = currentPlan.includes("pro") || currentPlan.includes("business") || isTrialActive;
-        const isPersonal = currentPlan.includes("personal");
+        const isPersonalUser = !isProUser && (rawPlan.includes("personal") || (isTrialValid && rawPlan.includes("personal")));
+        const isFreeUser = !isProUser && !isPersonalUser;
 
-        const resolvedTier: "free" | "personal" | "pro" = isPro
+        const resolvedTier: "free" | "personal" | "pro" = isProUser
           ? "pro"
-          : isPersonal
+          : isPersonalUser
           ? "personal"
           : "free";
 
         setInternalTier(resolvedTier);
+
+        // 4. Auto-Update Database Fallback (Self-Healing)
+        if (userProfile && (!userProfile.trial_ends_at || !userProfile.plan)) {
+          supabase
+            .from("profiles")
+            .update({
+              plan: userProfile.plan || "pro",
+              is_trial: true,
+              trial_ends_at: computedTrialEndsAt.toISOString(),
+            })
+            .eq("id", userProfile.id)
+            .then(() => {}, () => {});
+        }
 
         const leadsRes = await supabase
           .from("leads")
