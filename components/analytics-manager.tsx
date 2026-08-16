@@ -25,7 +25,7 @@ import { supabase } from "@/lib/supabase";
 import { SectionHelp } from "@/components/ui/section-help";
 
 interface AnalyticsManagerProps {
-  planType?: "free" | "personal" | "pro" | "business";
+  planType?: "free" | "personal" | "pro" | "business" | "trial_pro" | string;
   activeTier?: "free" | "personal" | "pro";
   onTierChange?: (tier: "free" | "personal" | "pro") => void;
   username?: string;
@@ -75,7 +75,7 @@ export function AnalyticsManager({
 }: AnalyticsManagerProps) {
   // Local state for draft tier switcher preview
   const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">(
-    initialPlan === "pro" || initialPlan === "business"
+    initialPlan === "pro" || initialPlan === "business" || initialPlan === "trial_pro"
       ? "pro"
       : initialPlan === "personal"
       ? "personal"
