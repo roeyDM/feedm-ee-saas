@@ -116,53 +116,59 @@ export function AnalyticsManager({
       let topLinks: { name: string; clicks: number; percentage: number }[] = [];
       let trafficSources: { source: string; percent: number; count: number; color: string }[] = [];
 
-      // 1. Determine active creator username, user_id, and fetch profile counts
-      const { data: { user } } = await supabase.auth.getUser();
+      // 1. Determine active creator username, user_id, and fetch profile
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       let activeUsername = propUsername ? propUsername.toLowerCase().trim() : "";
-      let activeUserId = user?.id || null;
-      let activePageId: string | null = null;
-      let profileCounts = { views: 0, clicks: 0 };
+      let activeUserId = currentUser?.id || null;
 
       const isUUID = (str: any): boolean =>
         typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
 
-      const candidateFeedIds: string[] = [
-        "42a20281-bd32-4498-9207-98f01ed51dcb",
-        "6aa990b0-7c2c-4493-9c3e-dd3012ed36c8",
-      ];
+      const userScopedIds: string[] = [];
 
-      if (user) {
-        const { data: prof } = await supabase
+      if (currentUser) {
+        const { data: userProfile } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .or(`id.eq.${currentUser.id},user_id.eq.${currentUser.id}`)
           .maybeSingle();
 
-        if (prof) {
-          if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
-          if (prof.id && isUUID(prof.id)) {
-            candidateFeedIds.push(prof.id);
+        if (userProfile) {
+          if (!activeUsername && userProfile.username) activeUsername = userProfile.username.toLowerCase().trim();
+          if (userProfile.id && isUUID(userProfile.id)) {
+            userScopedIds.push(userProfile.id);
+          }
+          if (userProfile.user_id && isUUID(userProfile.user_id)) {
+            userScopedIds.push(userProfile.user_id);
           }
         }
 
-        if (user.id && isUUID(user.id)) {
-          candidateFeedIds.push(user.id);
+        if (currentUser.id && isUUID(currentUser.id)) {
+          userScopedIds.push(currentUser.id);
         }
 
-        // Independent User Plan Resolution (Permissions Gating)
-        const rawPlan = String(prof?.plan || prof?.plan_type || prof?.subscription_plan || user?.user_metadata?.plan || "pro").toLowerCase().trim();
+        // Dynamic Subscription Plan Resolution (Per-User Scope)
+        const rawPlan = String(
+          userProfile?.plan_type ||
+          userProfile?.plan ||
+          userProfile?.subscription_plan ||
+          currentUser?.user_metadata?.plan ||
+          "free"
+        ).toLowerCase().trim();
+
         const resolvedTier =
-          rawPlan.includes("pro") || rawPlan.includes("business") || rawPlan.includes("trial") || rawPlan === "pro"
+          rawPlan.includes("pro") || rawPlan.includes("business") || rawPlan.includes("trial")
             ? "pro"
             : rawPlan === "personal"
             ? "personal"
-            : "pro"; // Default active dashboard sessions to PRO PLAN
+            : "free";
+
         setInternalTier(resolvedTier);
 
         const leadsRes = await supabase
           .from("leads")
           .select("id, created_at", { count: "exact" })
-          .or(`user_id.eq.${user.id},user_id.is.null`);
+          .eq("user_id", currentUser.id);
 
         if (leadsRes.count !== null && leadsRes.count !== undefined) {
           leadsCount = leadsRes.count;
@@ -171,15 +177,10 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Direct feed_analytics query using strictly valid UUID candidate IDs
+      // 2. Direct feed_analytics query using ONLY userScopedIds for the logged in user
       try {
         const validIds = Array.from(
-          new Set([
-            "42a20281-bd32-4498-9207-98f01ed51dcb",
-            "6aa990b0-7c2c-4493-9c3e-dd3012ed36c8",
-            ...candidateFeedIds,
-            user?.id,
-          ].filter((id): id is string => isUUID(id)))
+          new Set(userScopedIds.filter((id): id is string => isUUID(id)))
         );
 
         if (validIds.length > 0) {
