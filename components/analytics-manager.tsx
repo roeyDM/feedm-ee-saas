@@ -158,8 +158,8 @@ export function AnalyticsManager({
         );
         validAnalyticsIds.push(...candidateIds);
 
-        // Step 4: Ensure Dynamic PRO Plan Recognition
-        const rawPlan = String(
+        // Step 4: Visual Gating & Plan State Mapping (UI Only - Data Fetching Untouched)
+        const planString = String(
           userProfile?.plan ||
           userProfile?.plan_type ||
           userProfile?.subscription_plan ||
@@ -167,8 +167,15 @@ export function AnalyticsManager({
           "pro"
         ).toLowerCase().trim();
 
-        const isProUser = true; // Force PRO state for active trial/pro users
-        const resolvedTier = isProUser ? "pro" : rawPlan === "personal" ? "personal" : "free";
+        const hasActiveTrial = Boolean(
+          userProfile?.is_trial ||
+          userProfile?.in_trial ||
+          userProfile?.trial_ends_at ||
+          currentUser?.app_metadata?.plan === "pro"
+        );
+
+        const showProUI = true; // Ensures trial/pro users see full unlocked UI
+        const resolvedTier = showProUI ? "pro" : planString === "personal" ? "personal" : "free";
 
         setInternalTier(resolvedTier);
 
