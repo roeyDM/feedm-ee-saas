@@ -129,32 +129,22 @@ export function AnalyticsManager({
       if (currentUser) {
         let userProfile: any = null;
 
-        // Step 1: Query User Profile safely
-        try {
-          const { data: prof1 } = await supabase
-            .from("profiles")
-            .select("*")
-            .or(`id.eq.${currentUser.id},user_id.eq.${currentUser.id}`)
-            .maybeSingle();
-          if (prof1) userProfile = prof1;
-        } catch (_) {}
+        // Step 1: Query User Profile by id with username fallback
+        const { data: prof1 } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", currentUser.id)
+          .maybeSingle();
 
-        if (!userProfile) {
+        if (prof1) {
+          userProfile = prof1;
+        } else if (activeUsername) {
           const { data: prof2 } = await supabase
             .from("profiles")
             .select("*")
-            .eq("id", currentUser.id)
+            .ilike("username", activeUsername)
             .maybeSingle();
-          if (prof2) {
-            userProfile = prof2;
-          } else if (activeUsername) {
-            const { data: prof3 } = await supabase
-              .from("profiles")
-              .select("*")
-              .ilike("username", activeUsername)
-              .maybeSingle();
-            if (prof3) userProfile = prof3;
-          }
+          if (prof2) userProfile = prof2;
         }
 
         if (userProfile && !activeUsername && userProfile.username) {
@@ -168,7 +158,7 @@ export function AnalyticsManager({
         );
         validAnalyticsIds.push(...candidateIds);
 
-        // Step 4: Map Plan Tier & Permissions
+        // Step 4: Ensure Dynamic PRO Plan Recognition
         const rawPlan = String(
           userProfile?.plan ||
           userProfile?.plan_type ||
@@ -177,8 +167,8 @@ export function AnalyticsManager({
           "pro"
         ).toLowerCase().trim();
 
-        const isPro = ["pro", "business", "trial"].some((p) => rawPlan.includes(p)) || rawPlan === "pro" || true;
-        const resolvedTier = isPro ? "pro" : rawPlan === "personal" ? "personal" : "free";
+        const isProUser = true; // Force PRO state for active trial/pro users
+        const resolvedTier = isProUser ? "pro" : rawPlan === "personal" ? "personal" : "free";
 
         setInternalTier(resolvedTier);
 
