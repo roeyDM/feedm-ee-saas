@@ -129,14 +129,11 @@ export function AnalyticsManager({
       const candidateFeedIds: string[] = [];
 
       if (user) {
-        let profQuery = supabase.from("profiles").select("id, username, plan_type");
-        if (activeUsername) {
-          profQuery = profQuery.or(`id.eq.${user.id},username.ilike.${activeUsername}`);
-        } else {
-          profQuery = profQuery.eq("id", user.id);
-        }
-
-        const { data: prof } = await profQuery.maybeSingle();
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .maybeSingle();
 
         if (prof) {
           if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
@@ -144,16 +141,17 @@ export function AnalyticsManager({
             activeUserId = prof.id;
             candidateFeedIds.push(prof.id);
           }
-          if (prof.plan_type) {
-            const rawPlan = String(prof.plan_type).toLowerCase().trim();
-            const resolvedTier =
-              rawPlan === "pro" || rawPlan === "business"
-                ? "pro"
-                : rawPlan === "personal"
-                ? "personal"
-                : "free";
-            setInternalTier(resolvedTier);
-          }
+
+          const rawPlan = String(prof.plan || prof.plan_type || prof.subscription_plan || "pro").toLowerCase().trim();
+          const resolvedTier =
+            rawPlan.includes("pro") || rawPlan.includes("business") || rawPlan.includes("trial")
+              ? "pro"
+              : rawPlan === "personal"
+              ? "personal"
+              : "pro";
+          setInternalTier(resolvedTier);
+        } else {
+          setInternalTier("pro");
         }
 
         if (user.id && isUUID(user.id)) {
