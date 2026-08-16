@@ -122,30 +122,31 @@ export function AnalyticsManager({
       let activePageId: string | null = null;
       let profileCounts = { views: 0, clicks: 0 };
 
+      const isUUID = (str: any): boolean =>
+        typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+
       const candidateFeedIds: string[] = [];
 
       if (user) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("id, username")
-          .eq("id", user.id)
-          .maybeSingle();
+        let profQuery = supabase.from("profiles").select("id, username");
+        if (activeUsername) {
+          profQuery = profQuery.or(`id.eq.${user.id},username.ilike.${activeUsername}`);
+        } else {
+          profQuery = profQuery.eq("id", user.id);
+        }
+
+        const { data: prof } = await profQuery.maybeSingle();
 
         if (prof) {
           if (!activeUsername && prof.username) activeUsername = prof.username.toLowerCase().trim();
-          activeUserId = prof.id;
-          candidateFeedIds.push(prof.id);
+          if (prof.id && isUUID(prof.id)) {
+            activeUserId = prof.id;
+            candidateFeedIds.push(prof.id);
+          }
         }
 
-        const { data: userFeeds } = await supabase
-          .from("feeds")
-          .select("id")
-          .eq("user_id", user.id);
-
-        if (userFeeds && userFeeds.length > 0) {
-          userFeeds.forEach((f) => {
-            if (f.id) candidateFeedIds.push(f.id);
-          });
+        if (user.id && isUUID(user.id)) {
+          candidateFeedIds.push(user.id);
         }
 
         const leadsRes = await supabase
