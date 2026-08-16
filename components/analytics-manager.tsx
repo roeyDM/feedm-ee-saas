@@ -160,10 +160,13 @@ export function AnalyticsManager({
         }
       }
 
-      // 2. Direct feed_analytics query using ALL candidate IDs (user.id, profile.id, feeds.id, username)
+      // 2. Direct feed_analytics query using strictly valid UUID candidate IDs
       try {
+        const isUUID = (str: any): boolean =>
+          typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+
         const validIds = Array.from(
-          new Set([activeUserId, user?.id, activeUsername, ...candidateFeedIds].filter((id): id is string => Boolean(id)))
+          new Set([activeUserId, user?.id, ...candidateFeedIds].filter((id): id is string => isUUID(id)))
         );
 
         console.log("[Analytics Query Identifiers]:", validIds);
