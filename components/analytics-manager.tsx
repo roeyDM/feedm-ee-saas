@@ -74,15 +74,10 @@ export function AnalyticsManager({
   username: propUsername,
 }: AnalyticsManagerProps) {
   // Local state for draft tier switcher preview
-  const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">(
-    initialPlan === "pro" || initialPlan === "business" || initialPlan === "trial_pro"
-      ? "pro"
-      : initialPlan === "personal"
-      ? "personal"
-      : "free"
-  );
+  const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">("pro");
 
-  const activeTier = controlledTier || internalTier;
+  // Force PRO tier state parity with header & sidebar state
+  const activeTier: "free" | "personal" | "pro" = ((controlledTier && controlledTier !== "free") ? controlledTier : internalTier) as "free" | "personal" | "pro";
 
   const handleTierChange = (tier: "free" | "personal" | "pro") => {
     setInternalTier(tier);
