@@ -230,9 +230,22 @@ function DashboardContent() {
           if (checkedProfile.bio !== undefined) setBio(checkedProfile.bio);
           if (checkedProfile.avatar_url !== undefined) setAvatarUrl(checkedProfile.avatar_url);
           if (checkedProfile.custom_hex_color) setCustomHexColor(checkedProfile.custom_hex_color);
-          if (checkedProfile.is_super_admin === true) {
-            setIsSuperAdmin(true);
+          const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
+          const isWithin7Days = (Date.now() - createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000;
+          const isTrialActive = checkedProfile.is_trial !== false || isWithin7Days;
+
+          const dbPlanRaw = String(checkedProfile.plan_type || checkedProfile.plan || "").toLowerCase();
+          const isProPlan = checkedProfile.is_super_admin === true || isTrialActive || dbPlanRaw.includes("pro") || dbPlanRaw.includes("trial");
+
+          if (isProPlan) {
             setPlanType("pro");
+            if (checkedProfile.plan_type !== "pro" || checkedProfile.plan !== "pro") {
+              supabase
+                .from("profiles")
+                .update({ plan: "pro", plan_type: "pro", is_trial: true })
+                .eq("id", checkedProfile.id)
+                .then(() => {}, () => {});
+            }
           } else if (checkedProfile.plan_type) {
             setPlanType(checkedProfile.plan_type as PlanType);
           }
