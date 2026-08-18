@@ -91,27 +91,24 @@ export async function POST(req: NextRequest) {
       console.log(`[Signup UPSERT Success]: Page record upserted for UserID=${userId}`);
     }
 
-    // 3. Guaranteed Welcome Email Dispatch via Resend (wrapped in try/catch so email failures never block onboarding)
+    // 3. Guaranteed Welcome Email Dispatch via Resend
     let emailResult = null;
     try {
-      console.log(`[Resend] Triggering welcome email dispatch for: ${email}`);
-      const freeEmailRes = await sendFreeWelcomeEmail({
-        email,
-        name: formattedName,
-        handle: cleanHandle,
-      });
-
-      let trialEmailRes = null;
-      if (!isFreePlan) {
+      console.log(`[Resend] Triggering email dispatch for: ${cleanEmail} (isTrialAllowed=${isTrialAllowed})`);
+      if (isTrialAllowed) {
         const planTitle = planType.includes("personal") ? "Personal Creator" : "Pro Growth";
-        trialEmailRes = await sendTrialStartedEmail({
-          email,
+        emailResult = await sendTrialStartedEmail({
+          email: cleanEmail,
           name: formattedName,
           planName: `${planTitle} Plan`,
         });
+      } else {
+        emailResult = await sendFreeWelcomeEmail({
+          email: cleanEmail,
+          name: formattedName,
+          handle: cleanHandle,
+        });
       }
-
-      emailResult = { freeEmailRes, trialEmailRes };
     } catch (emailErr: any) {
       console.error("[Resend Error]: Exception caught during welcome email dispatch:", emailErr);
     }

@@ -71,15 +71,15 @@ export async function POST(request: Request) {
       process.env.SUPPORT_EMAIL ||
       "report@feedm.ee";
 
-    const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee Moderation <updates@feedm.ee>";
-    const subject = `[FeedM.ee Report] New Profile Report Submitted for @${username}`;
+    const senderEmail = process.env.RESEND_FROM_EMAIL || "Feed Me Moderation <updates@feedm.ee>";
+    const subject = `[Feed Me Report] New Profile Report Submitted for @${username}`;
     const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
     const htmlContent = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 20px; background-color: #ffffff; color: #111827;">
         <div style="background-color: #0f172a; padding: 20px 24px; text-align: center; border-radius: 12px 12px 0 0;">
           <span style="font-size: 18px; font-weight: 900; color: #ffffff;">
-            FeedM<span style="color: #10b981;">.ee</span> Moderation Alert
+            Feed <span style="color: #10b981;">Me</span> Moderation Alert
           </span>
         </div>
 
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
 
         <div style="background-color: #f9fafb; border-top: 1px solid #f3f4f6; padding: 16px 24px; text-align: center; border-radius: 0 0 12px 12px;">
           <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-            Sent automatically to report@feedm.ee via FeedM.ee Moderation Service
+            Sent automatically to report@feedm.ee via Feed Me Moderation Service
           </p>
         </div>
       </div>
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "FeedM.ee Moderation <onboarding@resend.dev>",
+              from: "Feed Me Moderation <onboarding@resend.dev>",
               to: [adminTargetEmail.trim()],
               subject: subject,
               html: htmlContent,

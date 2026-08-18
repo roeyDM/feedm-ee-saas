@@ -197,7 +197,7 @@ export async function POST(request: Request) {
       process.env.LEAD_EMAIL_API_KEY;
 
     const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.URL || "https://feedm.ee";
-    const senderEmail = process.env.RESEND_FROM_EMAIL || "FeedM.ee <updates@feedm.ee>";
+    const senderEmail = process.env.RESEND_FROM_EMAIL || "Feed Me <updates@feedm.ee>";
 
     const sendResendMail = async (toEmail: string, emailSubject: string, htmlBody: string) => {
       if (!apiKey) {
@@ -234,7 +234,7 @@ export async function POST(request: Request) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: "FeedM.ee Alerts <onboarding@resend.dev>",
+              from: "Feed Me Alerts <onboarding@resend.dev>",
               to: [toEmail.trim()],
               subject: emailSubject,
               html: htmlBody,
@@ -294,12 +294,12 @@ export async function POST(request: Request) {
     // 7. Standard Lead Notification Email
     if (!isLocked && recipientEmail) {
       const timestampStr = new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-      const standardSubject = `🎉 New Lead Captured on FeedM.ee! (${fullName || "Visitor"})`;
+      const standardSubject = `🎉 New Lead Captured on Feed Me! (${fullName || "Visitor"})`;
 
       const standardHtml = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 550px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff; color: #111827;">
           <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #059669; margin: 0; font-size: 22px; font-weight: 800;">🎉 New Lead Captured on FeedM.ee!</h2>
+            <h2 style="color: #059669; margin: 0; font-size: 22px; font-weight: 800;">🎉 New Lead Captured on Feed Me!</h2>
             <p style="font-size: 13px; color: #6b7280; margin-top: 4px;">You just received a new contact submission from your video feed.</p>
           </div>
 
@@ -336,7 +336,7 @@ export async function POST(request: Request) {
 
           <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0 16px 0;" />
           <p style="font-size: 11px; color: #9ca3af; text-align: center; margin: 0;">
-            Sent via <a href="${BASE_URL}" style="color: #059669; text-decoration: none; font-weight: bold;">FeedM.ee</a> Video Link-inBio Platform
+            Sent via <a href="${BASE_URL}" style="color: #059669; text-decoration: none; font-weight: bold;">Feed Me</a> Video Link-inBio Platform
           </p>
         </div>
       `;
