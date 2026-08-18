@@ -237,7 +237,15 @@ function DashboardContent() {
           const dbPlanRaw = String(checkedProfile.plan_type || checkedProfile.plan || "").toLowerCase();
           const isProPlan = checkedProfile.is_super_admin === true || isTrialActive || dbPlanRaw.includes("pro") || dbPlanRaw.includes("trial");
 
-          if (isProPlan) {
+          const isTrialExpired = !isTrialActive && !dbPlanRaw.includes("pro") && checkedProfile.is_super_admin !== true;
+
+          if (isTrialExpired) {
+            setPlanType("free");
+            const hasDismissed = typeof window !== "undefined" && sessionStorage.getItem("feedmee_trial_expired_dismissed") === "true";
+            if (!hasDismissed) {
+              setShowUpgradeModal(true);
+            }
+          } else if (isProPlan) {
             setPlanType("pro");
             if (checkedProfile.plan_type !== "pro" || checkedProfile.plan !== "pro") {
               supabase
@@ -1713,11 +1721,10 @@ function DashboardContent() {
       {/* In-App Upgrade Modal */}
       <UpgradeModal
         open={showUpgradeModal}
-        onOpenChange={setShowUpgradeModal}
-        onActivateTrial={() => {
-          setPlanType("pro");
-          if (typeof window !== "undefined") {
-            localStorage.setItem("feedmee_subscription_tier", "pro");
+        onOpenChange={(open) => {
+          setShowUpgradeModal(open);
+          if (!open && typeof window !== "undefined") {
+            sessionStorage.setItem("feedmee_trial_expired_dismissed", "true");
           }
         }}
       />

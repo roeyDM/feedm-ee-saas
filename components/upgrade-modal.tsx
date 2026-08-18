@@ -22,54 +22,29 @@ export function UpgradeModal({
   subtitle = "Get 3 Vertical Video Reels, Lead Capture, and Remove Branding.",
   onActivateTrial,
 }: UpgradeModalProps) {
-  const [isActivating, setIsActivating] = useState(false);
-  const [activated, setActivated] = useState(false);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   if (!open) return null;
 
-  const handleActivate = async () => {
-    setIsActivating(true);
-
-    const now = new Date();
-    const trialStartIso = now.toISOString();
-    const trialEndMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
-    const trialEndIso = new Date(trialEndMs).toISOString();
-
-    // 1. Save local state for instant responsiveness
-    if (typeof window !== "undefined") {
-      localStorage.setItem("feedmee_subscription_tier", "pro");
-      localStorage.setItem("feedmee_trial_active", "true");
-      localStorage.setItem("feedmee_trial_end", String(trialEndMs));
-    }
-
-    // 2. Persist Pro trial state in live database (Supabase)
+  const handleUpgrade = async () => {
+    setIsCheckoutLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("profiles").update({
-          plan_type: "pro",
-          is_trial_active: true,
-          trial_start_date: trialStartIso,
-          trial_end_date: trialEndIso,
-          updated_at: trialStartIso,
-        }).eq("id", user.id);
+      const res = await fetch("/api/checkout/lemonsqueezy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID || "739343" }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        window.location.href = "/pricing";
       }
-    } catch (err) {
-      console.warn("Supabase database update warning (trial active locally):", err);
+    } catch (_) {
+      window.location.href = "/pricing";
+    } finally {
+      setIsCheckoutLoading(false);
     }
-
-    setIsActivating(false);
-    setActivated(true);
-
-    if (onActivateTrial) {
-      onActivateTrial();
-    }
-
-    // Automatically close modal after 1.5s
-    setTimeout(() => {
-      setActivated(false);
-      onOpenChange(false);
-    }, 1500);
   };
 
   return (
@@ -84,90 +59,76 @@ export function UpgradeModal({
           <X className="h-4 w-4" />
         </button>
 
-        {activated ? (
-          /* Real-time Lock Unlock Animation & Confetti Feedback State */
-          <div className="py-6 flex flex-col items-center animate-in zoom-in-90 duration-300">
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-xl shadow-emerald-500/30 mb-4 animate-bounce">
-              <CheckCircle2 className="h-10 w-10 stroke-[2.5]" />
-              <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-amber-300 animate-pulse" />
-            </div>
-            <h3 className="text-2xl font-black text-zinc-950 tracking-tight">
-              Pro Trial Unlocked! 🚀
-            </h3>
-            <p className="text-xs font-bold text-emerald-700 mt-2 max-w-xs leading-relaxed bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
-              ✨ 3 Video Reels, Lead Forms & White-Label Branding are now fully active!
-            </p>
-          </div>
-        ) : (
-          /* Normal Upgrade Modal Form */
-          <>
-            {/* Icon Header */}
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 via-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/20 mb-4 relative">
-              {isActivating ? (
-                <Unlock className="h-8 w-8 stroke-[2.5] animate-pulse" />
-              ) : (
-                <Zap className="h-8 w-8 stroke-[2.5] fill-current" />
-              )}
-            </div>
+        {/* Icon Header */}
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 via-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/20 mb-4 relative">
+          <Zap className="h-8 w-8 stroke-[2.5] fill-current" />
+        </div>
 
-            {/* Title & Subtitle */}
-            <h3 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
-              {title}
-            </h3>
-            <p className="text-xs sm:text-sm font-semibold text-zinc-600 mt-2 leading-relaxed">
-              {subtitle}
-            </p>
+        {/* Title & Subtitle */}
+        <h3 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
+          {title}
+        </h3>
+        <p className="text-xs sm:text-sm font-semibold text-zinc-600 mt-2 leading-relaxed">
+          {subtitle}
+        </p>
 
-            {/* Pro Feature Checklist */}
-            <div className="my-5 w-full rounded-2xl bg-emerald-50/60 border border-emerald-200/80 p-4 text-left">
-              <span className="text-[11px] font-black text-emerald-900 uppercase tracking-wider block mb-2.5">
-                Included in 7-Day Free Trial:
-              </span>
-              <ul className="space-y-2 text-xs font-bold text-zinc-800">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>3 Vertical Video Reels (Pages 2–4)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>Page 5 Built-in Lead Capture Form</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>100% White-label (Remove FeedM.ee Branding)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>Custom Domain Integration</span>
-                </li>
-              </ul>
-            </div>
+        {/* Pro Feature Checklist */}
+        <div className="my-5 w-full rounded-2xl bg-emerald-50/60 border border-emerald-200/80 p-4 text-left">
+          <span className="text-[11px] font-black text-emerald-900 uppercase tracking-wider block mb-2.5">
+            Included in Pro Plan:
+          </span>
+          <ul className="space-y-2 text-xs font-bold text-zinc-800">
+            <li className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+              <span>3 Vertical Video Reels (Pages 2–4)</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+              <span>Page 5 Built-in Lead Capture Form</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+              <span>100% White-label (Remove FeedM.ee Branding)</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+              <span>Custom Domain &amp; Advanced Analytics</span>
+            </li>
+          </ul>
+        </div>
 
-            {/* Offline Mock Activate Trial Button */}
-            <Button
-              onClick={handleActivate}
-              disabled={isActivating}
-              className="w-full h-12 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 cursor-pointer gap-2 transition hover:scale-[1.01]"
-            >
-              {isActivating ? (
-                <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 animate-spin" /> Unlocking Pro Features...
-                </span>
-              ) : (
-                <>
-                  <span>Activate 7-Day Free Trial (No Card Needed)</span>
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
+        {/* Primary CTA: Upgrade to Pro */}
+        <Button
+          onClick={handleUpgrade}
+          disabled={isCheckoutLoading}
+          className="w-full h-12 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 cursor-pointer gap-2 transition hover:scale-[1.01]"
+        >
+          {isCheckoutLoading ? (
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 animate-spin" /> Redirecting to Checkout...
+            </span>
+          ) : (
+            <>
+              <span>Upgrade to Pro Plan ($7/mo)</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </Button>
 
-            {/* Trust Guarantee Micro-copy */}
-            <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-500">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-              <span>Offline Instant Mock Trial • No credit card required</span>
-            </div>
-          </>
-        )}
+        {/* Secondary CTA: Continue with Free Plan */}
+        <button
+          type="button"
+          onClick={() => onOpenChange(false)}
+          className="w-full mt-2.5 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition cursor-pointer"
+        >
+          Continue with Free Plan
+        </button>
+
+        {/* Trust Guarantee Micro-copy */}
+        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-500">
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+          <span>Secure Checkout powered by Lemon Squeezy</span>
+        </div>
       </div>
     </div>
   );
