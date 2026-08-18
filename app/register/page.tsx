@@ -68,10 +68,10 @@ function RegisterForm() {
 
   const badgeText =
     isFreePlan
-      ? "⚡ Create Your Free Page in Minutes • No Credit Card Required"
+      ? "Create Your Free Page in Minutes • No Credit Card Required"
       : plan === "personal"
-      ? "⚡ 7-Day Personal Trial Included • No Credit Card Required"
-      : "⚡ 7-Day Pro Trial Included • No Credit Card Required";
+      ? "7-Day Personal Trial Included • No Credit Card Required"
+      : "7-Day Pro Trial Included • No Credit Card Required";
 
   const planTitle =
     isFreePlan
@@ -146,12 +146,12 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden relative w-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50/60 via-emerald-50/40 to-sky-50/50 px-4 py-12 text-zinc-900 font-sans relative">
+    <div className="min-h-screen relative w-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50/60 via-emerald-50/40 to-sky-50/50 px-4 py-12 text-zinc-900 font-sans">
       {/* Background Pastel Orbs */}
       <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[45%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[130px]" />
       <div className="pointer-events-none absolute bottom-[-10%] right-[-5%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px]" />
 
-      <div className="relative w-full max-w-md max-w-full z-10">
+      <div className="relative w-full max-w-md z-10">
         {/* Dynamic Plan Badge */}
         <div className="mb-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-emerald-300 shadow-xs px-4 py-1.5 text-xs font-bold text-emerald-950 backdrop-blur-md">
@@ -166,7 +166,7 @@ function RegisterForm() {
             <LogoIconOnly />
           </Link>
           <h1 className="text-2xl font-black text-zinc-950 tracking-tight sm:text-3xl">
-            Claim Your FeedM<span className="text-emerald-600">.ee</span> Page
+            Claim Your Feed <span className="text-emerald-600">Me</span> Page
           </h1>
           <p className="text-xs font-semibold text-zinc-600 mt-1">
             Setting up your account for <span className="font-extrabold text-emerald-700">{planTitle}</span> ({isFreePlan ? "Forever Free" : billing})

@@ -346,8 +346,8 @@ export function MobilePreview({
   // Appearance settings derivation: appearance prop takes precedence over default and customHexColor fallback
   const activeAppearance: AppearanceSettings = {
     ...DEFAULT_APPEARANCE,
-    ...(customHexColor ? { bgColor: customHexColor } : {}),
     ...appearance,
+    ...(appearance?.bgColor ? {} : customHexColor ? { bgColor: customHexColor } : {}),
   };
 
   const activeFont = fontFamily || appearance?.fontFamily || activeAppearance.fontFamily || "Inter";

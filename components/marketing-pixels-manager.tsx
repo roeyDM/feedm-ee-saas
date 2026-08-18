@@ -101,10 +101,13 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           .from("profiles")
           .select("meta_pixel_id, tiktok_pixel_id, google_ads_id, ga_measurement_id");
 
-        if (user?.id) {
+        const cleanHandle = (username || "").toLowerCase().trim();
+        if (user?.id && cleanHandle) {
+          query = query.or(`id.eq.${user.id},username.eq.${cleanHandle}`);
+        } else if (user?.id) {
           query = query.eq("id", user.id);
-        } else if (username) {
-          query = query.eq("username", username.toLowerCase().trim());
+        } else if (cleanHandle) {
+          query = query.eq("username", cleanHandle);
         }
 
         const { data, error } = await query.maybeSingle();
