@@ -225,6 +225,31 @@ function DashboardContent() {
 
         if (profile && !error) {
           const checkedProfile = await checkAndApplyTrialDowngrade(profile);
+
+          // Check if URL search parameter specifies a Pro/Personal plan for initial signup hydration
+          const urlPlanParam = (searchParams.get("plan") || "").toLowerCase();
+          const isUrlTrialRequested = (urlPlanParam === "pro" || urlPlanParam === "personal") && checkedProfile.has_used_trial !== true && checkedProfile.is_trial !== false;
+
+          if (isUrlTrialRequested && (checkedProfile.plan_type !== "pro" || checkedProfile.is_trial !== true)) {
+            const trialEndIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            checkedProfile.plan = urlPlanParam;
+            checkedProfile.plan_type = urlPlanParam;
+            checkedProfile.is_trial = true;
+            checkedProfile.trial_ends_at = trialEndIso;
+
+            supabase
+              .from("profiles")
+              .update({
+                plan: urlPlanParam,
+                plan_type: urlPlanParam,
+                is_trial: true,
+                trial_ends_at: trialEndIso,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", checkedProfile.id)
+              .then(() => {}, () => {});
+          }
+
           if (checkedProfile.name) setName(checkedProfile.name);
           if (checkedProfile.username) setUsername(checkedProfile.username);
           if (checkedProfile.bio !== undefined) setBio(checkedProfile.bio);

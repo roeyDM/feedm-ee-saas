@@ -139,9 +139,9 @@ function SignupFormContent() {
       }
     }
 
-    // Redirect user to dashboard
+    // Redirect user to dashboard with plan parameter
     if (data.session) {
-      router.push("/dashboard");
+      router.push(`/dashboard?welcome=true&plan=${planParam}`);
     } else {
       setSuccess(true);
     }

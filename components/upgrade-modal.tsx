@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { Zap, Check, X, ArrowRight, ShieldCheck, Lock, Unlock, Sparkles, CheckCircle2 } from "lucide-react";
+import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-import { supabase } from "@/lib/supabase";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -18,21 +15,26 @@ interface UpgradeModalProps {
 export function UpgradeModal({
   open,
   onOpenChange,
-  title = "Unlock Pro Features 🚀",
-  subtitle = "Get 3 Vertical Video Reels, Lead Capture, and Remove Branding.",
+  title = "Upgrade to Pro",
+  subtitle = "Unlock 3 Vertical Video Reels, Page 5 Lead Form, Custom Domain, and White-Label Branding.",
   onActivateTrial,
 }: UpgradeModalProps) {
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   if (!open) return null;
 
+  const monthlyVariantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID || "739343";
+  const yearlyVariantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID || "739344";
+
   const handleUpgrade = async () => {
     setIsCheckoutLoading(true);
+    const selectedVariantId = billingInterval === "yearly" ? yearlyVariantId : monthlyVariantId;
     try {
       const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId: process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID || "739343" }),
+        body: JSON.stringify({ variantId: selectedVariantId }),
       });
       const data = await res.json();
       if (data.url) {
@@ -60,24 +62,53 @@ export function UpgradeModal({
         </button>
 
         {/* Icon Header */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-400 via-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/20 mb-4 relative">
-          <Zap className="h-8 w-8 stroke-[2.5] fill-current" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 text-emerald-400 shadow-xl shadow-zinc-950/10 mb-4 relative">
+          <Zap className="h-7 w-7 stroke-[2.5] fill-current" />
         </div>
 
         {/* Title & Subtitle */}
         <h3 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
           {title}
         </h3>
-        <p className="text-xs sm:text-sm font-semibold text-zinc-600 mt-2 leading-relaxed">
+        <p className="text-xs sm:text-sm font-medium text-zinc-600 mt-2 leading-relaxed">
           {subtitle}
         </p>
 
+        {/* Clean Monthly / Yearly Toggle Switch */}
+        <div className="my-5 flex items-center justify-center p-1 bg-zinc-100 rounded-2xl border border-zinc-200/80 w-full">
+          <button
+            type="button"
+            onClick={() => setBillingInterval("monthly")}
+            className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer ${
+              billingInterval === "monthly"
+                ? "bg-white text-zinc-950 shadow-sm border border-zinc-200/60"
+                : "text-zinc-500 hover:text-zinc-900"
+            }`}
+          >
+            Monthly ($7/mo)
+          </button>
+          <button
+            type="button"
+            onClick={() => setBillingInterval("yearly")}
+            className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              billingInterval === "yearly"
+                ? "bg-white text-zinc-950 shadow-sm border border-zinc-200/60"
+                : "text-zinc-500 hover:text-zinc-900"
+            }`}
+          >
+            <span>Yearly ($67/yr)</span>
+            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.5 rounded-md">
+              Save 20%
+            </span>
+          </button>
+        </div>
+
         {/* Pro Feature Checklist */}
-        <div className="my-5 w-full rounded-2xl bg-emerald-50/60 border border-emerald-200/80 p-4 text-left">
-          <span className="text-[11px] font-black text-emerald-900 uppercase tracking-wider block mb-2.5">
+        <div className="mb-5 w-full rounded-2xl bg-zinc-50 border border-zinc-200/80 p-4 text-left">
+          <span className="text-[11px] font-black text-zinc-800 uppercase tracking-wider block mb-2.5">
             Included in Pro Plan:
           </span>
-          <ul className="space-y-2 text-xs font-bold text-zinc-800">
+          <ul className="space-y-2 text-xs font-semibold text-zinc-700">
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
               <span>3 Vertical Video Reels (Pages 2–4)</span>
@@ -88,20 +119,20 @@ export function UpgradeModal({
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>100% White-label (Remove FeedM.ee Branding)</span>
+              <span>100% White-Label Branding</span>
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>Custom Domain &amp; Advanced Analytics</span>
+              <span>Custom Domain &amp; Traffic Analytics</span>
             </li>
           </ul>
         </div>
 
-        {/* Primary CTA: Upgrade to Pro */}
+        {/* Primary CTA Button */}
         <Button
           onClick={handleUpgrade}
           disabled={isCheckoutLoading}
-          className="w-full h-12 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 cursor-pointer gap-2 transition hover:scale-[1.01]"
+          className="w-full h-12 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 cursor-pointer gap-2 transition hover:scale-[1.01]"
         >
           {isCheckoutLoading ? (
             <span className="flex items-center gap-2">
@@ -109,7 +140,11 @@ export function UpgradeModal({
             </span>
           ) : (
             <>
-              <span>Upgrade to Pro Plan ($7/mo)</span>
+              <span>
+                {billingInterval === "yearly"
+                  ? "Upgrade to Pro Annual — $67/yr"
+                  : "Upgrade to Pro — $7/mo"}
+              </span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
@@ -119,13 +154,13 @@ export function UpgradeModal({
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="w-full mt-2.5 py-2 text-xs font-bold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition cursor-pointer"
+          className="w-full mt-2.5 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition cursor-pointer"
         >
           Continue with Free Plan
         </button>
 
         {/* Trust Guarantee Micro-copy */}
-        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-500">
+        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-zinc-500">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
           <span>Secure Checkout powered by Lemon Squeezy</span>
         </div>

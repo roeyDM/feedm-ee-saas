@@ -47,7 +47,7 @@ export async function sendFreeWelcomeEmail({
       data = await resend.emails.send({
         from: fromAddress,
         to: [email],
-        subject: "Welcome to Feed Me — Your Bio & Links Page is Ready! ⚡",
+        subject: "Welcome to Feed Me — Your Bio Page is Active",
         html,
       });
     } catch (sendErr: any) {
@@ -55,7 +55,7 @@ export async function sendFreeWelcomeEmail({
         data = await resend.emails.send({
           from: FALLBACK_FROM,
           to: [email],
-          subject: "Welcome to Feed Me — Your Bio & Links Page is Ready! ⚡",
+          subject: "Welcome to Feed Me — Your Bio Page is Active",
           html,
         });
       } else {
@@ -104,7 +104,7 @@ export async function sendTrialStartedEmail({
       data = await resend.emails.send({
         from: fromAddress,
         to: [email],
-        subject: "Welcome to Feed Me — Your 5-Page Bio & 7-Day Pro Trial are Live! 🚀",
+        subject: "Welcome to Feed Me — Your 7-Day Pro Trial Has Started",
         html,
       });
     } catch (sendErr: any) {
@@ -112,7 +112,7 @@ export async function sendTrialStartedEmail({
         data = await resend.emails.send({
           from: FALLBACK_FROM,
           to: [email],
-          subject: "Welcome to Feed Me — Your 5-Page Bio & 7-Day Pro Trial are Live! 🚀",
+          subject: "Welcome to Feed Me — Your 7-Day Pro Trial Has Started",
           html,
         });
       } else {
@@ -140,10 +140,10 @@ export async function sendTrialDay5Email({
   try {
     const html = `
       <div style="font-family: Inter, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; border: 1px solid #e5e7eb; padding: 32px;">
-        <h2 style="font-size: 20px; font-weight: 800; color: #09090b; margin: 0 0 16px;">How is your Feed Me page performing this week? 📊</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Hey ${name || "Creator"}, you have 2 days remaining on your 7-day Pro Trial! Log in to your Feed Me analytics dashboard to view your profile views, click-through rates, and video engagement metrics.</p>
+        <h2 style="font-size: 20px; font-weight: 800; color: #09090b; margin: 0 0 16px;">How is your Feed Me page performing this week?</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Hey ${name || "Creator"}, you have 2 days remaining on your 7-day Pro Trial. Log in to your Feed Me analytics dashboard to view your profile views, click-through rates, and video engagement metrics.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://feedm.ee/dashboard" style="background-color: #00BC7D; color: #ffffff; font-size: 14px; font-weight: 700; padding: 14px 32px; border-radius: 9999px; text-decoration: none; display: inline-block;">Check Your Analytics 📊</a>
+          <a href="https://feedm.ee/dashboard" style="background-color: #00BC7D; color: #ffffff; font-size: 14px; font-weight: 700; padding: 14px 32px; border-radius: 9999px; text-decoration: none; display: inline-block;">Check Your Analytics</a>
         </div>
       </div>
     `;
@@ -151,7 +151,7 @@ export async function sendTrialDay5Email({
     const data = await resend.emails.send({
       from: getFromAddress(),
       to: [email],
-      subject: "How is your Feed Me page performing this week? 📊",
+      subject: "How is your Feed Me page performing this week?",
       html,
     });
 
@@ -177,9 +177,9 @@ export async function sendTrialDay6WarningEmail({
       <div style="font-family: Inter, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; border: 1px solid #e5e7eb; padding: 32px;">
         <div style="display:inline-block; background-color: #fef2f2; color: #dc2626; font-size: 11px; font-weight: 800; padding: 6px 14px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 16px;">24 Hours Remaining</div>
         <h2 style="font-size: 20px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Your Pro Trial ends in 24 hours — Don't lose your video reels & analytics!</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Hey ${name || "Creator"}, your 7-day Pro Trial is expiring tomorrow. Upgrade today for just $7/mo to keep your 3 video reels, lead capture form, and custom domain active without interruption.</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Hey ${name || "Creator"}, your 7-day Pro Trial is expiring tomorrow. Upgrade today for $7/mo to keep your 3 video reels, lead capture form, and custom domain active without interruption.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="${checkoutUrl}" style="background-color: #dc2626; color: #ffffff; font-size: 14px; font-weight: 700; padding: 14px 32px; border-radius: 9999px; text-decoration: none; display: inline-block;">Lock In Pro Plan ($7/mo) 🚀</a>
+          <a href="${checkoutUrl}" style="background-color: #00BC7D; color: #ffffff; font-size: 14px; font-weight: 700; padding: 14px 32px; border-radius: 9999px; text-decoration: none; display: inline-block;">Lock In Pro Plan ($7/mo)</a>
         </div>
       </div>
     `;
@@ -187,7 +187,7 @@ export async function sendTrialDay6WarningEmail({
     const data = await resend.emails.send({
       from: getFromAddress(),
       to: [email],
-      subject: "Your Pro Trial ends in 24 hours — Don't lose your video reels & analytics!",
+      subject: "Your Pro Trial ends in 24 hours",
       html,
     });
 
@@ -212,9 +212,9 @@ export async function sendTrialExpiredEmail({
     const html = `
       <div style="font-family: Inter, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; border: 1px solid #e5e7eb; padding: 32px;">
         <h2 style="font-size: 20px; font-weight: 800; color: #09090b; margin: 0 0 16px;">Your Pro Trial has ended — Your Free account is active</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Hey ${name || "Creator"}, your 7-day Pro Trial has completed and your account has smoothly transitioned to the Free Starter Plan. Your Single-Page Bio and custom links remain 100% active. You can upgrade back to Pro anytime to reactivate your video reels and lead forms.</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Hey ${name || "Creator"}, your 7-day Pro Trial has completed and your account has transitioned to the Free Starter Plan. Your Single-Page Bio and custom links remain 100% active. You can upgrade back to Pro anytime to reactivate your video reels and lead forms.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="${upgradeUrl}" style="background-color: #00BC7D; color: #ffffff; font-size: 14px; font-weight: 700; padding: 14px 32px; border-radius: 9999px; text-decoration: none; display: inline-block;">Reactivate Pro Features Anytime 🚀</a>
+          <a href="${upgradeUrl}" style="background-color: #00BC7D; color: #ffffff; font-size: 14px; font-weight: 700; padding: 14px 32px; border-radius: 9999px; text-decoration: none; display: inline-block;">Reactivate Pro Features Anytime</a>
         </div>
       </div>
     `;
@@ -222,7 +222,7 @@ export async function sendTrialExpiredEmail({
     const data = await resend.emails.send({
       from: getFromAddress(),
       to: [email],
-      subject: "Your Pro Trial has ended — Your Free account is active",
+      subject: "Your Pro Trial has ended — Account set to Free",
       html,
     });
 

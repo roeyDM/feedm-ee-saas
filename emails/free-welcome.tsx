@@ -27,7 +27,7 @@ export function FreeWelcomeEmail({
         {/* Body Content */}
         <div style={{ padding: "32px" }}>
           <h1 style={{ fontSize: "20px", fontWeight: "800", color: "#09090b", margin: "0 0 16px" }}>
-            Welcome to Feed Me, {name}! ⚡
+            Welcome to Feed Me, {name}
           </h1>
 
           <p style={{ fontSize: "14px", lineHeight: "1.6", color: "#4b5563", margin: "0 0 20px" }}>
@@ -35,21 +35,21 @@ export function FreeWelcomeEmail({
           </p>
 
           {/* What You're Missing Box */}
-          <div style={{ backgroundColor: "#ecfdf5", borderRadius: "16px", padding: "20px", border: "1px solid #a7f3d0", margin: "0 0 28px" }}>
-            <div style={{ fontSize: "13px", fontWeight: "800", color: "#065f46", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>
-              ⚡ What You&apos;re Missing on Pro:
+          <div style={{ backgroundColor: "#f8fafc", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0", margin: "0 0 28px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "800", color: "#09090b", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 12px" }}>
+              What You&apos;re Missing on Pro:
             </div>
             
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#047857", marginBottom: "8px" }}>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>
               • 3 Vertical Video Snap Reels (Pages 2–4)
             </div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#047857", marginBottom: "8px" }}>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>
               • Page 5 Built-in Lead Capture Form
             </div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#047857", marginBottom: "8px" }}>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "8px" }}>
               • Custom Domain &amp; 100% White-Label Branding
             </div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#047857" }}>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#374151" }}>
               • Real-time Traffic Attribution &amp; CTR Analytics
             </div>
           </div>
@@ -70,7 +70,7 @@ export function FreeWelcomeEmail({
                 boxShadow: "0 4px 14px rgba(0, 188, 125, 0.3)",
               }}
             >
-              Upgrade Page to Pro 🚀
+              Upgrade Page to Pro
             </a>
           </div>
 
@@ -93,7 +93,7 @@ export function FreeWelcomeEmail({
 export function renderFreeWelcomeHtml(props: FreeWelcomeEmailProps): string {
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"/><title>Welcome to Feed Me — Your Bio & Links Page is Ready! ⚡</title></head>
+<head><meta charset="utf-8"/><title>Welcome to Feed Me — Your Bio Page is Active</title></head>
 <body style="margin:0;padding:0;background-color:#f9fafb;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#f9fafb;padding:40px 20px;font-family:Inter,Helvetica,Arial,sans-serif;">
     <tr>
@@ -107,19 +107,19 @@ export function renderFreeWelcomeHtml(props: FreeWelcomeEmailProps): string {
           </tr>
           <tr>
             <td style="padding:32px;">
-              <h1 style="font-size:20px;font-weight:800;color:#09090b;margin:0 0 16px;">Welcome to Feed Me, ${props.name || "Creator"}! ⚡</h1>
+              <h1 style="font-size:20px;font-weight:800;color:#09090b;margin:0 0 16px;">Welcome to Feed Me, ${props.name || "Creator"}</h1>
               <p style="font-size:14px;line-height:1.6;color:#4b5563;margin:0 0 20px;">Your Single-Page Bio & Links page is active! You can now customize your bio, connect custom social links, and start sharing your handle with your audience.</p>
               
-              <div style="background-color:#ecfdf5;border-radius:16px;padding:20px;border:1px solid #a7f3d0;margin:0 0 28px;">
-                <div style="font-size:13px;font-weight:800;color:#065f46;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">⚡ What You're Missing on Pro:</div>
-                <p style="font-size:13px;font-weight:600;color:#047857;margin:0 0 8px;">• 3 Vertical Video Snap Reels (Pages 2–4)</p>
-                <p style="font-size:13px;font-weight:600;color:#047857;margin:0 0 8px;">• Page 5 Built-in Lead Capture Form</p>
-                <p style="font-size:13px;font-weight:600;color:#047857;margin:0 0 8px;">• Custom Domain & 100% White-Label Branding</p>
-                <p style="font-size:13px;font-weight:600;color:#047857;margin:0;">• Real-time Traffic Attribution & CTR Analytics</p>
+              <div style="background-color:#f8fafc;border-radius:16px;padding:20px;border:1px solid #e2e8f0;margin:0 0 28px;">
+                <div style="font-size:12px;font-weight:800;color:#09090b;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">What You're Missing on Pro:</div>
+                <p style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px;">• 3 Vertical Video Snap Reels (Pages 2–4)</p>
+                <p style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px;">• Page 5 Built-in Lead Capture Form</p>
+                <p style="font-size:13px;font-weight:600;color:#374151;margin:0 0 8px;">• Custom Domain & 100% White-Label Branding</p>
+                <p style="font-size:13px;font-weight:600;color:#374151;margin:0;">• Real-time Traffic Attribution & CTR Analytics</p>
               </div>
 
               <div style="text-align:center;margin:0 0 28px;">
-                <a href="${props.upgradeUrl || "https://feedm.ee/pricing"}" style="display:inline-block;background-color:#00BC7D;color:#ffffff;font-size:14px;font-weight:700;padding:14px 32px;border-radius:9999px;text-decoration:none;">Upgrade Page to Pro 🚀</a>
+                <a href="${props.upgradeUrl || "https://feedm.ee/pricing"}" style="display:inline-block;background-color:#00BC7D;color:#ffffff;font-size:14px;font-weight:700;padding:14px 32px;border-radius:9999px;text-decoration:none;">Upgrade Page to Pro</a>
               </div>
               <p style="font-size:12px;line-height:1.5;color:#6b7280;margin:0;text-align:center;">Need help setting up? Reply directly to this email or visit our support desk at feedm.ee/pricing.</p>
             </td>
