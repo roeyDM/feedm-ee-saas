@@ -1,6 +1,20 @@
--- Migration: Enable Row Level Security (RLS) on feed_analytics and profiles tables
+-- Migration: Enable Row Level Security (RLS) & Trial Anti-Abuse Tracking
 ALTER TABLE public.feed_analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- Add has_used_trial column to profiles if not exists
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS has_used_trial BOOLEAN DEFAULT FALSE;
+
+-- Create used_trials_history table to prevent deleted account re-registration trial abuse
+CREATE TABLE IF NOT EXISTS public.used_trials_history (
+  email TEXT PRIMARY KEY,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.used_trials_history ENABLE ROW LEVEL SECURITY;
+
+-- Allow service role and authenticated triggers full access on used_trials_history
+DROP POLICY IF EXISTS "Allow service role full access on used_trials_history" ON public.used_trials_history;
+CREATE POLICY "Allow service role full access on used_trials_history" ON public.used_trials_history FOR ALL USING (true);
 
 -- Index for fast query execution on creator dashboards
 CREATE INDEX IF NOT EXISTS idx_feed_analytics_feed_event ON public.feed_analytics(feed_id, event_type, created_at);

@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Account Deletion API]: Commencing strict sequential purge for UserID=${userId}...`);
 
-    // Fetch associated username/email from profiles for exhaustive deletion matching
+    // Fetch associated username/email from profiles for exhaustive deletion matching & trial tracking
     let userHandle = "";
     try {
       const { data: prof } = await adminClient.from("profiles").select("username, email").eq("id", userId).maybeSingle();
@@ -39,6 +39,20 @@ export async function POST(req: NextRequest) {
       }
     } catch (e) {
       console.warn("[Account Deletion Note]: Profile lookup note:", e);
+    }
+
+    // STEP 0: Log email in used_trials_history to prevent trial re-registration abuse
+    if (userEmail) {
+      const cleanEmail = userEmail.toLowerCase().trim();
+      try {
+        await adminClient.from("used_trials_history").upsert(
+          { email: cleanEmail, created_at: new Date().toISOString() },
+          { onConflict: "email" }
+        );
+        console.log(`[Account Deletion Trial History]: Logged ${cleanEmail} to used_trials_history.`);
+      } catch (e) {
+        console.warn("[Account Deletion Trial History Note]:", e);
+      }
     }
 
     // STEP 1: Delete reels

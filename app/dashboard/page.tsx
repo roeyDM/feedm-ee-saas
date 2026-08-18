@@ -232,30 +232,36 @@ function DashboardContent() {
           if (checkedProfile.custom_hex_color) setCustomHexColor(checkedProfile.custom_hex_color);
           const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
           const isWithin7Days = (Date.now() - createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000;
-          const isTrialActive = checkedProfile.is_trial !== false || isWithin7Days;
+          const hasUsedTrial = checkedProfile.has_used_trial === true;
+
+          // Trial is only valid if has_used_trial is not true AND is_trial !== false AND within 7 days
+          const isTrialValid = !hasUsedTrial && checkedProfile.is_trial !== false && isWithin7Days;
 
           const dbPlanRaw = String(checkedProfile.plan_type || checkedProfile.plan || "").toLowerCase();
-          const isProPlan = checkedProfile.is_super_admin === true || isTrialActive || dbPlanRaw.includes("pro") || dbPlanRaw.includes("trial");
+          const isPaidPro = dbPlanRaw.includes("pro") && checkedProfile.is_trial === false;
+          const isProPlan = checkedProfile.is_super_admin === true || isPaidPro || isTrialValid;
 
-          const isTrialExpired = !isTrialActive && !dbPlanRaw.includes("pro") && checkedProfile.is_super_admin !== true;
+          const isTrialExpired = !isProPlan && checkedProfile.is_super_admin !== true;
 
           if (isTrialExpired) {
             setPlanType("free");
+            // Permanently mark trial as used in DB so user never receives another automated trial
+            if (checkedProfile.is_trial !== false || checkedProfile.has_used_trial !== true) {
+              supabase
+                .from("profiles")
+                .update({ plan: "free", plan_type: "free", is_trial: false, has_used_trial: true })
+                .eq("id", checkedProfile.id)
+                .then(() => {}, () => {});
+            }
+
             const hasDismissed = typeof window !== "undefined" && sessionStorage.getItem("feedmee_trial_expired_dismissed") === "true";
             if (!hasDismissed) {
               setShowUpgradeModal(true);
             }
           } else if (isProPlan) {
             setPlanType("pro");
-            if (checkedProfile.plan_type !== "pro" || checkedProfile.plan !== "pro") {
-              supabase
-                .from("profiles")
-                .update({ plan: "pro", plan_type: "pro", is_trial: true })
-                .eq("id", checkedProfile.id)
-                .then(() => {}, () => {});
-            }
-          } else if (checkedProfile.plan_type) {
-            setPlanType(checkedProfile.plan_type as PlanType);
+          } else {
+            setPlanType("free");
           }
           setSubscriptionStatus(checkedProfile.subscription_status || "active");
           setTrialEndsAt(checkedProfile.trial_ends_at || null);

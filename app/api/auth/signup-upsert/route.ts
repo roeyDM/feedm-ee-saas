@@ -14,8 +14,9 @@ export async function POST(req: NextRequest) {
     const formattedName = fullName || (cleanHandle ? cleanHandle.charAt(0).toUpperCase() + cleanHandle.slice(1) : "Creator");
     const planType = (plan || "free").toLowerCase();
     const isFreePlan = planType === "free" || planType === "starter";
+    const cleanEmail = email.toLowerCase().trim();
 
-    console.log(`[Signup UPSERT API]: Executing robust profile & page upsert for UserID=${userId}, Email=${email}, Handle=@${cleanHandle}`);
+    console.log(`[Signup UPSERT API]: Executing robust profile & page upsert for UserID=${userId}, Email=${cleanEmail}, Handle=@${cleanHandle}`);
 
     const adminClient = getSupabaseAdmin();
     if (!adminClient) {
@@ -23,20 +24,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Server admin client unavailable." }, { status: 500 });
     }
 
+    // Check if email has previously used a trial (from deleted account or prior sub)
+    let hasUsedTrialBefore = false;
+    try {
+      const { data: usedTrialRecord } = await adminClient
+        .from("used_trials_history")
+        .select("email")
+        .eq("email", cleanEmail)
+        .maybeSingle();
+
+      if (usedTrialRecord) {
+        hasUsedTrialBefore = true;
+        console.log(`[Signup UPSERT Anti-Abuse]: Email ${cleanEmail} found in used_trials_history. Initializing as FREE plan without trial.`);
+      }
+    } catch (e) {
+      console.warn("[Signup UPSERT Anti-Abuse Warning]:", e);
+    }
+
+    const isTrialAllowed = !hasUsedTrialBefore && !isFreePlan;
+
     // 1. Robust UPSERT into public.profiles (on conflict: update)
     const { error: profileErr } = await adminClient
       .from("profiles")
       .upsert(
         {
           id: userId,
-          email: email,
+          email: cleanEmail,
           username: cleanHandle,
           full_name: formattedName,
           name: formattedName,
           bio: "",
           avatar_url: `https://api.dicebear.com/7.x/shapes/svg?seed=${cleanHandle || userId}`,
-          plan_type: isFreePlan ? "free" : planType,
-          subscription_status: isFreePlan ? "active" : "trialing",
+          plan_type: isTrialAllowed ? planType : "free",
+          plan: isTrialAllowed ? planType : "free",
+          is_trial: isTrialAllowed,
+          has_used_trial: hasUsedTrialBefore,
+          subscription_status: isFreePlan ? "active" : isTrialAllowed ? "trialing" : "active",
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" }
