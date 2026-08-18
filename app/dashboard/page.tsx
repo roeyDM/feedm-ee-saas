@@ -216,6 +216,28 @@ function DashboardContent() {
           setTimeout(() => setSaveStatus("idle"), 6000);
         }
 
+        // Pre-check URL search parameter for plan=pro or plan=personal and execute immediate awaited DB update BEFORE profile fetch
+        const rawUrlPlan = (searchParams.get("plan") || "").toLowerCase();
+        const isTrialRequestedFromUrl = rawUrlPlan === "pro" || rawUrlPlan === "personal";
+
+        if (isTrialRequestedFromUrl) {
+          const trialEndIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          try {
+            await supabase
+              .from("profiles")
+              .update({
+                plan: rawUrlPlan,
+                plan_type: rawUrlPlan,
+                is_trial: true,
+                trial_ends_at: trialEndIso,
+                updated_at: new Date().toISOString(),
+              })
+              .or(`id.eq.${user.id},username.eq.${userHandle.toLowerCase()}`);
+          } catch (_) {}
+
+          setPlanType("pro");
+        }
+
         // Fetch profile row from Supabase for authenticated user
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -225,30 +247,6 @@ function DashboardContent() {
 
         if (profile && !error) {
           const checkedProfile = await checkAndApplyTrialDowngrade(profile);
-
-          // Check if URL search parameter specifies a Pro/Personal plan for initial signup hydration
-          const urlPlanParam = (searchParams.get("plan") || "").toLowerCase();
-          const isUrlTrialRequested = (urlPlanParam === "pro" || urlPlanParam === "personal") && checkedProfile.has_used_trial !== true && checkedProfile.is_trial !== false;
-
-          if (isUrlTrialRequested && (checkedProfile.plan_type !== "pro" || checkedProfile.is_trial !== true)) {
-            const trialEndIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-            checkedProfile.plan = urlPlanParam;
-            checkedProfile.plan_type = urlPlanParam;
-            checkedProfile.is_trial = true;
-            checkedProfile.trial_ends_at = trialEndIso;
-
-            supabase
-              .from("profiles")
-              .update({
-                plan: urlPlanParam,
-                plan_type: urlPlanParam,
-                is_trial: true,
-                trial_ends_at: trialEndIso,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", checkedProfile.id)
-              .then(() => {}, () => {});
-          }
 
           if (checkedProfile.name) setName(checkedProfile.name);
           if (checkedProfile.username) setUsername(checkedProfile.username);
@@ -264,7 +262,7 @@ function DashboardContent() {
 
           const dbPlanRaw = String(checkedProfile.plan_type || checkedProfile.plan || "").toLowerCase();
           const isPaidPro = dbPlanRaw.includes("pro") && checkedProfile.is_trial === false;
-          const isProPlan = checkedProfile.is_super_admin === true || isPaidPro || isTrialValid;
+          const isProPlan = checkedProfile.is_super_admin === true || isPaidPro || isTrialValid || isTrialRequestedFromUrl;
 
           const isTrialExpired = !isProPlan && checkedProfile.is_super_admin !== true;
 
