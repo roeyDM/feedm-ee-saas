@@ -27,6 +27,7 @@ export interface PlanConfig {
   yearlyPriceUSD: number;
   limits: PlanLimits;
   features: PlanFeatures;
+  supportLevel: string;
 }
 
 export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
@@ -53,12 +54,13 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
     },
+    supportLevel: "Community",
   },
   personal: {
     name: "Personal Creator",
     tier: "personal",
-    monthlyPriceUSD: 4,
-    yearlyPriceUSD: 39,
+    monthlyPriceUSD: 8,
+    yearlyPriceUSD: 72,
     limits: {
       reelsPerFeed: 3,
       leadsPerMonth: 20,
@@ -77,12 +79,13 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
     },
+    supportLevel: "Standard Email",
   },
   pro: {
     name: "Pro Growth",
     tier: "pro",
-    monthlyPriceUSD: 7,
-    yearlyPriceUSD: 67,
+    monthlyPriceUSD: 15,
+    yearlyPriceUSD: 144,
     limits: {
       reelsPerFeed: 3,
       leadsPerMonth: -1, // Unlimited
@@ -101,12 +104,13 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
     },
+    supportLevel: "Priority Support",
   },
   business: {
     name: "Business Agency",
     tier: "business",
-    monthlyPriceUSD: 19,
-    yearlyPriceUSD: 180,
+    monthlyPriceUSD: 35,
+    yearlyPriceUSD: 348,
     limits: {
       reelsPerFeed: 3,
       leadsPerMonth: -1, // Unlimited
@@ -125,6 +129,7 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
     },
+    supportLevel: "Priority Support",
   },
 };
 

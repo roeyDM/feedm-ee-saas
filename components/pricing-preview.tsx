@@ -212,12 +212,12 @@ export function PricingPreview() {
               <div className="my-5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-zinc-950">
-                    {billingCycle === "yearly" ? "$4" : "$5"}
+                    {billingCycle === "yearly" ? "$6" : "$8"}
                   </span>
                   <span className="text-xs text-zinc-500 font-bold">/mo</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 mt-1 font-medium">
-                  {billingCycle === "yearly" ? "Billed annually at $39/yr" : "Billed monthly"}
+                  {billingCycle === "yearly" ? "Billed annually at $72/yr" : "Billed monthly"}
                 </p>
               </div>
 
@@ -276,12 +276,12 @@ export function PricingPreview() {
               <div className="my-5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-emerald-600">
-                    {billingCycle === "yearly" ? "$7" : "$9"}
+                    {billingCycle === "yearly" ? "$12" : "$15"}
                   </span>
                   <span className="text-xs text-zinc-500 font-bold">/mo</span>
                 </div>
                 <p className="text-[11px] text-emerald-700 font-medium mt-1">
-                  {billingCycle === "yearly" ? "Billed annually at $67/yr" : "Billed monthly"}
+                  {billingCycle === "yearly" ? "Billed annually at $144/yr" : "Billed monthly"}
                 </p>
               </div>
 
@@ -335,12 +335,12 @@ export function PricingPreview() {
               <div className="my-5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-zinc-950">
-                    {billingCycle === "yearly" ? "$19" : "$25"}
+                    {billingCycle === "yearly" ? "$29" : "$35"}
                   </span>
                   <span className="text-xs text-zinc-500 font-bold">/mo</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 mt-1 font-medium">
-                  {billingCycle === "yearly" ? "Billed annually at $180/yr" : "Billed monthly"}
+                  {billingCycle === "yearly" ? "Billed annually at $348/yr" : "Billed monthly"}
                 </p>
               </div>
 
@@ -471,7 +471,7 @@ export function PricingPreview() {
                     <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/6 align-top">
                       <span className="block font-black text-sm text-zinc-950 mb-1">Personal</span>
                       <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">
-                        {billingCycle === "yearly" ? "$4/mo" : "$5/mo"}
+                        {billingCycle === "yearly" ? "$6/mo" : "$8/mo"}
                       </span>
                       <Button
                         onClick={() => handleCheckout("personal")}
@@ -486,7 +486,7 @@ export function PricingPreview() {
                         <span className="font-black text-sm text-emerald-950">Growth Pro</span>
                       </div>
                       <span className="block text-[11px] font-bold text-emerald-700 mb-2.5">
-                        {billingCycle === "yearly" ? "$7/mo" : "$9/mo"}
+                        {billingCycle === "yearly" ? "$12/mo" : "$15/mo"}
                       </span>
                       <Button
                         onClick={() => handleCheckout("pro")}
@@ -498,7 +498,7 @@ export function PricingPreview() {
                     <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/6 align-top">
                       <span className="block font-black text-sm text-zinc-950 mb-1">Business</span>
                       <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">
-                        {billingCycle === "yearly" ? "$19/mo" : "$25/mo"}
+                        {billingCycle === "yearly" ? "$29/mo" : "$35/mo"}
                       </span>
                       <Button
                         onClick={() => handleCheckout("business")}
@@ -689,7 +689,7 @@ export function PricingPreview() {
                     <td className="p-4 text-center text-zinc-500 font-medium">Community</td>
                     <td className="p-4 text-center font-bold text-zinc-900">Standard Email</td>
                     <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">Priority Support</td>
-                    <td className="p-4 text-center font-bold text-zinc-900">Dedicated Manager</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Priority Support</td>
                   </tr>
                 </tbody>
               </table>
