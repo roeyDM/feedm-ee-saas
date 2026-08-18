@@ -212,12 +212,12 @@ export function PricingPreview() {
               <div className="my-5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-zinc-950">
-                    {billingCycle === "yearly" ? "$6" : "$8"}
+                    {billingCycle === "yearly" ? "$4" : "$5"}
                   </span>
                   <span className="text-xs text-zinc-500 font-bold">/mo</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 mt-1 font-medium">
-                  {billingCycle === "yearly" ? "Billed annually at $72/yr" : "Billed monthly"}
+                  {billingCycle === "yearly" ? "Billed annually at $39/yr" : "Billed monthly"}
                 </p>
               </div>
 
@@ -238,19 +238,19 @@ export function PricingPreview() {
                 <p className="font-extrabold text-zinc-400 text-[10px] uppercase tracking-wider mb-2">Everything in Free, plus:</p>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Video Reels tab (Up to 3 videos)</span>
+                  <span>3 Vertical Video Snap Reels</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Expanded Lead Capture (Up to 20 leads/mo)</span>
+                  <span>Lead Capture (Up to 20 leads/mo)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Remove FeedM.ee Branding (White-Label)</span>
+                  <span>Remove Feed Me Branding (White-Label)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Advanced custom designs &amp; fonts</span>
+                  <span>Advanced design themes &amp; fonts</span>
                 </div>
               </div>
             </div>
@@ -276,12 +276,12 @@ export function PricingPreview() {
               <div className="my-5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-emerald-600">
-                    {billingCycle === "yearly" ? "$12" : "$15"}
+                    {billingCycle === "yearly" ? "$7" : "$9"}
                   </span>
                   <span className="text-xs text-zinc-500 font-bold">/mo</span>
                 </div>
                 <p className="text-[11px] text-emerald-700 font-medium mt-1">
-                  {billingCycle === "yearly" ? "Billed annually at $144/yr" : "Billed monthly"}
+                  {billingCycle === "yearly" ? "Billed annually at $67/yr" : "Billed monthly"}
                 </p>
               </div>
 
@@ -306,15 +306,11 @@ export function PricingPreview() {
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span className="font-bold text-zinc-900">Full Leads CRM System (Manage &amp; CSV export)</span>
+                  <span className="font-bold text-zinc-900">Marketing Pixels (Meta, TikTok, Google)</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Marketing Pixels Integration (Meta, TikTok, Google)</span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Detailed Analytics &amp; Conversion Tracking</span>
+                  <span>Full Analytics &amp; Video Engagement Stats</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -339,12 +335,12 @@ export function PricingPreview() {
               <div className="my-5">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-zinc-950">
-                    {billingCycle === "yearly" ? "$29" : "$35"}
+                    {billingCycle === "yearly" ? "$19" : "$25"}
                   </span>
                   <span className="text-xs text-zinc-500 font-bold">/mo</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 mt-1 font-medium">
-                  {billingCycle === "yearly" ? "Billed annually at $348/yr" : "Billed monthly"}
+                  {billingCycle === "yearly" ? "Billed annually at $180/yr" : "Billed monthly"}
                 </p>
               </div>
 
@@ -475,7 +471,7 @@ export function PricingPreview() {
                     <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/6 align-top">
                       <span className="block font-black text-sm text-zinc-950 mb-1">Personal</span>
                       <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">
-                        {billingCycle === "yearly" ? "$7/mo" : "$9/mo"}
+                        {billingCycle === "yearly" ? "$4/mo" : "$5/mo"}
                       </span>
                       <Button
                         onClick={() => handleCheckout("personal")}
@@ -490,7 +486,7 @@ export function PricingPreview() {
                         <span className="font-black text-sm text-emerald-950">Growth Pro</span>
                       </div>
                       <span className="block text-[11px] font-bold text-emerald-700 mb-2.5">
-                        {billingCycle === "yearly" ? "$12/mo" : "$15/mo"}
+                        {billingCycle === "yearly" ? "$7/mo" : "$9/mo"}
                       </span>
                       <Button
                         onClick={() => handleCheckout("pro")}
@@ -502,7 +498,7 @@ export function PricingPreview() {
                     <th className="p-4 text-center text-xs font-bold text-zinc-900 w-1/6 align-top">
                       <span className="block font-black text-sm text-zinc-950 mb-1">Business</span>
                       <span className="block text-[11px] font-medium text-zinc-500 mb-2.5">
-                        {billingCycle === "yearly" ? "$29/mo" : "$35/mo"}
+                        {billingCycle === "yearly" ? "$19/mo" : "$25/mo"}
                       </span>
                       <Button
                         onClick={() => handleCheckout("business")}
@@ -521,7 +517,7 @@ export function PricingPreview() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Video Reels Count</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Video Snap Reels Limit</td>
                     <td className="p-4 text-center text-zinc-500 font-medium">0 Videos (Static Bio)</td>
                     <td className="p-4 text-center font-bold text-zinc-900">3 Videos</td>
                     <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">3 Videos</td>
@@ -542,13 +538,6 @@ export function PricingPreview() {
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Dynamic Display Delays (0s, 3s, 5s, 10s)</td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
-                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
-                  </tr>
-                  <tr>
                     <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Auto-Looping &amp; Audio Mute Controls</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
@@ -563,39 +552,39 @@ export function PricingPreview() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Custom Lead Generation Forms</td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Monthly Lead Capture Quota</td>
+                    <td className="p-4 text-center text-zinc-600 font-bold">5 Leads / mo</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">20 Leads / mo</td>
+                    <td className="p-4 text-center font-extrabold text-emerald-950 bg-emerald-50/50 border-x border-emerald-200/80">Unlimited</td>
+                    <td className="p-4 text-center font-bold text-zinc-900">Unlimited</td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Direct Email Lead Routing</td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Custom Builder Lead Forms</td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">WhatsApp 1-Click Instant Lead Route</td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">WhatsApp 1-Click Instant Route</td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
                   </tr>
                   <tr>
                     <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">Leads CRM Manager &amp; CSV Export</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">API &amp; Webhook Access</td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">API &amp; Webhook Sync</td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
+                    <td className="p-4 text-center"><span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span></td>
                   </tr>
 
                   {/* Category 3 */}
