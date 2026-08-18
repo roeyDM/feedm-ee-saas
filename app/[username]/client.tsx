@@ -144,11 +144,12 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
       {cleanGadsId && (
         <>
           <Script
+            id="google-ads-gtag-loader"
             strategy="afterInteractive"
             src={`https://www.googletagmanager.com/gtag/js?id=${cleanGadsId}`}
           />
           <Script
-            id="google-ads-script"
+            id="google-ads-gtag-init"
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `

@@ -131,9 +131,9 @@ async function fetchPublicProfile(handleKey: string) {
     leadForm:    sanitizeLeadForm(profile.lead_form),
     appearance:  sanitizedAppearance,
     pixels: {
-      metaPixelId:   (profile.meta_pixel_id   || profile.appearance?.meta_pixel_id   || "").toString().trim(),
+      metaPixelId:   (profile.meta_pixel_id   || profile.facebook_pixel_id || profile.appearance?.meta_pixel_id   || "").toString().trim(),
       tiktokPixelId: (profile.tiktok_pixel_id || profile.appearance?.tiktok_pixel_id || "").toString().trim(),
-      googleAdsId:   (profile.google_ads_id   || profile.ga_measurement_id || profile.appearance?.google_ads_id || "").toString().trim(),
+      googleAdsId:   (profile.google_ads_id   || profile.google_ads_pixel_id || profile.google_pixel_id || profile.ga_measurement_id || profile.appearance?.google_ads_id || "").toString().trim(),
     },
   };
 }
