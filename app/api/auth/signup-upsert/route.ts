@@ -42,6 +42,9 @@ export async function POST(req: NextRequest) {
     }
 
     const isTrialAllowed = !hasUsedTrialBefore && !isFreePlan;
+    const trialEndsAtIso = isTrialAllowed
+      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      : null;
 
     // 1. Robust UPSERT into public.profiles (on conflict: update)
     const { error: profileErr } = await adminClient
@@ -58,7 +61,8 @@ export async function POST(req: NextRequest) {
           plan_type: isTrialAllowed ? planType : "free",
           plan: isTrialAllowed ? planType : "free",
           is_trial: isTrialAllowed,
-          has_used_trial: hasUsedTrialBefore,
+          trial_ends_at: trialEndsAtIso,
+          has_used_trial: hasUsedTrialBefore || isFreePlan,
           subscription_status: isFreePlan ? "active" : isTrialAllowed ? "trialing" : "active",
           updated_at: new Date().toISOString(),
         },
