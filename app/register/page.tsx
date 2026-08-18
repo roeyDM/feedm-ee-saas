@@ -146,12 +146,12 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen relative w-full flex flex-col items-center justify-center bg-gradient-to-br from-amber-50/60 via-emerald-50/40 to-sky-50/50 px-4 py-12 text-zinc-900 font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden relative flex flex-col items-center justify-center bg-gradient-to-br from-amber-50/60 via-emerald-50/40 to-sky-50/50 px-4 py-8 text-zinc-900 font-sans">
       {/* Background Pastel Orbs */}
-      <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[45%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[130px]" />
-      <div className="pointer-events-none absolute bottom-[-10%] right-[-5%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px]" />
+      <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[45%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[130px] overflow-hidden" />
+      <div className="pointer-events-none absolute bottom-[-10%] right-[-5%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px] overflow-hidden" />
 
-      <div className="relative w-full max-w-md z-10">
+      <div className="relative w-full max-w-md mx-auto z-10">
         {/* Dynamic Plan Badge */}
         <div className="mb-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-emerald-300 shadow-xs px-4 py-1.5 text-xs font-bold text-emerald-950 backdrop-blur-md">
