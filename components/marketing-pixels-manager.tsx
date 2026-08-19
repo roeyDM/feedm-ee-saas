@@ -131,17 +131,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
         const sanitizePixel = (val: any) => {
           if (!val || typeof val !== "string") return "";
-          const trimmed = val.trim();
-          if (
-            trimmed === "123456789012345" ||
-            trimmed === "1564193897126475" ||
-            trimmed === "AW-752532101" ||
-            trimmed === "C1234567890ABCDEF" ||
-            trimmed === "AW-123456789"
-          ) {
-            return "";
-          }
-          return trimmed;
+          return val.trim();
         };
 
         let meta = "";
