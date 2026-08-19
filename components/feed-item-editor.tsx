@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { SectionHelp } from "@/components/ui/section-help";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 import {
   Film,
   Trash2,
@@ -112,6 +113,9 @@ function ProgressBar({ percent }: { percent: number }) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType, leadForm, setLeadForm }: FeedItemEditorProps) {
+  const { getPlanLimit } = useFeatureAccess(planType);
+  const maxReels = getPlanLimit("reelsPerFeed");
+
   // Form state
   const [videoUrl, setVideoUrl] = useState("");
   const [caption, setCaption] = useState("");
@@ -134,7 +138,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
 
   // ─── File Selection Validation ────────────────────────────────────────────────
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (planType === "free") {
+    if (maxReels === 0 || planType === "free") {
       setShowUpgradeModal(true);
       if (e.target) e.target.value = "";
       return;
@@ -226,13 +230,13 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (planType === "free") {
+    if (maxReels === 0 || planType === "free") {
       setShowUpgradeModal(true);
       return;
     }
 
-    if (reels.length >= 3) {
-      showToast("error", "Maximum 3 video reels allowed.");
+    if (maxReels > 0 && reels.length >= maxReels) {
+      showToast("error", `Maximum ${maxReels} video reels allowed on your current plan.`);
       return;
     }
 
@@ -495,25 +499,37 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
               </div>
             )}
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              disabled={reels.length >= 3 || isUploading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs h-10 shadow-sm"
-            >
-              {isUploading ? (
-                <>
-                  <span className="animate-pulse">Uploading…</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-1" />
-                  {uploadMode === "file" && selectedFile
-                    ? "Upload & Add Reel"
-                    : `Add Reel (${reels.length}/3)`}
-                </>
-              )}
-            </Button>
+            {/* Submit / Upgrade Lock */}
+            {maxReels === 0 ? (
+              <Button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-10 shadow-sm gap-2 cursor-pointer"
+              >
+                <Lock className="h-4 w-4" />
+                <span>Reels Locked (Starter Free) — Click to Upgrade</span>
+                <Zap className="h-3.5 w-3.5 fill-current" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={reels.length >= maxReels || isUploading}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-bold text-xs h-10 shadow-sm"
+              >
+                {isUploading ? (
+                  <>
+                    <span className="animate-pulse">Uploading…</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-1" />
+                    {uploadMode === "file" && selectedFile
+                      ? "Upload & Add Reel"
+                      : `Add Reel (${reels.length}/${maxReels})`}
+                  </>
+                )}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>
