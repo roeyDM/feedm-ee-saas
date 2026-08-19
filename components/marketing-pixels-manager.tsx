@@ -9,10 +9,14 @@ import {
   HelpCircle,
   Trash2,
   AlertTriangle,
+  Lock,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { SectionHelp } from "@/components/ui/section-help";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { UpgradeModal } from "@/components/upgrade-modal";
 
 interface MarketingPixelsManagerProps {
   username?: string;
@@ -57,6 +61,10 @@ function OfficialGoogleAdsLogo({ className = "h-6 w-6" }: { className?: string }
 }
 
 export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps) {
+  const { canAccess } = useFeatureAccess();
+  const hasMarketingPixels = canAccess("hasMarketingPixels");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
   const [metaPixelId, setMetaPixelId] = useState("");
   const [tiktokPixelId, setTiktokPixelId] = useState("");
   const [googleAdsId, setGoogleAdsId] = useState("");
@@ -309,6 +317,9 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
   return (
     <div className="w-full max-w-none flex-1 flex flex-col gap-6 animate-in fade-in duration-300 font-sans">
+      {/* Universal Upgrade Modal */}
+      <UpgradeModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
+
       {/* Toast Notification */}
       {toastMsg && (
         <div className="fixed top-6 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
@@ -325,8 +336,50 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         </div>
       )}
 
+      {/* Free & Personal Plan Lock Warning Banner */}
+      {!hasMarketingPixels && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-black shadow-xs">
+              <Lock className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black">Marketing Pixels Available on Pro &amp; Business Plans</h4>
+              <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
+                Upgrade to Pro to connect Meta, TikTok, and Google Ads tracking pixels for retargeting and audience building.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            onClick={() => setShowUpgradeModal(true)}
+            className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-4 rounded-xl shrink-0 gap-1.5 cursor-pointer shadow-xs"
+          >
+            <span>Upgrade to Pro</span> <Zap className="h-3.5 w-3.5 fill-current" />
+          </Button>
+        </div>
+      )}
+
       {/* Main Container Card */}
-      <div className="w-full bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+      <div className={`w-full bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden ${!hasMarketingPixels ? "opacity-75 pointer-events-none select-none relative" : ""}`}>
+        {!hasMarketingPixels && (
+          <div
+            onClick={() => setShowUpgradeModal(true)}
+            className="absolute inset-0 z-20 bg-zinc-950/5 backdrop-blur-[1px] flex items-center justify-center cursor-pointer pointer-events-auto group"
+          >
+            <div className="bg-white/95 border border-amber-300 px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 group-hover:scale-105 transition-transform">
+              <Lock className="h-5 w-5 text-amber-600 shrink-0" />
+              <div className="text-left">
+                <p className="text-xs font-black text-zinc-950">Marketing Pixels Locked</p>
+                <p className="text-[10px] font-bold text-amber-700">Click to Upgrade to Pro or Business</p>
+              </div>
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-[11px] h-7 px-3 rounded-lg ml-2">
+                Upgrade
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Top Header Banner (Clean Header - No Top Summary Save Button) */}
         <div className="p-6 border-b border-zinc-100 bg-zinc-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
