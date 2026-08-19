@@ -247,49 +247,8 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
         </div>
       )}
 
-      {/* Free & Personal Plan Lock Warning Banner */}
-      {!hasLeadsCrmExport && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-black shadow-xs">
-              <Lock className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="text-xs font-black">Leads CRM &amp; CSV Export Available on Pro &amp; Business Plans</h4>
-              <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
-                Upgrade to Pro to unlock full leads manager, status tracking, direct contact links, and 1-click CSV export.
-              </p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            onClick={() => setShowUpgradeModal(true)}
-            className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-4 rounded-xl shrink-0 gap-1.5 cursor-pointer shadow-xs"
-          >
-            <span>Upgrade to Pro</span> <Zap className="h-3.5 w-3.5 fill-current" />
-          </Button>
-        </div>
-      )}
-
       {/* Main Single Card Container */}
-      <div className={`w-full max-w-none flex-1 bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden ${!hasLeadsCrmExport ? "opacity-75 pointer-events-none select-none relative" : ""}`}>
-        {!hasLeadsCrmExport && (
-          <div
-            onClick={() => setShowUpgradeModal(true)}
-            className="absolute inset-0 z-20 bg-zinc-950/5 backdrop-blur-[1px] flex items-center justify-center cursor-pointer pointer-events-auto group"
-          >
-            <div className="bg-white/95 border border-amber-300 px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 group-hover:scale-105 transition-transform max-w-md text-center">
-              <Lock className="h-5 w-5 text-amber-600 shrink-0" />
-              <div className="text-left">
-                <p className="text-xs font-black text-zinc-950">Leads CRM &amp; CSV Export Locked</p>
-                <p className="text-[10px] font-bold text-amber-700">Upgrade to Pro or Business to manage leads and export CSV data</p>
-              </div>
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-[11px] h-7 px-3 rounded-lg ml-2 shrink-0">
-                Upgrade
-              </Button>
-            </div>
-          </div>
-        )}
+      <div className="w-full max-w-none flex-1 bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
 
         {/* Card Header Toolbar */}
         <div className="p-5 border-b border-zinc-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-zinc-50/50">

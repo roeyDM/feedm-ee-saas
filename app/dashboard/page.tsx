@@ -28,6 +28,7 @@ import { ExtraFeedModal } from "@/components/extra-feed-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,6 +90,28 @@ function DashboardContent() {
     myFeed: true,
     marketing: true,
   });
+
+  const { getPlanLimit, canAccess } = useFeatureAccess(planType);
+  const maxReels = getPlanLimit("reelsPerFeed");
+  const hasLeadsCrmExport = canAccess("hasLeadsCrmExport");
+  const hasMarketingPixels = canAccess("hasMarketingPixels");
+
+  const handleTabClick = (tab: "bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels") => {
+    if (tab === "reels" && maxReels === 0) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    if (tab === "leads" && !hasLeadsCrmExport) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    if (tab === "pixels" && !hasMarketingPixels) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    setActiveTab(tab);
+    setMobileDrawerOpen(false);
+  };
 
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -709,10 +732,7 @@ function DashboardContent() {
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setActiveTab("reels");
-                          setMobileDrawerOpen(false);
-                        }}
+                        onClick={() => handleTabClick("reels")}
                         className={cn(
                           "flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
                           activeTab === "reels" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -720,15 +740,12 @@ function DashboardContent() {
                       >
                         <Film className="h-4 w-4 text-emerald-400" />
                         <span>Videos &amp; Reels</span>
-                        {planType === "free" && <Lock className="h-3 w-3 text-amber-400 ml-auto" />}
+                        {maxReels === 0 && <Lock className="h-3 w-3 text-amber-400 ml-auto" />}
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setActiveTab("design");
-                          setMobileDrawerOpen(false);
-                        }}
+                        onClick={() => handleTabClick("design")}
                         className={cn(
                           "flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
                           activeTab === "design" ? "bg-emerald-600 text-white shadow-sm" : "text-slate-300 hover:bg-slate-800 hover:text-white"
@@ -744,10 +761,7 @@ function DashboardContent() {
                 {/* 2. ANALYTICS / INSIGHTS (Direct Category) */}
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveTab("analytics");
-                    setMobileDrawerOpen(false);
-                  }}
+                  onClick={() => handleTabClick("analytics")}
                   className={cn(
                     "flex items-center justify-between px-3.5 py-3 rounded-2xl border text-xs font-black transition-all text-left cursor-pointer",
                     activeTab === "analytics"
@@ -785,10 +799,7 @@ function DashboardContent() {
                     <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-slate-800/80 animate-in fade-in duration-200">
                       <button
                         type="button"
-                        onClick={() => {
-                          setActiveTab("leads");
-                          setMobileDrawerOpen(false);
-                        }}
+                        onClick={() => handleTabClick("leads")}
                         className={cn(
                           "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
                           activeTab === "leads"
@@ -800,17 +811,18 @@ function DashboardContent() {
                           <Inbox className="h-4 w-4 shrink-0 text-emerald-400" />
                           <span>Leads CRM</span>
                         </div>
-                        <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
-                          New
-                        </span>
+                        {!hasLeadsCrmExport ? (
+                          <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                        ) : (
+                          <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
+                            New
+                          </span>
+                        )}
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setActiveTab("pixels");
-                          setMobileDrawerOpen(false);
-                        }}
+                        onClick={() => handleTabClick("pixels")}
                         className={cn(
                           "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
                           activeTab === "pixels"
@@ -822,9 +834,13 @@ function DashboardContent() {
                           <Target className="h-4 w-4 shrink-0 text-emerald-400" />
                           <span>Marketing Pixels</span>
                         </div>
-                        <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
-                          New
-                        </span>
+                        {!hasMarketingPixels ? (
+                          <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                        ) : (
+                          <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
+                            New
+                          </span>
+                        )}
                       </button>
                     </div>
                   )}
@@ -1059,7 +1075,7 @@ function DashboardContent() {
               {openAccordions.myFeed && (
                 <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
                   <button
-                    onClick={() => setActiveTab("bio")}
+                    onClick={() => handleTabClick("bio")}
                     className={cn(
                       "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left",
                       activeTab === "bio"
@@ -1072,7 +1088,7 @@ function DashboardContent() {
                   </button>
 
                   <button
-                    onClick={() => setActiveTab("reels")}
+                    onClick={() => handleTabClick("reels")}
                     className={cn(
                       "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left relative",
                       activeTab === "reels"
@@ -1082,13 +1098,13 @@ function DashboardContent() {
                   >
                     <Film className="h-4 w-4 shrink-0" />
                     <span>Videos &amp; Reels</span>
-                    {planType === "free" && (
+                    {maxReels === 0 && (
                       <Lock className={cn("h-3.5 w-3.5 ml-auto", activeTab === "reels" ? "text-amber-400" : "text-amber-500")} />
                     )}
                   </button>
 
                   <button
-                    onClick={() => setActiveTab("design")}
+                    onClick={() => handleTabClick("design")}
                     className={cn(
                       "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left",
                       activeTab === "design"
@@ -1106,7 +1122,7 @@ function DashboardContent() {
             {/* Top-Level Menu: Analytics & Insights (Flattened) */}
             <div className="flex flex-col rounded-2xl overflow-hidden border border-zinc-200/90 bg-white shadow-2xs transition-all">
               <button
-                onClick={() => setActiveTab("analytics")}
+                onClick={() => handleTabClick("analytics")}
                 className={cn(
                   "w-full flex items-center justify-between px-3.5 py-3 text-xs font-black transition-all text-left select-none cursor-pointer",
                   activeTab === "analytics"
@@ -1178,7 +1194,7 @@ function DashboardContent() {
               {openAccordions.settings && (
                 <div className="flex flex-col gap-1 p-2 pt-0.5 border-t border-zinc-100/90 animate-in fade-in duration-200">
                   <button
-                    onClick={() => setActiveTab("leads")}
+                    onClick={() => handleTabClick("leads")}
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
                       activeTab === "leads"
@@ -1190,13 +1206,17 @@ function DashboardContent() {
                       <Inbox className="h-4 w-4 shrink-0 text-emerald-500" />
                       <span>Leads CRM</span>
                     </div>
-                    <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
-                      New
-                    </span>
+                    {!hasLeadsCrmExport ? (
+                      <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    ) : (
+                      <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
+                        New
+                      </span>
+                    )}
                   </button>
 
                   <button
-                    onClick={() => setActiveTab("pixels")}
+                    onClick={() => handleTabClick("pixels")}
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
                       activeTab === "pixels"
@@ -1208,9 +1228,13 @@ function DashboardContent() {
                       <Target className="h-4 w-4 shrink-0 text-emerald-500" />
                       <span>Marketing Pixels</span>
                     </div>
-                    <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
-                      New
-                    </span>
+                    {!hasMarketingPixels ? (
+                      <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    ) : (
+                      <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
+                        New
+                      </span>
+                    )}
                   </button>
                 </div>
               )}
@@ -1617,7 +1641,7 @@ function DashboardContent() {
           <>
             <button
               type="button"
-              onClick={() => setActiveTab("bio")}
+              onClick={() => handleTabClick("bio")}
               className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
             >
               <LayoutDashboard className="w-5 h-5 text-slate-300" />
@@ -1626,7 +1650,7 @@ function DashboardContent() {
 
             <button
               type="button"
-              onClick={() => setActiveTab("analytics")}
+              onClick={() => handleTabClick("analytics")}
               className={cn(
                 "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 transition-colors cursor-pointer",
                 activeTab === "analytics" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
@@ -1638,7 +1662,7 @@ function DashboardContent() {
 
             <button
               type="button"
-              onClick={() => setActiveTab("leads")}
+              onClick={() => handleTabClick("leads")}
               className={cn(
                 "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 transition-colors cursor-pointer",
                 activeTab === "leads" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
