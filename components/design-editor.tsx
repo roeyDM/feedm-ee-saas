@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { SectionHelp } from "@/components/ui/section-help";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { 
   Palette, 
   RotateCcw, 
@@ -431,6 +432,9 @@ export function DesignEditor({
   planType = "pro",
   onRegisterActions,
 }: DesignEditorProps) {
+  const { canAccess } = useFeatureAccess(planType);
+  const hasWatermarkRemoval = canAccess("hasWatermarkRemoval");
+
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [history, setHistory] = useState<AppearanceSettings[]>([appearance]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -1058,36 +1062,41 @@ export function DesignEditor({
         </CardContent>
       </Card>
 
-      {/* FEEDMEE BRANDING WATERMARK CARD */}
+      {/* FEED ME BRANDING WATERMARK CARD */}
       <Card className="bg-white border-zinc-200/80 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-zinc-900">
-              <Sparkles className="h-4 w-4 text-emerald-600" /> FeedM.ee Watermark
-              <SectionHelp text='Control the visibility of the "Powered by FeedM.ee" watermark at the bottom of your feed.' />
+              <Sparkles className="h-4 w-4 text-emerald-600" /> Feed Me Watermark
+              <SectionHelp text='Control the visibility of the "Powered by Feed Me" watermark at the bottom of your feed.' />
             </CardTitle>
-            {planType === "free" && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
-                <Lock className="h-3 w-3" /> Pro Feature
-              </span>
+            {!hasWatermarkRemoval && (
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black text-amber-900 border border-amber-300 shadow-2xs cursor-pointer hover:bg-amber-200 transition-all"
+              >
+                <Lock className="h-3 w-3 text-amber-700" />
+                <span>Remove Branding (Personal &amp; Pro Plan)</span>
+              </button>
             )}
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80">
             <div>
-              <p className="text-xs font-bold text-zinc-900">Remove FeedM.ee Branding</p>
+              <p className="text-xs font-bold text-zinc-900">Remove Feed Me Branding</p>
               <p className="text-[11px] font-medium text-zinc-500 mt-0.5 hidden md:block">
-                {planType === "free"
-                  ? "Requires Pro Plan to hide watermark (currently visible on Starter)"
+                {!hasWatermarkRemoval
+                  ? "Requires Personal or Pro Plan to hide watermark (currently visible on Starter)"
                   : "Hide watermark for a 100% white-label creator feed"}
               </p>
             </div>
             <ToggleSwitch
-              checked={planType !== "free" && !!currentApp.hideBranding}
-              disabled={planType === "free"}
+              checked={hasWatermarkRemoval && !!currentApp.hideBranding}
+              disabled={!hasWatermarkRemoval}
               onChange={(val) => {
-                if (planType === "free") {
+                if (!hasWatermarkRemoval) {
                   setShowUpgradeModal(true);
                   return;
                 }
