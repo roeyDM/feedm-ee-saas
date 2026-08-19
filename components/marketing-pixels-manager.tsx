@@ -90,15 +90,28 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         let tiktok = "";
         let gads = "";
 
+        const sanitizePixel = (val: any) => {
+          if (!val || typeof val !== "string") return "";
+          const trimmed = val.trim();
+          if (
+            trimmed === "123456789012345" ||
+            trimmed === "C1234567890ABCDEF" ||
+            trimmed === "AW-123456789"
+          ) {
+            return "";
+          }
+          return trimmed;
+        };
+
         // 1. Try local storage first for immediate client feedback
         if (typeof window !== "undefined") {
           const cached = localStorage.getItem("feedmee_marketing_pixels");
           if (cached) {
             try {
               const parsed = JSON.parse(cached);
-              meta = parsed.metaPixelId || "";
-              tiktok = parsed.tiktokPixelId || "";
-              gads = parsed.googleAdsId || parsed.gaMeasurementId || "";
+              meta = sanitizePixel(parsed.metaPixelId);
+              tiktok = sanitizePixel(parsed.tiktokPixelId);
+              gads = sanitizePixel(parsed.googleAdsId || parsed.gaMeasurementId);
             } catch (e) {}
           }
         }
@@ -121,10 +134,10 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         const { data, error } = await query.maybeSingle();
 
         if (data && !error) {
-          if (data.meta_pixel_id) meta = data.meta_pixel_id;
-          if (data.tiktok_pixel_id) tiktok = data.tiktok_pixel_id;
-          if (data.google_ads_id) gads = data.google_ads_id;
-          else if (data.ga_measurement_id) gads = data.ga_measurement_id;
+          if (data.meta_pixel_id) meta = sanitizePixel(data.meta_pixel_id);
+          if (data.tiktok_pixel_id) tiktok = sanitizePixel(data.tiktok_pixel_id);
+          if (data.google_ads_id) gads = sanitizePixel(data.google_ads_id);
+          else if (data.ga_measurement_id) gads = sanitizePixel(data.ga_measurement_id);
         }
 
         setMetaPixelId(meta);

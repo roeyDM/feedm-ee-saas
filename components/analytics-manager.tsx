@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { SectionHelp } from "@/components/ui/section-help";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 
 interface AnalyticsManagerProps {
   planType?: "free" | "personal" | "pro" | "business" | "trial_pro" | string;
@@ -73,6 +74,8 @@ export function AnalyticsManager({
   onTierChange,
   username: propUsername,
 }: AnalyticsManagerProps) {
+  const { currentPlan } = useFeatureAccess(initialPlan);
+
   // Local state for draft tier switcher preview
   const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">("pro");
 
@@ -491,7 +494,11 @@ export function AnalyticsManager({
                   <SectionHelp text="Real Supabase performance metrics and live visitor signals" />
                 </h2>
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  {activeTier === "free" ? "Free Plan" : activeTier === "personal" ? "Personal Plan" : "Pro Plan"}
+                  {currentPlan === "free" || initialPlan === "free"
+                    ? "Basic Analytics (Starter Free)"
+                    : currentPlan === "personal" || initialPlan === "personal"
+                    ? "Personal Analytics"
+                    : "Pro Analytics"}
                 </span>
               </div>
             </div>
