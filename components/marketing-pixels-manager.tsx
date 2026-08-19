@@ -82,7 +82,7 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Load existing pixel configuration strictly from Supabase profiles for authenticated user.id
+  // Load existing pixel configuration strictly from Supabase profiles for authenticated user
   useEffect(() => {
     async function loadPixels() {
       try {
@@ -97,11 +97,25 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           return;
         }
 
-        const { data: profile, error } = await supabase
+        let profile: any = null;
+
+        // 1. Query by user.id first
+        const { data: prof1 } = await supabase
           .from("profiles")
-          .select("meta_pixel_id, facebook_pixel_id, tiktok_pixel_id, google_ads_id, google_pixel_id, ga_measurement_id")
+          .select("*")
           .eq("id", user.id)
           .maybeSingle();
+
+        if (prof1) {
+          profile = prof1;
+        } else if (username) {
+          const { data: prof2 } = await supabase
+            .from("profiles")
+            .select("*")
+            .ilike("username", username.toLowerCase().trim())
+            .maybeSingle();
+          if (prof2) profile = prof2;
+        }
 
         const sanitizePixel = (val: any) => {
           if (!val || typeof val !== "string") return "";
@@ -122,10 +136,10 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
         let tiktok = "";
         let gads = "";
 
-        if (profile && !error) {
+        if (profile) {
           meta = sanitizePixel(profile.meta_pixel_id || profile.facebook_pixel_id);
           tiktok = sanitizePixel(profile.tiktok_pixel_id);
-          gads = sanitizePixel(profile.google_ads_id || profile.google_pixel_id || profile.ga_measurement_id);
+          gads = sanitizePixel(profile.google_ads_id || profile.google_pixel_id || profile.google_ads_pixel_id || profile.ga_measurement_id);
         }
 
         setMetaPixelId(meta);
@@ -150,39 +164,92 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     const cleanTiktok = tiktok.trim();
     const cleanGads = gads.trim();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user?.id) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
       alert("Authentication error: Please log in to update marketing pixels.");
-      return;
+      return false;
     }
 
-    console.log("Updating profiles for user ID:", user.id, "meta_pixel_id:", cleanMeta);
+    console.log("📝 [Pixels Manager] Saving pixels for user ID:", user.id, {
+      meta: cleanMeta,
+      tiktok: cleanTiktok,
+      gads: cleanGads,
+    });
 
-    const updatePayload = {
+    const updatePayload: Record<string, any> = {
       meta_pixel_id: cleanMeta || null,
+      facebook_pixel_id: cleanMeta || null,
       tiktok_pixel_id: cleanTiktok || null,
       google_ads_id: cleanGads || null,
+      google_pixel_id: cleanGads || null,
+      google_ads_pixel_id: cleanGads || null,
       ga_measurement_id: cleanGads || null,
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("profiles")
       .update(updatePayload)
       .eq("id", user.id)
       .select();
 
+    // Fallback: If unknown column error occurs, retry with safe primary columns
+    if (error && (error.code === "PGRST204" || error.message?.includes("column"))) {
+      console.warn("[Pixels Update Note]: Retrying with safe column names:", error.message);
+      const safePayload = {
+        meta_pixel_id: cleanMeta || null,
+        tiktok_pixel_id: cleanTiktok || null,
+        google_ads_id: cleanGads || null,
+        updated_at: new Date().toISOString(),
+      };
+      const retryRes = await supabase
+        .from("profiles")
+        .update(safePayload)
+        .eq("id", user.id)
+        .select();
+      data = retryRes.data;
+      error = retryRes.error;
+    }
+
+    // Fallback: If 0 rows updated by id and username exists, update by username
+    if ((!data || data.length === 0) && username) {
+      const cleanHandle = username.toLowerCase().trim();
+      console.log("[Pixels Update Note]: 0 rows updated by id. Retrying by username:", cleanHandle);
+      const handleRes = await supabase
+        .from("profiles")
+        .update({
+          meta_pixel_id: cleanMeta || null,
+          tiktok_pixel_id: cleanTiktok || null,
+          google_ads_id: cleanGads || null,
+          updated_at: new Date().toISOString(),
+        })
+        .ilike("username", cleanHandle)
+        .select();
+
+      if (handleRes.data && handleRes.data.length > 0) {
+        data = handleRes.data;
+        error = null;
+      }
+    }
+
     if (error) {
-      console.error("Supabase Pixel Update Error:", error);
+      console.error("[Pixels Update Error]:", error);
       alert(`Supabase Error (${error.code || "UNKNOWN"}): ${error.message}`);
       throw error;
     }
 
-    setSavedMetaId(cleanMeta);
-    setSavedTiktokId(cleanTiktok);
-    setSavedGoogleAdsId(cleanGads);
+    console.log("✅ [Pixels Update Success]: Row updated successfully in Supabase:", data);
 
-    return data;
+    setSavedMetaId(cleanMeta);
+    setMetaPixelId(cleanMeta);
+
+    setSavedTiktokId(cleanTiktok);
+    setTiktokPixelId(cleanTiktok);
+
+    setSavedGoogleAdsId(cleanGads);
+    setGoogleAdsId(cleanGads);
+
+    return true;
   };
 
   // 1. Save Meta Pixel
