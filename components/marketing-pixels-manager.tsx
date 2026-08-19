@@ -84,31 +84,43 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
   // Load existing pixel configuration strictly from Supabase profiles for authenticated user
   useEffect(() => {
-    async function loadPixels() {
+    let isMounted = true;
+
+    async function loadPixelsForUser(uid?: string) {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user?.id) {
-          setMetaPixelId("");
-          setSavedMetaId("");
-          setTiktokPixelId("");
-          setSavedTiktokId("");
-          setGoogleAdsId("");
-          setSavedGoogleAdsId("");
+        let userIdToFetch = uid;
+        if (!userIdToFetch) {
+          const { data: { user } } = await supabase.auth.getUser();
+          userIdToFetch = user?.id;
+        }
+
+        if (!userIdToFetch && !username) {
+          if (isMounted) {
+            setMetaPixelId("");
+            setSavedMetaId("");
+            setTiktokPixelId("");
+            setSavedTiktokId("");
+            setGoogleAdsId("");
+            setSavedGoogleAdsId("");
+          }
           return;
         }
 
         let profile: any = null;
 
         // 1. Query by user.id first
-        const { data: prof1 } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
+        if (userIdToFetch) {
+          const { data: prof1 } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", userIdToFetch)
+            .maybeSingle();
 
-        if (prof1) {
-          profile = prof1;
-        } else if (username) {
+          if (prof1) profile = prof1;
+        }
+
+        // 2. Query by username fallback if profile not resolved by user.id
+        if (!profile && username) {
           const { data: prof2 } = await supabase
             .from("profiles")
             .select("*")
@@ -142,20 +154,42 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           gads = sanitizePixel(profile.google_ads_id || profile.google_pixel_id || profile.google_ads_pixel_id || profile.ga_measurement_id);
         }
 
-        setMetaPixelId(meta);
-        setSavedMetaId(meta);
+        if (isMounted) {
+          console.log("📥 [Pixels Hydrated]: Loaded from Supabase:", {
+            userId: userIdToFetch,
+            username,
+            meta,
+            tiktok,
+            gads,
+          });
 
-        setTiktokPixelId(tiktok);
-        setSavedTiktokId(tiktok);
+          setMetaPixelId(meta);
+          setSavedMetaId(meta);
 
-        setGoogleAdsId(gads);
-        setSavedGoogleAdsId(gads);
+          setTiktokPixelId(tiktok);
+          setSavedTiktokId(tiktok);
+
+          setGoogleAdsId(gads);
+          setSavedGoogleAdsId(gads);
+        }
       } catch (err) {
         console.error("[Pixels Load Error]:", err);
       }
     }
 
-    loadPixels();
+    loadPixelsForUser();
+
+    // Subscribe to auth state changes so pixel inputs populate as soon as session hydration finishes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.id) {
+        loadPixelsForUser(session.user.id);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [username]);
 
   // Unified function to save pixels strictly to authenticated user's profile
