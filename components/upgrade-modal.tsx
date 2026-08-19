@@ -24,8 +24,14 @@ export function UpgradeModal({
 
   if (!open) return null;
 
-  const monthlyVariantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID || "739343";
-  const yearlyVariantId = process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID || "739344";
+  const monthlyVariantId =
+    process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID ||
+    process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY ||
+    "1996077";
+  const yearlyVariantId =
+    process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
+    process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY ||
+    "1996078";
 
   const handleUpgrade = async () => {
     setIsCheckoutLoading(true);
@@ -34,16 +40,16 @@ export function UpgradeModal({
       const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId: selectedVariantId }),
+        body: JSON.stringify({ variantId: selectedVariantId, planType: "pro" }),
       });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
       } else {
-        window.location.href = "/pricing";
+        window.location.href = `/dashboard?upgrade=pro&cycle=${billingInterval}`;
       }
     } catch (_) {
-      window.location.href = "/pricing";
+      window.location.href = `/dashboard?upgrade=pro&cycle=${billingInterval}`;
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -85,7 +91,7 @@ export function UpgradeModal({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            Monthly ($7/mo)
+            Monthly ($15/mo)
           </button>
           <button
             type="button"
@@ -96,7 +102,7 @@ export function UpgradeModal({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            <span>Yearly ($67/yr)</span>
+            <span>Yearly ($12/mo)</span>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.5 rounded-md">
               Save 20%
             </span>
@@ -115,15 +121,15 @@ export function UpgradeModal({
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>Page 5 Built-in Lead Capture Form</span>
+              <span>Unlimited Lead Capture &amp; CRM Export</span>
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>100% White-Label Branding</span>
+              <span>Marketing Pixels (Meta, TikTok, Google)</span>
             </li>
             <li className="flex items-center gap-2">
               <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>Custom Domain &amp; Traffic Analytics</span>
+              <span>100% White-Label Branding Removal</span>
             </li>
           </ul>
         </div>
@@ -142,8 +148,8 @@ export function UpgradeModal({
             <>
               <span>
                 {billingInterval === "yearly"
-                  ? "Upgrade to Pro Annual — $67/yr"
-                  : "Upgrade to Pro — $7/mo"}
+                  ? "Upgrade to Pro — $12/mo ($144/yr)"
+                  : "Upgrade to Pro — $15/mo"}
               </span>
               <ArrowRight className="h-4 w-4" />
             </>
