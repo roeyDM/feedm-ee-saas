@@ -15,6 +15,7 @@ export interface PlanFeatures {
   hasFullAnalytics: boolean;
   hasVideoAnalytics: boolean;
   hasMarketingPixels: boolean;
+  hasLeadsCrmExport: boolean;
   hasCustomLeadForms: boolean; // Currently false (In Dev)
   hasWhatsappLeadRoute: boolean; // Currently false (In Dev)
   hasApiWebhookAccess: boolean; // Currently false (In Dev)
@@ -50,6 +51,7 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasFullAnalytics: false,
       hasVideoAnalytics: false,
       hasMarketingPixels: false,
+      hasLeadsCrmExport: false,
       hasCustomLeadForms: false,
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
@@ -75,6 +77,7 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasFullAnalytics: false,
       hasVideoAnalytics: false,
       hasMarketingPixels: false,
+      hasLeadsCrmExport: false,
       hasCustomLeadForms: false,
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
@@ -100,6 +103,7 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasFullAnalytics: true,
       hasVideoAnalytics: true,
       hasMarketingPixels: true,
+      hasLeadsCrmExport: true,
       hasCustomLeadForms: false,
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
@@ -125,6 +129,7 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
       hasFullAnalytics: true,
       hasVideoAnalytics: true,
       hasMarketingPixels: true,
+      hasLeadsCrmExport: true,
       hasCustomLeadForms: false,
       hasWhatsappLeadRoute: false,
       hasApiWebhookAccess: false,
