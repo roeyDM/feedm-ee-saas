@@ -139,9 +139,53 @@ export const PLANS_CONFIG: Record<PlanTier, PlanConfig> = {
 };
 
 /**
+ * Helper function to normalize plan string variations safely
+ */
+export function normalizePlanTier(rawInput?: string | null): PlanTier {
+  if (!rawInput) return "free";
+  const str = String(rawInput).toLowerCase().trim();
+
+  if (
+    str === "pro" ||
+    str === "growth_pro" ||
+    str === "growth pro" ||
+    str === "pro_monthly" ||
+    str === "pro_yearly" ||
+    str === "pro_plan" ||
+    str === "trial_pro" ||
+    str.includes("pro")
+  ) {
+    return "pro";
+  }
+
+  if (
+    str === "business" ||
+    str === "enterprise" ||
+    str === "business_agency" ||
+    str.includes("business")
+  ) {
+    return "business";
+  }
+
+  if (
+    str === "personal" ||
+    str === "creator" ||
+    str === "personal_creator" ||
+    str === "personal_monthly" ||
+    str === "personal_yearly" ||
+    str.includes("personal") ||
+    str.includes("creator")
+  ) {
+    return "personal";
+  }
+
+  return "free";
+}
+
+/**
  * Helper function to retrieve feature config for a specific plan tier
  */
 export function getPlanConfig(tier?: string | null): PlanConfig {
-  const normalized = (tier || "free").toLowerCase() as PlanTier;
+  const normalized = normalizePlanTier(tier);
   return PLANS_CONFIG[normalized] || PLANS_CONFIG.free;
 }

@@ -9,15 +9,24 @@ import {
   PlanFeatures,
   PLANS_CONFIG,
   getPlanConfig,
+  normalizePlanTier,
 } from "@/lib/plans-config";
 
 export function useFeatureAccess(initialPlanTier?: string | null) {
-  const [currentPlan, setCurrentPlan] = useState<PlanTier>(() => {
-    const norm = (initialPlanTier || "free").toLowerCase() as PlanTier;
-    return PLANS_CONFIG[norm] ? norm : "free";
-  });
+  const [currentPlan, setCurrentPlan] = useState<PlanTier>(() =>
+    normalizePlanTier(initialPlanTier)
+  );
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
+  // Sync state whenever initialPlanTier prop updates in parent component
+  useEffect(() => {
+    if (initialPlanTier) {
+      const norm = normalizePlanTier(initialPlanTier);
+      setCurrentPlan(norm);
+    }
+  }, [initialPlanTier]);
+
+  // Fetch & synchronize database profile plan for authenticated user
   useEffect(() => {
     async function loadUserPlan() {
       try {
@@ -26,19 +35,37 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("plan, plan_type, is_trial, is_super_admin")
+          .select("plan, plan_type, subscription_tier, is_trial, is_super_admin, is_admin, role")
           .eq("id", user.id)
           .maybeSingle();
 
         if (profile) {
-          if (profile.is_super_admin === true) {
+          if (
+            profile.is_super_admin === true ||
+            profile.is_admin === true ||
+            profile.role === "super_admin" ||
+            profile.role === "admin"
+          ) {
             setIsSuperAdmin(true);
             setCurrentPlan("pro");
             return;
           }
 
-          const rawPlan = String(profile.plan_type || profile.plan || "free").toLowerCase();
-          const normTier = (PLANS_CONFIG[rawPlan as PlanTier] ? rawPlan : "free") as PlanTier;
+          const rawPlan =
+            profile.plan_type ||
+            profile.plan ||
+            profile.subscription_tier ||
+            "free";
+
+          const normTier = normalizePlanTier(rawPlan);
+
+          console.log("🔍 [useFeatureAccess] Profile plan resolution:", {
+            userId: user.id,
+            rawPlan,
+            normTier,
+            isTrial: profile.is_trial,
+          });
+
           setCurrentPlan(normTier);
         }
       } catch (err) {
@@ -46,9 +73,7 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
       }
     }
 
-    if (!initialPlanTier) {
-      loadUserPlan();
-    }
+    loadUserPlan();
   }, [initialPlanTier]);
 
   const config: PlanConfig = isSuperAdmin
