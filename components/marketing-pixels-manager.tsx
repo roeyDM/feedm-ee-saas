@@ -82,19 +82,34 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
 
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Load existing pixel configuration from Supabase profiles & localStorage
+  // Load existing pixel configuration strictly from Supabase profiles for authenticated user.id
   useEffect(() => {
     async function loadPixels() {
       try {
-        let meta = "";
-        let tiktok = "";
-        let gads = "";
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) {
+          setMetaPixelId("");
+          setSavedMetaId("");
+          setTiktokPixelId("");
+          setSavedTiktokId("");
+          setGoogleAdsId("");
+          setSavedGoogleAdsId("");
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("meta_pixel_id, facebook_pixel_id, tiktok_pixel_id, google_ads_id, google_pixel_id, ga_measurement_id")
+          .eq("id", user.id)
+          .maybeSingle();
 
         const sanitizePixel = (val: any) => {
           if (!val || typeof val !== "string") return "";
           const trimmed = val.trim();
           if (
             trimmed === "123456789012345" ||
+            trimmed === "1564193897126475" ||
+            trimmed === "AW-752532101" ||
             trimmed === "C1234567890ABCDEF" ||
             trimmed === "AW-123456789"
           ) {
@@ -103,41 +118,14 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
           return trimmed;
         };
 
-        // 1. Try local storage first for immediate client feedback
-        if (typeof window !== "undefined") {
-          const cached = localStorage.getItem("feedmee_marketing_pixels");
-          if (cached) {
-            try {
-              const parsed = JSON.parse(cached);
-              meta = sanitizePixel(parsed.metaPixelId);
-              tiktok = sanitizePixel(parsed.tiktokPixelId);
-              gads = sanitizePixel(parsed.googleAdsId || parsed.gaMeasurementId);
-            } catch (e) {}
-          }
-        }
+        let meta = "";
+        let tiktok = "";
+        let gads = "";
 
-        // 2. Fetch from Supabase profiles table
-        const { data: { user } } = await supabase.auth.getUser();
-        let query = supabase
-          .from("profiles")
-          .select("meta_pixel_id, tiktok_pixel_id, google_ads_id, ga_measurement_id");
-
-        const cleanHandle = (username || "").toLowerCase().trim();
-        if (user?.id && cleanHandle) {
-          query = query.or(`id.eq.${user.id},username.eq.${cleanHandle}`);
-        } else if (user?.id) {
-          query = query.eq("id", user.id);
-        } else if (cleanHandle) {
-          query = query.eq("username", cleanHandle);
-        }
-
-        const { data, error } = await query.maybeSingle();
-
-        if (data && !error) {
-          if (data.meta_pixel_id) meta = sanitizePixel(data.meta_pixel_id);
-          if (data.tiktok_pixel_id) tiktok = sanitizePixel(data.tiktok_pixel_id);
-          if (data.google_ads_id) gads = sanitizePixel(data.google_ads_id);
-          else if (data.ga_measurement_id) gads = sanitizePixel(data.ga_measurement_id);
+        if (profile && !error) {
+          meta = sanitizePixel(profile.meta_pixel_id || profile.facebook_pixel_id);
+          tiktok = sanitizePixel(profile.tiktok_pixel_id);
+          gads = sanitizePixel(profile.google_ads_id || profile.google_pixel_id || profile.ga_measurement_id);
         }
 
         setMetaPixelId(meta);
@@ -156,37 +144,21 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
     loadPixels();
   }, [username]);
 
-  // Helper to sync local cache
-  const updateLocalCache = (meta: string, tiktok: string, gads: string) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "feedmee_marketing_pixels",
-        JSON.stringify({
-          metaPixelId: meta,
-          tiktokPixelId: tiktok,
-          googleAdsId: gads,
-        })
-      );
-    }
-  };
-
-  // Unified function to save pixels to Supabase
+  // Unified function to save pixels strictly to authenticated user's profile
   const savePixelsToSupabase = async (meta: string, tiktok: string, gads: string) => {
     const cleanMeta = meta.trim();
     const cleanTiktok = tiktok.trim();
     const cleanGads = gads.trim();
 
-    updateLocalCache(cleanMeta, cleanTiktok, cleanGads);
-
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError) {
-      console.warn("[Supabase Auth Notice]:", authError.message);
+    if (authError || !user?.id) {
+      alert("Authentication error: Please log in to update marketing pixels.");
+      return;
     }
 
-    const userId = user?.id;
-    console.log("Updating profiles for user ID:", userId || "N/A", "handle:", username, "meta_pixel_id:", cleanMeta);
+    console.log("Updating profiles for user ID:", user.id, "meta_pixel_id:", cleanMeta);
 
-    const updatePayload: any = {
+    const updatePayload = {
       meta_pixel_id: cleanMeta || null,
       tiktok_pixel_id: cleanTiktok || null,
       google_ads_id: cleanGads || null,
@@ -194,54 +166,23 @@ export function MarketingPixelsManager({ username }: MarketingPixelsManagerProps
       updated_at: new Date().toISOString(),
     };
 
-    let res: any = null;
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(updatePayload)
+      .eq("id", user.id)
+      .select();
 
-    // 1. Try update by user.id if logged in
-    if (userId) {
-      res = await supabase
-        .from("profiles")
-        .update(updatePayload)
-        .eq("id", userId)
-        .select();
-    }
-
-    // 2. If no user.id or update matched 0 rows, try update by username
-    if ((!userId || res?.error || !res?.data || res.data.length === 0) && username) {
-      res = await supabase
-        .from("profiles")
-        .update(updatePayload)
-        .eq("username", username.toLowerCase().trim())
-        .select();
-    }
-
-    // 3. Fallback: upsert by username if row doesn't exist
-    if ((!res?.data || res.data.length === 0) && username) {
-      res = await supabase
-        .from("profiles")
-        .upsert({ username: username.toLowerCase().trim(), ...updatePayload }, { onConflict: "username" })
-        .select();
-    }
-
-    if (res?.error) {
-      console.error("Supabase Update Error:", res.error);
-      if (res.error.code === "42501" || res.error.code === "PGRST301" || res.error.message?.includes("policy")) {
-        console.error("RLS Policy Error: Please ensure UPDATE policy on profiles is enabled for auth.uid() = id or anon role");
-      }
-      alert(`Supabase Error (${res.error.code || "UNKNOWN"}): ${res.error.message}`);
-      throw res.error;
-    }
-
-    if (!res?.data || res.data.length === 0) {
-      console.warn("Supabase Warning: Update succeeded but 0 rows returned.");
-    } else {
-      console.log("Update successful:", res.data);
+    if (error) {
+      console.error("Supabase Pixel Update Error:", error);
+      alert(`Supabase Error (${error.code || "UNKNOWN"}): ${error.message}`);
+      throw error;
     }
 
     setSavedMetaId(cleanMeta);
     setSavedTiktokId(cleanTiktok);
     setSavedGoogleAdsId(cleanGads);
 
-    return res?.data;
+    return data;
   };
 
   // 1. Save Meta Pixel
