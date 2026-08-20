@@ -53,47 +53,48 @@ async function fetchPublicProfile(handleKey: string) {
   const cleanTextColor       = sanitizeHexColor(textColor,       "#ffffff");
   const cleanButtonTextColor = sanitizeHexColor(buttonTextColor, "#ffffff");
 
-  // bioColor: use the saved value if present, otherwise inherit from text_color so bio
-  // is always legible regardless of background darkness. Never default to #27272A when
-  // the user has a dark-themed feed (it becomes invisible against dark backgrounds).
-  const rawBioColor = loadedAppearance?.bioColor;
+  // Priority order for design fields: dedicated DB columns → appearance JSONB → default fallbacks
+  const rawBioColor = profile?.bio_color || loadedAppearance?.bioColor;
   const cleanBioColor = rawBioColor
     ? sanitizeHexColor(rawBioColor, cleanTextColor)
     : cleanTextColor;
 
-  // socialIconBgColor: check profile.social_pill_color or appearance.socialIconBgColor; fall back to button_color
   const socialPillColor = profile?.social_pill_color || loadedAppearance?.socialIconBgColor || buttonColor;
   const cleanSocialIconBg = sanitizeHexColor(socialPillColor, cleanButtonColor);
 
-  // socialFlatColor: use saved value, else button_text_color for contrast on icon bg
-  const rawSocialFlatColor = loadedAppearance?.socialFlatColor;
+  const rawSocialFlatColor = profile?.social_flat_color || loadedAppearance?.socialFlatColor;
   const cleanSocialFlatColor = rawSocialFlatColor
     ? sanitizeHexColor(rawSocialFlatColor, cleanButtonTextColor)
     : cleanButtonTextColor;
 
   const socialIconMode = profile?.social_icon_mode || loadedAppearance?.socialLogoMode || "brand";
 
+  const rawAvatarBorderColor = profile?.avatar_border_color || loadedAppearance?.avatarBorderColor || profile?.button_color;
+  const cleanAvatarBorderColor = sanitizeHexColor(rawAvatarBorderColor, cleanButtonColor);
+
+  const rawButtonBorderColor = profile?.button_border_color || loadedAppearance?.cardBorderColor;
+  const cleanButtonBorderColor = sanitizeHexColor(rawButtonBorderColor, "#E4E4E7");
+
   const sanitizedAppearance = {
-    bgType:           loadedAppearance?.bgType           || "solid",
+    bgType:           loadedAppearance?.bgType           || (profile?.background_image_url ? "image" : "solid"),
     bgColor:          cleanThemeColor,
     bgGradientStart:  sanitizeHexColor(loadedAppearance?.bgGradientStart, "#FBCFE8"),
     bgGradientEnd:    sanitizeHexColor(loadedAppearance?.bgGradientEnd,   "#E0F2FE"),
-    bgGradientAngle:  loadedAppearance?.bgGradientAngle  ?? 135,
-    bgImageUrl:       loadedAppearance?.bgImageUrl        || "",
+    bgGradientAngle:  profile?.background_gradient_angle ?? loadedAppearance?.bgGradientAngle ?? 135,
+    bgImageUrl:       profile?.background_image_url || loadedAppearance?.bgImageUrl || "",
     headlineColor:    cleanTextColor,
-    bioColor:         cleanBioColor,          // ← inherited from text_color when not set
+    bioColor:         cleanBioColor,
     cardBgColor:      cleanButtonColor,
     cardTextColor:    cleanButtonTextColor,
-    cardBorderColor:  sanitizeHexColor(loadedAppearance?.cardBorderColor, "#E4E4E7"),
-    // Social icons: preserve saved mode, default to "brand" with themed colors
+    cardBorderColor:  cleanButtonBorderColor,
     socialLogoMode:   (socialIconMode as "brand" | "flat"),
-    socialIconBgColor: cleanSocialIconBg,     // ← themed from button_color when not set
-    socialFlatColor:   cleanSocialFlatColor,  // ← themed from button_text_color when not set
-    avatarBorderColor: sanitizeHexColor(loadedAppearance?.avatarBorderColor || profile?.button_color, cleanButtonColor),
-    avatarBorderEnabled: loadedAppearance?.avatarBorderEnabled !== false,
-    avatarBorderWidth: loadedAppearance?.avatarBorderWidth ?? 4,
-    buttonShape:      loadedAppearance?.buttonShape       || "rounded",
-    fontFamily:       loadedAppearance?.fontFamily         || "Inter",
+    socialIconBgColor: cleanSocialIconBg,
+    socialFlatColor:   cleanSocialFlatColor,
+    avatarBorderColor: cleanAvatarBorderColor,
+    avatarBorderEnabled: profile?.avatar_border_enabled !== undefined ? profile.avatar_border_enabled !== false : (loadedAppearance?.avatarBorderEnabled !== false),
+    avatarBorderWidth: profile?.avatar_border_width ?? loadedAppearance?.avatarBorderWidth ?? 4,
+    buttonShape:      profile?.button_shape || loadedAppearance?.buttonShape || "rounded",
+    fontFamily:       profile?.font_family || loadedAppearance?.fontFamily || "Inter",
     hideBranding:     isFreeUser ? false : !!loadedAppearance?.hideBranding,
   };
 

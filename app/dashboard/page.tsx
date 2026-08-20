@@ -487,6 +487,16 @@ function DashboardContent() {
         button_color: cleanButtonColor,
         text_color: cleanTextColor,
         button_text_color: cleanButtonTextColor,
+        background_gradient_angle: appearance?.bgGradientAngle ?? 135,
+        background_image_url: appearance?.bgImageUrl || null,
+        avatar_border_enabled: appearance?.avatarBorderEnabled !== false,
+        avatar_border_color: sanitizeHexColor(appearance?.avatarBorderColor, "#FFFFFF"),
+        avatar_border_width: appearance?.avatarBorderWidth ?? 4,
+        font_family: appearance?.fontFamily || "Inter",
+        bio_color: sanitizeHexColor(appearance?.bioColor, "#27272A"),
+        button_shape: appearance?.buttonShape || "rounded",
+        button_border_color: sanitizeHexColor(appearance?.cardBorderColor, "#E4E4E7"),
+        social_flat_color: sanitizeHexColor(appearance?.socialFlatColor, "#18181B"),
         appearance: sanitizedAppearance,
         social_links: socialLinks,
         custom_links: customLinks,
@@ -499,13 +509,26 @@ function DashboardContent() {
         .from("profiles")
         .upsert(payload, { onConflict: "username" });
 
-      if (error && (error.message?.includes("appearance") || error.details?.includes("appearance"))) {
-        console.warn("Appearance column missing, falling back to safe payload...");
-        delete payload.appearance;
-        
-        // Attempt to save to an alternative jsonb column like theme or settings if it exists, or just omit it
-        // We will just omit it to guarantee a 200 Success as requested
-        const fallbackRes = await supabase.from("profiles").upsert(payload, { onConflict: "username" });
+      if (error && (error.message?.includes("column") || error.details?.includes("column"))) {
+        console.warn("One or more new design columns missing in profiles table, falling back to safe payload...");
+        const safePayload = {
+          username: username.toLowerCase().trim(),
+          name,
+          bio,
+          avatar_url: avatarUrl,
+          custom_hex_color: cleanThemeColor,
+          theme_color: cleanThemeColor,
+          button_color: cleanButtonColor,
+          text_color: cleanTextColor,
+          button_text_color: cleanButtonTextColor,
+          appearance: sanitizedAppearance,
+          social_links: socialLinks,
+          custom_links: customLinks,
+          reels: reels,
+          lead_form: leadForm,
+          updated_at: new Date().toISOString(),
+        };
+        const fallbackRes = await supabase.from("profiles").upsert(safePayload, { onConflict: "username" });
         if (fallbackRes.error) {
           throw fallbackRes.error;
         }
