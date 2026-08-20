@@ -513,11 +513,6 @@ export function ProfileEditor({
                 <p className="text-[11px] text-zinc-500">
                   Recommended: Square JPG, PNG or WebP. Max 5MB.
                 </p>
-                {avatarError && (
-                  <p className="text-[10px] font-bold text-amber-700 mt-1 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                    ⚠️ {avatarError}
-                  </p>
-                )}
               </div>
             </div>
           </div>
