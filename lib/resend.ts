@@ -7,7 +7,7 @@ const apiKey = process.env.RESEND_API_KEY;
 
 export const resend = apiKey ? new Resend(apiKey) : null;
 
-const DEFAULT_FROM = process.env.RESEND_FROM_EMAIL || "Feed Me <welcome@feedm.ee>";
+const DEFAULT_FROM = process.env.RESEND_FROM_EMAIL || "Feedm.ee <welcome@feedm.ee>";
 const FALLBACK_FROM = "onboarding@resend.dev";
 
 function getFromAddress(): string {

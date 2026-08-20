@@ -83,9 +83,15 @@ export function TrialStartedEmail({
         </div>
 
         {/* Footer */}
-        <div style={{ backgroundColor: "#f9fafb", padding: "20px 32px", borderTop: "1px solid #f3f4f6", textAlign: "center" }}>
+        <div style={{ backgroundColor: "#f9fafb", padding: "24px 32px", borderTop: "1px solid #f3f4f6", textAlign: "center" }}>
+          <div style={{ fontSize: "12px", color: "#4b5563", fontWeight: "700", marginBottom: "6px" }}>
+            Feedm.ee — Smart Link in Bio Platform
+          </div>
+          <div style={{ fontSize: "11px", color: "#9ca3af", lineHeight: "1.5", marginBottom: "12px" }}>
+            You received this email because you created an account on Feedm.ee. If you did not sign up, you can safely ignore this email.
+          </div>
           <div style={{ fontSize: "11px", color: "#9ca3af", fontWeight: "500" }}>
-            &copy; {new Date().getFullYear()} Feed Me. All rights reserved.
+            &copy; {new Date().getFullYear()} Feedm.ee. All rights reserved.
           </div>
         </div>
       </div>
@@ -96,7 +102,7 @@ export function TrialStartedEmail({
 export function renderTrialStartedHtml(props: TrialStartedEmailProps): string {
   return `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"/><title>Welcome to Feed Me — Your 7-Day Pro Trial Has Started</title></head>
+<head><meta charset="utf-8"/><title>Welcome to Feedm.ee — Your 7-Day Pro Trial Has Started</title></head>
 <body style="margin:0;padding:0;background-color:#f9fafb;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#f9fafb;padding:40px 20px;font-family:Inter,Helvetica,Arial,sans-serif;">
     <tr>
@@ -104,14 +110,14 @@ export function renderTrialStartedHtml(props: TrialStartedEmailProps): string {
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#ffffff;border-radius:24px;border:1px solid #e5e7eb;overflow:hidden;">
           <tr>
             <td style="padding:32px 32px 24px;border-bottom:1px solid #f3f4f6;">
-              <div style="font-size:22px;font-weight:900;color:#09090b;letter-spacing:-0.5px;">Feed <span style="color:#00BC7D;">Me</span></div>
-              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-top:4px;">The 5-Page Vertical Snap Bio Platform</div>
+              <div style="font-size:22px;font-weight:900;color:#09090b;letter-spacing:-0.5px;">Feed<span style="color:#00BC7D;">m.ee</span></div>
+              <div style="font-size:12px;font-weight:600;color:#6b7280;margin-top:4px;">Smart Link in Bio Platform</div>
             </td>
           </tr>
           <tr>
             <td style="padding:32px;">
               <div style="display:inline-block;background-color:#ecfdf5;color:#047857;font-size:11px;font-weight:800;padding:6px 14px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 16px;">7-Day Pro Trial Active</div>
-              <h1 style="font-size:20px;font-weight:800;color:#09090b;margin:0 0 16px;">Welcome to Feed Me — Your 7-Day Pro Trial Has Started</h1>
+              <h1 style="font-size:20px;font-weight:800;color:#09090b;margin:0 0 16px;">Welcome to Feedm.ee — Your 7-Day Pro Trial Has Started</h1>
               <p style="font-size:14px;line-height:1.6;color:#4b5563;margin:0 0 20px;">Hey ${props.name || "Creator"}, your 7-day free trial of <strong>${props.planName || "Pro Plan"}</strong> is now live! You have full access to 3 Video Snap Reels, Page 5 Lead Capture Form, Custom Domain integration, and Advanced Analytics.</p>
               
               <div style="background-color:#f8fafc;border-radius:16px;padding:20px;border:1px solid #e2e8f0;margin:0 0 28px;">
@@ -124,12 +130,14 @@ export function renderTrialStartedHtml(props: TrialStartedEmailProps): string {
               <div style="text-align:center;margin:0 0 28px;">
                 <a href="${props.dashboardUrl || "https://feedm.ee/dashboard"}" style="display:inline-block;background-color:#00BC7D;color:#ffffff;font-size:14px;font-weight:700;padding:14px 32px;border-radius:9999px;text-decoration:none;">Go to Your Creator Dashboard</a>
               </div>
-              <p style="font-size:12px;line-height:1.5;color:#6b7280;margin:0;text-align:center;">You will not be charged during your 7-day trial. You can manage or modify your subscription anytime from your Feed Me dashboard settings.</p>
+              <p style="font-size:12px;line-height:1.5;color:#6b7280;margin:0;text-align:center;">You will not be charged during your 7-day trial. You can manage or modify your subscription anytime from your Feedm.ee dashboard settings.</p>
             </td>
           </tr>
           <tr>
-            <td style="background-color:#f9fafb;padding:20px 32px;border-top:1px solid #f3f4f6;text-align:center;">
-              <div style="font-size:11px;color:#9ca3af;font-weight:500;">&copy; ${new Date().getFullYear()} Feed Me. All rights reserved.</div>
+            <td style="background-color:#f9fafb;padding:24px 32px;border-top:1px solid #f3f4f6;text-align:center;">
+              <div style="font-size:12px;color:#4b5563;font-weight:700;margin-bottom:6px;">Feedm.ee — Smart Link in Bio Platform</div>
+              <div style="font-size:11px;color:#9ca3af;line-height:1.5;margin-bottom:12px;">You received this email because you created an account on Feedm.ee. If you did not sign up, you can safely ignore this email.</div>
+              <div style="font-size:11px;color:#9ca3af;font-weight:500;">&copy; ${new Date().getFullYear()} Feedm.ee. All rights reserved.</div>
             </td>
           </tr>
         </table>
