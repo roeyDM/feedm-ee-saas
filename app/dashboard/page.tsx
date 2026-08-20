@@ -487,6 +487,10 @@ function DashboardContent() {
         button_color: cleanButtonColor,
         text_color: cleanTextColor,
         button_text_color: cleanButtonTextColor,
+        background_color: cleanThemeColor,
+        background_gradient: appearance?.bgGradientStart && appearance?.bgGradientEnd ? `linear-gradient(${appearance?.bgGradientAngle ?? 135}deg, ${appearance.bgGradientStart}, ${appearance.bgGradientEnd})` : null,
+        social_pill_color: sanitizeHexColor(appearance?.socialIconBgColor, cleanButtonColor),
+        social_icon_mode: appearance?.socialLogoMode || "brand",
         background_gradient_angle: appearance?.bgGradientAngle ?? 135,
         background_image_url: appearance?.bgImageUrl || null,
         avatar_border_enabled: appearance?.avatarBorderEnabled !== false,
@@ -497,7 +501,6 @@ function DashboardContent() {
         button_shape: appearance?.buttonShape || "rounded",
         button_border_color: sanitizeHexColor(appearance?.cardBorderColor, "#E4E4E7"),
         social_flat_color: sanitizeHexColor(appearance?.socialFlatColor, "#18181B"),
-        appearance: sanitizedAppearance,
         social_links: socialLinks,
         custom_links: customLinks,
         reels: reels,
@@ -510,7 +513,7 @@ function DashboardContent() {
         .upsert(payload, { onConflict: "username" });
 
       if (error && (error.message?.includes("column") || error.details?.includes("column"))) {
-        console.warn("One or more new design columns missing in profiles table, falling back to safe payload...");
+        console.warn("One or more new design columns missing in profiles table, falling back to core payload...");
         const safePayload = {
           username: username.toLowerCase().trim(),
           name,
@@ -521,7 +524,6 @@ function DashboardContent() {
           button_color: cleanButtonColor,
           text_color: cleanTextColor,
           button_text_color: cleanButtonTextColor,
-          appearance: sanitizedAppearance,
           social_links: socialLinks,
           custom_links: customLinks,
           reels: reels,
