@@ -1349,7 +1349,7 @@ function DashboardContent() {
 
           {/* Active Form Panel */}
           {activeTab !== "settings" ? (
-            <div className={cn("relative w-full space-y-6 transition-all duration-300 pb-28 md:pb-0", activeTab === "leads" || activeTab === "analytics" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto")}>
+            <div className={cn("relative w-full space-y-6 transition-all duration-300 pb-32", activeTab === "leads" || activeTab === "analytics" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto")}>
               {activeTab === "bio" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
                   <ProfileEditor
@@ -1424,7 +1424,7 @@ function DashboardContent() {
               )}
             </div>
           ) : (
-            <div className="w-full flex-1 animate-in fade-in duration-200 pb-28 md:pb-0">
+            <div className="w-full flex-1 animate-in fade-in duration-200 pb-32">
               <AccountSettingsEditor
                 name={name}
                 setName={setName}
