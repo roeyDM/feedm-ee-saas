@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import confetti from "canvas-confetti";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { ProfileEditor } from "@/components/profile-editor";
 import { FeedItemEditor } from "@/components/feed-item-editor";
@@ -29,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -55,7 +56,7 @@ function StripeCheckoutStatus({
       
       // 2. Alert the user
       setSaveStatus("success");
-      setStatusMsg(`🎉 Pro Features Unlocked! Welcome to the ${plan} plan.`);
+      setStatusMsg(`Pro Features Unlocked! Welcome to the ${plan} plan.`);
       setTimeout(() => setSaveStatus("idle"), 5000);
 
       // 3. Update Supabase asynchronously
@@ -75,6 +76,279 @@ function StripeCheckoutStatus({
   }, [searchParams, username, setPlanType, setSaveStatus, setStatusMsg]);
 
   return null;
+}
+
+function OnboardingWizardHeader({
+  currentStep,
+  onStepClick,
+  onSkip,
+}: {
+  currentStep: 1 | 2 | 3;
+  onStepClick: (step: 1 | 2 | 3) => void;
+  onSkip: () => void;
+}) {
+  const steps = [
+    { number: 1, label: "Profile & Links", icon: Link2 },
+    { number: 2, label: "Media & Reels", icon: Film },
+    { number: 3, label: "Theme & Design", icon: Palette },
+  ];
+
+  const progressPercent = currentStep === 1 ? 33 : currentStep === 2 ? 66 : 100;
+
+  return (
+    <div className="w-full bg-slate-900 border-b border-slate-800 p-3 sm:p-4 text-white animate-in fade-in duration-300 shadow-md shrink-0">
+      <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+        {/* Left Title & Status */}
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                Setup Wizard <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-800/80">Step {currentStep} of 3</span>
+              </h2>
+              <p className="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">
+                Follow these 3 quick steps to launch your creator page.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onSkip}
+            className="sm:hidden text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <span>Skip</span>
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Center Steps Pills */}
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 shrink-0 w-full sm:w-auto justify-center">
+          {steps.map((s) => {
+            const isActive = currentStep === s.number;
+            const isDone = currentStep > s.number;
+
+            return (
+              <button
+                key={s.number}
+                type="button"
+                onClick={() => onStepClick(s.number as 1 | 2 | 3)}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer",
+                  isActive
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : isDone
+                    ? "text-emerald-400 hover:bg-slate-800"
+                    : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                )}
+              >
+                <span className={cn(
+                  "h-4.5 w-4.5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                  isActive
+                    ? "bg-white text-emerald-950"
+                    : isDone
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                    : "bg-slate-800 text-slate-400"
+                )}>
+                  {isDone ? <Check className="h-3 w-3" /> : s.number}
+                </span>
+                <span className="text-[11px] sm:text-xs">{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Action: Skip */}
+        <button
+          type="button"
+          onClick={onSkip}
+          className="hidden sm:flex text-xs font-bold text-slate-400 hover:text-white items-center gap-1 transition-colors shrink-0 cursor-pointer"
+        >
+          <span>Skip Wizard</span>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Progress Track */}
+      <div className="max-w-4xl mx-auto mt-2.5 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-emerald-500 transition-all duration-300 ease-out rounded-full"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function OnboardingWizardFooterNav({
+  currentStep,
+  onStepChange,
+  onFinish,
+  onSkip,
+}: {
+  currentStep: 1 | 2 | 3;
+  onStepChange: (step: 1 | 2 | 3) => void;
+  onFinish: () => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 max-w-[92vw]">
+      <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-2xl shadow-2xl px-4 sm:px-5 py-3 flex items-center gap-3 sm:gap-5 text-xs font-medium">
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="font-extrabold text-slate-200 hidden md:inline">
+            Step {currentStep}: {currentStep === 1 ? "Bio & Links" : currentStep === 2 ? "Media & Reels" : "Theme & Design"}
+          </span>
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-slate-400 hover:text-slate-200 text-xs font-semibold underline cursor-pointer"
+          >
+            Skip
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          {currentStep > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onStepChange((currentStep - 1) as 1 | 2 | 3)}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 h-9 px-3 text-xs font-bold gap-1.5 cursor-pointer rounded-xl"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+          )}
+
+          {currentStep < 3 ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => onStepChange((currentStep + 1) as 1 | 2 | 3)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-9 px-4 text-xs shadow-md gap-1.5 cursor-pointer rounded-xl"
+            >
+              <span>{currentStep === 1 ? "Next: Media & Reels" : "Next: Design"}</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              onClick={onFinish}
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black h-9 px-4 sm:px-5 text-xs shadow-lg gap-1.5 cursor-pointer rounded-xl"
+            >
+              <Sparkles className="h-4 w-4 text-slate-950" />
+              <span>Finish &amp; Publish Page</span>
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PublishSuccessModal({
+  open,
+  onClose,
+  username,
+}: {
+  open: boolean;
+  onClose: () => void;
+  username: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#10b981", "#3b82f6", "#f59e0b", "#ec4899"],
+        });
+      } catch (e) {
+        console.log("Confetti trigger error:", e);
+      }
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const publicUrl = `https://feedm.ee/${username || "main"}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl border border-zinc-200 max-w-md w-full p-6 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
+        <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-xs">
+          <Sparkles className="h-7 w-7 text-emerald-600" />
+        </div>
+
+        <div>
+          <h3 className="text-xl font-black text-zinc-950 tracking-tight">Your Page is Live</h3>
+          <p className="text-xs font-semibold text-zinc-500 mt-1">
+            Congratulations! Your creator bio page has been published and is ready to share.
+          </p>
+        </div>
+
+        {/* Public URL Box */}
+        <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-between gap-2">
+          <span className="text-xs font-extrabold text-zinc-800 truncate font-mono">
+            {publicUrl}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="h-8 px-3 text-xs font-bold rounded-xl gap-1 shrink-0 bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100 cursor-pointer"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5 text-zinc-500" />
+                <span>Copy Link</span>
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <Link href={`/${username}`} target="_blank" className="w-full">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11 text-xs font-extrabold rounded-xl border-zinc-200 text-zinc-700 hover:bg-zinc-100 gap-1.5 cursor-pointer"
+            >
+              <ExternalLink className="h-4 w-4 text-zinc-500" />
+              <span>View Live Feed</span>
+            </Button>
+          </Link>
+          <Button
+            type="button"
+            onClick={onClose}
+            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
+          >
+            <span>Go to Dashboard</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function DashboardContent() {
@@ -197,6 +471,28 @@ function DashboardContent() {
   const [showExtraFeedModal, setShowExtraFeedModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
+  // FTUE Onboarding Wizard State (Local Experiment)
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
+  const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
+  const [showPublishSuccessModal, setShowPublishSuccessModal] = useState<boolean>(false);
+
+  const handleWizardStepChange = (step: 1 | 2 | 3) => {
+    setWizardStep(step);
+    if (step === 1) {
+      setActiveTab("bio");
+    } else if (step === 2) {
+      setActiveTab("reels");
+    } else if (step === 3) {
+      setActiveTab("design");
+    }
+  };
+
+  const handleFinishAndPublish = async () => {
+    await handleSave();
+    setOnboardingCompleted(true);
+    setShowPublishSuccessModal(true);
+  };
+
   // Serialize current state for dirty checking
   const getCurrentStateJSON = () => {
     return JSON.stringify({
@@ -235,7 +531,7 @@ function DashboardContent() {
         // Check for ?checkout=success parameter
         if (searchParams.get("checkout") === "success") {
           setSaveStatus("success");
-          setStatusMsg("🎉 Subscription upgrade successful! Welcome to your upgraded creator workspace.");
+          setStatusMsg("Subscription upgrade successful! Welcome to your upgraded creator workspace.");
           setTimeout(() => setSaveStatus("idle"), 6000);
         }
 
@@ -1269,6 +1565,15 @@ function DashboardContent() {
 
         {/* CENTER WORKSPACE */}
         <div className={cn("min-w-0 flex flex-col w-full flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
+          {/* FTUE Onboarding Wizard Progress Banner (Local Experiment) */}
+          {!onboardingCompleted && (
+            <OnboardingWizardHeader
+              currentStep={wizardStep}
+              onStepClick={handleWizardStepChange}
+              onSkip={() => setOnboardingCompleted(true)}
+            />
+          )}
+
           {/* Status Notification Toast Banner - Only shown on editing tabs (Bio, Reels, Design) */}
           {saveStatus !== "idle" && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
             <div
@@ -1769,33 +2074,52 @@ function DashboardContent() {
             </div>
           </div>
 
-          {/* Desktop Floating Toast Bar (100% Untouched) */}
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 hidden md:block">
-            <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
-              <span>Hey there! You made some magic ✨ Don't forget to save your changes!</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  type="button"
-                  onClick={handleDiscardChanges}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 h-8 px-3 text-xs font-semibold cursor-pointer"
-                >
-                  Discard
-                </Button>
-                <Button
-                  size="sm"
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-8 px-4 text-xs shadow-md cursor-pointer"
-                >
-                  Save Now 🚀
-                </Button>
+          {/* Desktop Floating Toast Bar (Shown when wizard is completed and user has unsaved changes) */}
+          {onboardingCompleted && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 hidden md:block">
+              <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
+                <span>You have unsaved profile changes. Don't forget to save!</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    type="button"
+                    onClick={handleDiscardChanges}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 h-8 px-3 text-xs font-semibold cursor-pointer"
+                  >
+                    Discard
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-8 px-4 text-xs shadow-md cursor-pointer"
+                  >
+                    Save Now
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </>
       )}
+
+      {/* FTUE Onboarding Wizard Bottom Navigation Stepper */}
+      {!onboardingCompleted && (
+        <OnboardingWizardFooterNav
+          currentStep={wizardStep}
+          onStepChange={handleWizardStepChange}
+          onFinish={handleFinishAndPublish}
+          onSkip={() => setOnboardingCompleted(true)}
+        />
+      )}
+
+      {/* FTUE Onboarding Wizard Publish Success Modal */}
+      <PublishSuccessModal
+        open={showPublishSuccessModal}
+        onClose={() => setShowPublishSuccessModal(false)}
+        username={username}
+      />
       {/* In-App Upgrade Modal */}
       <UpgradeModal
         open={showUpgradeModal}
