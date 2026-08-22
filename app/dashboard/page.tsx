@@ -254,10 +254,16 @@ function PublishSuccessModal({
   open,
   onClose,
   username,
+  hasAvatar,
+  hasBio,
+  hasLinks,
 }: {
   open: boolean;
   onClose: () => void;
   username: string;
+  hasAvatar?: boolean;
+  hasBio?: boolean;
+  hasLinks?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -286,9 +292,12 @@ function PublishSuccessModal({
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const readinessScore = (hasAvatar ? 1 : 0) + (hasBio ? 1 : 0) + (hasLinks ? 1 : 0);
+  const isFullyReady = readinessScore === 3;
+
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl border border-zinc-200 max-w-md w-full p-6 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white rounded-3xl border border-zinc-200 max-w-md w-full p-6 shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-200 my-auto">
         <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-xs">
           <Sparkles className="h-7 w-7 text-emerald-600" />
         </div>
@@ -298,6 +307,41 @@ function PublishSuccessModal({
           <p className="text-xs font-semibold text-zinc-500 mt-1">
             Congratulations! Your creator bio page has been published and is ready to share.
           </p>
+        </div>
+
+        {/* Readiness Preparation Checklist Banner */}
+        <div className={cn(
+          "p-3.5 rounded-2xl border text-left text-xs space-y-2",
+          isFullyReady
+            ? "bg-emerald-50/80 border-emerald-200 text-emerald-900"
+            : "bg-amber-50/80 border-amber-200 text-amber-900"
+        )}>
+          <div className="flex items-center justify-between font-extrabold">
+            <span className="flex items-center gap-1.5">
+              {isFullyReady ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+              )}
+              <span>Page Readiness ({readinessScore}/3 Completed)</span>
+            </span>
+            <span className={cn(
+              "text-[10px] uppercase font-black px-2 py-0.5 rounded-full border",
+              isFullyReady
+                ? "bg-emerald-100 border-emerald-300 text-emerald-800"
+                : "bg-amber-100 border-amber-300 text-amber-800"
+            )}>
+              {isFullyReady ? "100% Ready" : "Optimization Tip"}
+            </span>
+          </div>
+
+          {!isFullyReady && (
+            <div className="space-y-1 text-[11px] font-medium text-amber-800/90 pl-5">
+              {!hasAvatar && <p>• Upload a custom profile picture for identity</p>}
+              {!hasBio && <p>• Write a brief bio to tell visitors who you are</p>}
+              {!hasLinks && <p>• Add at least 1 custom link button</p>}
+            </div>
+          )}
         </div>
 
         {/* Public URL Box */}
@@ -326,24 +370,24 @@ function PublishSuccessModal({
           </Button>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Link href={`/${username}`} target="_blank" className="w-full">
+        {/* Action Buttons Container (Clean, no overflow) */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+          <Link href={`/${username}`} target="_blank" className="w-full sm:flex-1">
             <Button
               type="button"
               variant="outline"
               className="w-full h-11 text-xs font-extrabold rounded-xl border-zinc-200 text-zinc-700 hover:bg-zinc-100 gap-1.5 cursor-pointer"
             >
-              <ExternalLink className="h-4 w-4 text-zinc-500" />
-              <span>View Live Feed</span>
+              <ExternalLink className="h-4 w-4 text-zinc-500 shrink-0" />
+              <span className="truncate">View Live Feed</span>
             </Button>
           </Link>
           <Button
             type="button"
             onClick={onClose}
-            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
+            className="w-full sm:flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
           >
-            <span>Go to Dashboard</span>
+            <span className="truncate">Go to Dashboard</span>
           </Button>
         </div>
       </div>
@@ -487,9 +531,31 @@ function DashboardContent() {
     }
   };
 
+  const markOnboardingCompletedInDB = async () => {
+    setOnboardingCompleted(true);
+    const targetUsername = username.toLowerCase().trim();
+    if (typeof window !== "undefined" && targetUsername) {
+      localStorage.setItem(`feedmee_onboarding_completed_${targetUsername}`, "true");
+    }
+    try {
+      if (targetUsername) {
+        await supabase
+          .from("profiles")
+          .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+          .or(`username.eq.${targetUsername}`);
+      }
+    } catch (err) {
+      console.warn("Failed to persist onboarding_completed to Supabase profiles:", err);
+    }
+  };
+
+  const handleSkipWizard = async () => {
+    await markOnboardingCompletedInDB();
+  };
+
   const handleFinishAndPublish = async () => {
     await handleSave();
-    setOnboardingCompleted(true);
+    await markOnboardingCompletedInDB();
     setShowPublishSuccessModal(true);
   };
 
@@ -651,6 +717,17 @@ function DashboardContent() {
           if (loadedAppearance && Object.keys(loadedAppearance).length > 0) {
             setAppearance(loadedAppearance);
             if (loadedAppearance.bgColor) setCustomHexColor(loadedAppearance.bgColor);
+          }
+
+          // FTUE Onboarding Completed check
+          const isCompletedInDB = profile.onboarding_completed === true;
+          const isCompletedInLocal = typeof window !== "undefined" && localStorage.getItem(`feedmee_onboarding_completed_${(profile.username || userHandle).toLowerCase()}`) === "true";
+          const hasExistingContent = (profile.custom_links && profile.custom_links.length > 0) || (profile.reels && profile.reels.length > 0);
+
+          if (isCompletedInDB || isCompletedInLocal || hasExistingContent) {
+            setOnboardingCompleted(true);
+          } else {
+            setOnboardingCompleted(false);
           }
 
           setSavedSnapshot(JSON.stringify({
@@ -1570,7 +1647,7 @@ function DashboardContent() {
             <OnboardingWizardHeader
               currentStep={wizardStep}
               onStepClick={handleWizardStepChange}
-              onSkip={() => setOnboardingCompleted(true)}
+              onSkip={handleSkipWizard}
             />
           )}
 
@@ -2110,7 +2187,7 @@ function DashboardContent() {
           currentStep={wizardStep}
           onStepChange={handleWizardStepChange}
           onFinish={handleFinishAndPublish}
-          onSkip={() => setOnboardingCompleted(true)}
+          onSkip={handleSkipWizard}
         />
       )}
 
@@ -2119,6 +2196,9 @@ function DashboardContent() {
         open={showPublishSuccessModal}
         onClose={() => setShowPublishSuccessModal(false)}
         username={username}
+        hasAvatar={!!avatarUrl && avatarUrl.trim().length > 0}
+        hasBio={!!bio && bio.trim().length > 0}
+        hasLinks={customLinks && customLinks.length > 0}
       />
       {/* In-App Upgrade Modal */}
       <UpgradeModal
