@@ -400,20 +400,22 @@ function DraftWarningModal({
   open,
   onClose,
   readiness,
+  onNavigateToItem,
 }: {
   open: boolean;
   onClose: () => void;
   username?: string;
   readiness: ReadinessData;
+  onNavigateToItem?: (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => void;
 }) {
   if (!open) return null;
 
   const checklistItems = [
-    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar },
-    { label: "Bio Description Text", isMet: readiness.hasBio },
-    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks },
-    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels },
-    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail },
+    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
+    { label: "Bio Description Text", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
+    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
+    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
+    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
   ];
 
   return (
@@ -444,7 +446,17 @@ function DraftWarningModal({
 
           <div className="space-y-1.5 pt-1">
             {checklistItems.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between text-[11px] font-semibold">
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onNavigateToItem) {
+                    onNavigateToItem(item.tab, item.targetId);
+                  }
+                }}
+                className="w-full flex items-center justify-between text-[11px] font-semibold hover:bg-amber-100/60 p-1.5 rounded-xl transition-all cursor-pointer text-left group"
+              >
                 <span className="flex items-center gap-2 text-zinc-800">
                   {item.isMet ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
@@ -456,14 +468,14 @@ function DraftWarningModal({
                   </span>
                 </span>
                 <span className={cn(
-                  "text-[9px] font-black uppercase px-1.5 py-0.2 rounded border",
+                  "text-[9px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0",
                   item.isMet
                     ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                    : "bg-amber-100 text-amber-800 border-amber-300"
+                    : "bg-amber-100 text-amber-800 border-amber-300 group-hover:bg-amber-200"
                 )}>
-                  {item.isMet ? "Complete" : "Missing"}
+                  {item.isMet ? "Complete" : "Tap to Fix"}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -478,6 +490,222 @@ function DraftWarningModal({
             <span>Continue Editing</span>
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SidebarReadinessWidget({
+  readiness,
+  onNavigateToItem,
+}: {
+  readiness: ReadinessData;
+  onNavigateToItem: (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const percent = Math.round((readiness.score / 5) * 100);
+
+  const checklistItems = [
+    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
+    { label: "Bio Description Text", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
+    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
+    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
+    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+  ];
+
+  return (
+    <div className="mt-2 rounded-2xl border border-zinc-200/90 bg-white shadow-2xs overflow-hidden transition-all">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full p-3 flex flex-col gap-2 hover:bg-zinc-50 transition-colors text-left cursor-pointer"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-zinc-900 flex items-center gap-1.5">
+            {readiness.is100Percent ? (
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+            )}
+            <span>Page Readiness</span>
+          </span>
+          <span className={cn(
+            "text-[9px] font-black uppercase px-2 py-0.5 rounded-full border",
+            readiness.is100Percent
+              ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+              : "bg-amber-100 text-amber-800 border-amber-300"
+          )}>
+            {readiness.is100Percent ? "LIVE" : "DRAFT"}
+          </span>
+        </div>
+
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px] font-bold text-zinc-500">
+            <span>{readiness.score}/5 Criteria</span>
+            <span>{percent}%</span>
+          </div>
+          <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                readiness.is100Percent ? "bg-emerald-500" : "bg-amber-500"
+              )}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+      </button>
+
+      {/* Expanded Checklist View */}
+      {expanded && (
+        <div className="p-2 pt-0.5 border-t border-zinc-100 space-y-1 bg-zinc-50/50 animate-in fade-in duration-150">
+          {checklistItems.map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onNavigateToItem(item.tab, item.targetId)}
+              className="w-full flex items-center justify-between p-2 rounded-xl text-[11px] font-semibold hover:bg-white hover:shadow-2xs transition-all text-left group cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5 min-w-0 pr-1">
+                {item.isMet ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                )}
+                <span className={cn("truncate", item.isMet ? "text-zinc-600" : "text-amber-900 font-extrabold")}>
+                  {item.label}
+                </span>
+              </div>
+              <span className={cn(
+                "text-[8px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0",
+                item.isMet
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                  : "bg-amber-100 text-amber-800 border-amber-300"
+              )}>
+                {item.isMet ? "Done" : "Edit"}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileReadinessFloatingBadge({
+  readiness,
+  onClick,
+}: {
+  readiness: ReadinessData;
+  onClick: () => void;
+}) {
+  const percent = Math.round((readiness.score / 5) * 100);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "md:hidden fixed top-3 right-16 z-40 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-md border backdrop-blur-md transition-all cursor-pointer",
+        readiness.is100Percent
+          ? "bg-emerald-950/90 border-emerald-700/80 text-emerald-300"
+          : "bg-amber-950/90 border-amber-700/80 text-amber-300"
+      )}
+    >
+      {readiness.is100Percent ? (
+        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+      ) : (
+        <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+      )}
+      <span>{readiness.is100Percent ? "Live" : "Draft"}: {percent}%</span>
+    </button>
+  );
+}
+
+function MobileReadinessSheet({
+  open,
+  onClose,
+  readiness,
+  onNavigateToItem,
+}: {
+  open: boolean;
+  onClose: () => void;
+  readiness: ReadinessData;
+  onNavigateToItem: (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => void;
+}) {
+  if (!open) return null;
+
+  const percent = Math.round((readiness.score / 5) * 100);
+
+  const checklistItems = [
+    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
+    { label: "Bio Description Text", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
+    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
+    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
+    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+  ];
+
+  return (
+    <div className="md:hidden fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-end justify-center animate-in fade-in duration-200">
+      <div className="bg-white rounded-t-3xl border-t border-zinc-200 w-full p-5 shadow-2xl space-y-4 animate-in slide-in-from-bottom duration-200 max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+          <div className="flex items-center gap-2">
+            {readiness.is100Percent ? (
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-amber-600" />
+            )}
+            <h3 className="text-sm font-black text-zinc-950">Page Readiness ({readiness.score}/5 - {percent}%)</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 cursor-pointer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {checklistItems.map((item, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                onClose();
+                onNavigateToItem(item.tab, item.targetId);
+              }}
+              className="w-full flex items-center justify-between p-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 hover:bg-white text-left transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                {item.isMet ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
+                )}
+                <span className={cn("text-xs font-bold truncate", item.isMet ? "text-zinc-700" : "text-amber-900 font-extrabold")}>
+                  {item.label}
+                </span>
+              </div>
+              <span className={cn(
+                "text-[9px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0",
+                item.isMet
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                  : "bg-amber-100 text-amber-800 border-amber-300"
+              )}>
+                {item.isMet ? "Complete" : "Tap to Fix"}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <Button
+          type="button"
+          onClick={onClose}
+          className="w-full h-11 bg-zinc-900 text-white font-extrabold text-xs rounded-xl cursor-pointer"
+        >
+          Close
+        </Button>
       </div>
     </div>
   );
@@ -608,6 +836,25 @@ function DashboardContent() {
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
   const [showPublishSuccessModal, setShowPublishSuccessModal] = useState<boolean>(false);
   const [showDraftWarningModal, setShowDraftWarningModal] = useState<boolean>(false);
+  const [mobileReadinessSheetOpen, setMobileReadinessSheetOpen] = useState<boolean>(false);
+
+  const handleNavigateToItem = (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => {
+    setShowDraftWarningModal(false);
+    setMobileReadinessSheetOpen(false);
+    setActiveTab(tab);
+
+    if (targetId) {
+      setTimeout(() => {
+        const el = document.getElementById(targetId) || document.querySelector(`[name="${targetId}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          if ("focus" in el && typeof el.focus === "function") {
+            (el as HTMLElement).focus();
+          }
+        }
+      }, 150);
+    }
+  };
 
   const evaluateReadiness = (): ReadinessData => {
     const hasAvatar = !!avatarUrl && avatarUrl.trim().length > 0 && !avatarUrl.includes("unsplash.com");
@@ -1834,8 +2081,20 @@ function DashboardContent() {
                 </div>
               )}
             </div>
+
+            {/* Desktop Sidebar Readiness Widget (Phase B) */}
+            <SidebarReadinessWidget
+              readiness={evaluateReadiness()}
+              onNavigateToItem={handleNavigateToItem}
+            />
           </div>
         </aside>
+
+        {/* Mobile Floating Readiness Badge (Phase B) */}
+        <MobileReadinessFloatingBadge
+          readiness={evaluateReadiness()}
+          onClick={() => setMobileReadinessSheetOpen(true)}
+        />
 
         {/* CENTER WORKSPACE */}
         <div className={cn("min-w-0 flex flex-col w-full flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
@@ -2405,6 +2664,15 @@ function DashboardContent() {
         onClose={() => setShowDraftWarningModal(false)}
         username={username}
         readiness={evaluateReadiness()}
+        onNavigateToItem={handleNavigateToItem}
+      />
+
+      {/* Mobile Readiness Checklist Bottom Sheet (Phase B) */}
+      <MobileReadinessSheet
+        open={mobileReadinessSheetOpen}
+        onClose={() => setMobileReadinessSheetOpen(false)}
+        readiness={evaluateReadiness()}
+        onNavigateToItem={handleNavigateToItem}
       />
       {/* In-App Upgrade Modal */}
       <UpgradeModal

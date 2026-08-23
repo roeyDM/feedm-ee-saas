@@ -248,7 +248,7 @@ export function LeadsManager({ username, targetEmail }: LeadsManagerProps) {
       )}
 
       {/* Main Single Card Container */}
-      <div className="w-full max-w-none flex-1 bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden">
+      <div id="lead-email-input" className="w-full max-w-none flex-1 bg-white rounded-3xl border border-zinc-200/90 shadow-2xs overflow-hidden scroll-mt-28">
 
         {/* Card Header Toolbar */}
         <div className="p-5 border-b border-zinc-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-zinc-50/50">

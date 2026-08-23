@@ -463,7 +463,8 @@ export function ProfileEditor({
             <Label className="text-xs font-bold text-zinc-700">Profile Photo</Label>
             <div className="flex items-center gap-4">
               <div 
-                className="relative h-16 w-16 shrink-0 rounded-full overflow-hidden border border-zinc-200 bg-zinc-100 cursor-pointer group"
+                id="avatar-upload-container"
+                className="relative h-16 w-16 shrink-0 rounded-full overflow-hidden border border-zinc-200 bg-zinc-100 cursor-pointer group scroll-mt-28"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {avatarUrl?.trim() ? (
