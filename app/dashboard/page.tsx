@@ -197,14 +197,14 @@ function OnboardingWizardFooterNav({
   onNext,
   onBack,
   onFinish,
-  onSkip,
+  onSkipStep,
 }: {
   currentStep: 1 | 2 | 3;
   isFreePlan?: boolean;
   onNext: () => void;
   onBack: () => void;
   onFinish: () => void;
-  onSkip: () => void;
+  onSkipStep: () => void;
 }) {
   const stepLabel = currentStep === 1 ? "Bio & Links" : currentStep === 2 ? "Videos & Reels" : "Design & Themes";
   const nextLabel = currentStep === 1 ? (isFreePlan ? "Next: Design & Themes" : "Next: Videos & Reels") : "Next: Design & Themes";
@@ -218,10 +218,11 @@ function OnboardingWizardFooterNav({
           </span>
           <button
             type="button"
-            onClick={onSkip}
-            className="text-slate-400 hover:text-slate-200 text-xs font-semibold underline cursor-pointer"
+            onClick={onSkipStep}
+            className="text-slate-400 hover:text-slate-200 text-xs font-semibold hover:underline flex items-center gap-1 cursor-pointer"
           >
-            Skip
+            <span>Skip this step</span>
+            <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
           </button>
         </div>
 
@@ -677,6 +678,20 @@ function DashboardContent() {
 
   const handleSkipWizard = async () => {
     await markOnboardingCompletedInDB();
+  };
+
+  const handleSkipStep = async () => {
+    if (wizardStep === 1) {
+      if (planType === "free") {
+        await handleWizardStepChange(3);
+      } else {
+        await handleWizardStepChange(2);
+      }
+    } else if (wizardStep === 2) {
+      await handleWizardStepChange(3);
+    } else if (wizardStep === 3) {
+      await handleFinishAndPublish();
+    }
   };
 
   const handleWizardNext = async () => {
@@ -2372,7 +2387,7 @@ function DashboardContent() {
           onNext={handleWizardNext}
           onBack={handleWizardBack}
           onFinish={handleFinishAndPublish}
-          onSkip={handleSkipWizard}
+          onSkipStep={handleSkipStep}
         />
       )}
 
