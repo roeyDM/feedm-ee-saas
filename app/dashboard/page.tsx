@@ -1014,19 +1014,19 @@ function DashboardContent() {
     }
   };
 
-  // Serialize current state for dirty checking
+  // Serialize current state for dirty checking with strict normalization
   const getCurrentStateJSON = () => {
     return JSON.stringify({
-      name,
-      bio,
-      avatarUrl,
-      customHexColor,
-      planType,
-      socialLinks,
-      customLinks,
-      reels,
-      leadForm,
-      appearance,
+      name: name || "",
+      bio: bio || "",
+      avatarUrl: avatarUrl || "",
+      customHexColor: customHexColor || "#bad1cb",
+      planType: planType || "free",
+      socialLinks: socialLinks || [],
+      customLinks: customLinks || [],
+      reels: reels || [],
+      leadForm: leadForm || {},
+      appearance: appearance || {},
     });
   };
 
@@ -1047,7 +1047,6 @@ function DashboardContent() {
         const userName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || (userHandle ? userHandle.charAt(0).toUpperCase() + userHandle.slice(1) : "Creator");
 
         if (userHandle) setUsername(userHandle);
-        if (userName) setName(userName);
 
         // Check for ?checkout=success parameter
         if (searchParams.get("checkout") === "success") {
@@ -1074,8 +1073,6 @@ function DashboardContent() {
               })
               .or(`id.eq.${user.id},username.eq.${userHandle.toLowerCase()}`);
           } catch (_) {}
-
-          setPlanType("pro");
         }
 
         // Fetch profile row from Supabase for authenticated user
@@ -1088,11 +1085,8 @@ function DashboardContent() {
         if (profile && !error) {
           const checkedProfile = await checkAndApplyTrialDowngrade(profile);
 
-          if (checkedProfile.name) setName(checkedProfile.name);
           if (checkedProfile.username) setUsername(checkedProfile.username);
-          if (checkedProfile.bio !== undefined) setBio(checkedProfile.bio);
-          if (checkedProfile.avatar_url !== undefined) setAvatarUrl(checkedProfile.avatar_url);
-          if (checkedProfile.custom_hex_color) setCustomHexColor(checkedProfile.custom_hex_color);
+
           const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
           const isWithin7Days = (Date.now() - createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000;
           const hasUsedTrial = checkedProfile.has_used_trial === true;
@@ -1103,11 +1097,9 @@ function DashboardContent() {
           const dbPlanRaw = String(checkedProfile.plan_type || checkedProfile.plan || "").toLowerCase();
           const isPaidPro = dbPlanRaw.includes("pro") && checkedProfile.is_trial === false;
           const isProPlan = checkedProfile.is_super_admin === true || isPaidPro || isTrialValid || isTrialRequestedFromUrl;
-
           const isTrialExpired = !isProPlan && checkedProfile.is_super_admin !== true;
 
           if (isTrialExpired) {
-            setPlanType("free");
             // Permanently mark trial as used in DB so user never receives another automated trial
             if (checkedProfile.is_trial !== false || checkedProfile.has_used_trial !== true) {
               supabase
@@ -1121,58 +1113,67 @@ function DashboardContent() {
             if (!hasDismissed) {
               setShowUpgradeModal(true);
             }
-          } else if (isProPlan) {
-            setPlanType("pro");
-          } else {
-            setPlanType("free");
-          }
-          setSubscriptionStatus(checkedProfile.subscription_status || "active");
-          setTrialEndsAt(checkedProfile.trial_ends_at || null);
-          if (profile.social_links) {
-            setSocialLinks(profile.social_links.map((l: any) => ({
-              ...l,
-              id: l.id || crypto.randomUUID(),
-              isActive: l.isActive !== false
-            })));
-          }
-          if (profile.custom_links) setCustomLinks(profile.custom_links);
-          if (profile.reels) {
-            const cleanedReels = profile.reels
-              .map((r: any) => ({
-                ...r,
-                videoUrl: r.videoUrl || r.url || "",
-                promoUrl: r.promoUrl || r.promo_url || r.targetUrl || r.target_url || "",
-                promoTitle: r.promoTitle || r.promo_title || "",
-                promoCode: r.promoCode || r.promo_code || "",
-                promoCta: r.promoCta || r.promo_cta || "Get Deal 🚀",
-                promoEnabled: !!(r.promoEnabled || r.promo_enabled),
-                promoDelaySeconds: typeof r.promoDelaySeconds === "number" ? r.promoDelaySeconds : (typeof r.promo_delay_seconds === "number" ? r.promo_delay_seconds : 3),
-              }))
-              .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"));
-            setReels(cleanedReels);
-          }
-          if (profile.lead_form) {
-            let sanitized = sanitizeLeadForm(profile.lead_form);
-            if ((!sanitized.target || !sanitized.target.trim()) && user?.email) {
-              sanitized = { ...sanitized, target: user.email };
-            }
-            setLeadForm(sanitized);
-          } else if (user?.email) {
-            setLeadForm((prev) => ({ ...prev, target: user.email || "" }));
           }
 
-          // Appearance Persistence with localStorage fallback
-          let loadedAppearance = profile.appearance;
+          setSubscriptionStatus(checkedProfile.subscription_status || "active");
+          setTrialEndsAt(checkedProfile.trial_ends_at || null);
+
+          // Compute normalized state values
+          const finalName = checkedProfile.name || userName;
+          const finalBio = checkedProfile.bio || "";
+          const finalAvatarUrl = checkedProfile.avatar_url || "";
+          const finalPlanType = isProPlan ? "pro" : "free";
+
+          const finalSocialLinks = checkedProfile.social_links
+            ? checkedProfile.social_links.map((l: any) => ({
+                ...l,
+                id: l.id || crypto.randomUUID(),
+                isActive: l.isActive !== false,
+              }))
+            : [];
+
+          const finalCustomLinks = checkedProfile.custom_links || [];
+
+          const finalReels = checkedProfile.reels
+            ? checkedProfile.reels
+                .map((r: any) => ({
+                  ...r,
+                  videoUrl: r.videoUrl || r.url || "",
+                  promoUrl: r.promoUrl || r.promo_url || r.targetUrl || r.target_url || "",
+                  promoTitle: r.promoTitle || r.promo_title || "",
+                  promoCode: r.promoCode || r.promo_code || "",
+                  promoCta: r.promoCta || r.promo_cta || "Get Deal 🚀",
+                  promoEnabled: !!(r.promoEnabled || r.promo_enabled),
+                  promoDelaySeconds: typeof r.promoDelaySeconds === "number" ? r.promoDelaySeconds : (typeof r.promo_delay_seconds === "number" ? r.promo_delay_seconds : 3),
+                }))
+                .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"))
+            : [];
+
+          let finalLeadForm = checkedProfile.lead_form ? sanitizeLeadForm(checkedProfile.lead_form) : leadForm;
+          if ((!finalLeadForm.target || !finalLeadForm.target.trim()) && user?.email) {
+            finalLeadForm = { ...finalLeadForm, target: user.email };
+          }
+
+          let loadedAppearance = checkedProfile.appearance;
           if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
-            const localApp = localStorage.getItem(`feedmee_appearance_${(profile.username || userHandle).toLowerCase()}`);
+            const localApp = localStorage.getItem(`feedmee_appearance_${(checkedProfile.username || userHandle).toLowerCase()}`);
             if (localApp) {
               try { loadedAppearance = JSON.parse(localApp); } catch(e) {}
             }
           }
-          if (loadedAppearance && Object.keys(loadedAppearance).length > 0) {
-            setAppearance(loadedAppearance);
-            if (loadedAppearance.bgColor) setCustomHexColor(loadedAppearance.bgColor);
-          }
+          const finalAppearance = (loadedAppearance && Object.keys(loadedAppearance).length > 0) ? loadedAppearance : appearance;
+          const finalCustomHexColor = finalAppearance?.bgColor || checkedProfile.custom_hex_color || "#bad1cb";
+
+          setName(finalName);
+          setBio(finalBio);
+          setAvatarUrl(finalAvatarUrl);
+          setPlanType(finalPlanType);
+          setSocialLinks(finalSocialLinks);
+          setCustomLinks(finalCustomLinks);
+          setReels(finalReels);
+          setLeadForm(finalLeadForm);
+          setAppearance(finalAppearance);
+          setCustomHexColor(finalCustomHexColor);
 
           // FTUE Onboarding Completed & Step check
           const isCompletedInDB = profile.onboarding_completed === true;
@@ -1193,17 +1194,18 @@ function DashboardContent() {
             else if (restoredStep === 3) setActiveTab("design");
           }
 
+          // Write exact normalized initial snapshot matching state definitions
           setSavedSnapshot(JSON.stringify({
-            name: profile.name || userName,
-            bio: profile.bio || "",
-            avatarUrl: profile.avatar_url || "",
-            customHexColor: loadedAppearance?.bgColor || profile.custom_hex_color || "#bad1cb",
-            planType: profile.plan_type || "free",
-            socialLinks: profile.social_links || [],
-            customLinks: profile.custom_links || [],
-            reels: profile.reels || [],
-            leadForm: sanitizeLeadForm(profile.lead_form) || leadForm,
-            appearance: loadedAppearance || appearance,
+            name: finalName,
+            bio: finalBio,
+            avatarUrl: finalAvatarUrl,
+            customHexColor: finalCustomHexColor,
+            planType: finalPlanType,
+            socialLinks: finalSocialLinks,
+            customLinks: finalCustomLinks,
+            reels: finalReels,
+            leadForm: finalLeadForm,
+            appearance: finalAppearance,
           }));
         } else {
           setSavedSnapshot(getCurrentStateJSON());
@@ -1218,14 +1220,11 @@ function DashboardContent() {
     loadAuthUserSession();
   }, [searchParams]);
 
-  // Sync snapshot right after hydration completes to ensure no false-positive isDirty on refresh
+  // Sync snapshot right after hydration completes to guarantee isDirty is strictly false on page load & refresh
   useEffect(() => {
     if (!isProfileLoading && !isInitialLoadDone) {
-      const timer = setTimeout(() => {
-        setSavedSnapshot(getCurrentStateJSON());
-        setIsInitialLoadDone(true);
-      }, 350);
-      return () => clearTimeout(timer);
+      setSavedSnapshot(getCurrentStateJSON());
+      setIsInitialLoadDone(true);
     }
   }, [isProfileLoading, isInitialLoadDone, name, bio, avatarUrl, customHexColor, planType, socialLinks, customLinks, reels, leadForm, appearance]);
 
