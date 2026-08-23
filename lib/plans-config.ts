@@ -189,3 +189,67 @@ export function getPlanConfig(tier?: string | null): PlanConfig {
   const normalized = normalizePlanTier(tier);
   return PLANS_CONFIG[normalized] || PLANS_CONFIG.free;
 }
+
+/**
+ * Dynamic resolution map for LemonSqueezy Variant IDs across all plan types and billing intervals.
+ * Supports standard, NEXT_PUBLIC, and Netlify environment variable naming conventions.
+ */
+export function getLemonSqueezyVariantId(
+  planType?: string | null,
+  interval: "monthly" | "yearly" = "monthly"
+): string | null {
+  const normalizedPlan = normalizePlanTier(planType);
+
+  if (normalizedPlan === "personal") {
+    if (interval === "yearly") {
+      const val =
+        process.env.NEXT_PUBLIC_LEMONSQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
+        process.env.LEMON_SQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_VARIANT_PERSONAL_YEARLY;
+      return val ? String(val).trim() : null;
+    }
+    const val =
+      process.env.NEXT_PUBLIC_LEMONSQUEEZY_PERSONAL_VARIANT_ID ||
+      process.env.LEMON_SQUEEZY_PERSONAL_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_PERSONAL_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_VARIANT_PERSONAL_MONTHLY;
+    return val ? String(val).trim() : null;
+  }
+
+  if (normalizedPlan === "pro") {
+    if (interval === "yearly") {
+      const val =
+        process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
+        process.env.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY;
+      return val ? String(val).trim() : null;
+    }
+    const val =
+      process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID ||
+      process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_PRO_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY;
+    return val ? String(val).trim() : null;
+  }
+
+  if (normalizedPlan === "business") {
+    if (interval === "yearly") {
+      const val =
+        process.env.NEXT_PUBLIC_LEMONSQUEEZY_BUSINESS_YEARLY_VARIANT_ID ||
+        process.env.LEMON_SQUEEZY_BUSINESS_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_BUSINESS_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_VARIANT_BUSINESS_YEARLY;
+      return val ? String(val).trim() : null;
+    }
+    const val =
+      process.env.NEXT_PUBLIC_LEMONSQUEEZY_BUSINESS_VARIANT_ID ||
+      process.env.LEMON_SQUEEZY_BUSINESS_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_BUSINESS_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_VARIANT_BUSINESS_MONTHLY;
+    return val ? String(val).trim() : null;
+  }
+
+  return null;
+}

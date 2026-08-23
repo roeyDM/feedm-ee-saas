@@ -1,21 +1,35 @@
 import { NextResponse } from "next/server";
 import { lemonSqueezySetup, createCheckout } from "@lemonsqueezy/lemonsqueezy.js";
 import { createClient } from "@supabase/supabase-js";
+import { getLemonSqueezyVariantId } from "@/lib/plans-config";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { variantId, userId: bodyUserId } = body;
+    const { variantId: bodyVariantId, planType = "pro", billingInterval = "monthly", userId: bodyUserId } = body;
+
+    // Resolve variant ID dynamically if not explicitly provided
+    let variantId = bodyVariantId ? String(bodyVariantId).trim() : "";
+    if (!variantId || variantId === "undefined" || variantId === "null") {
+      const resolved = getLemonSqueezyVariantId(planType, billingInterval as "monthly" | "yearly");
+      if (resolved) {
+        variantId = resolved;
+      }
+    }
 
     if (!variantId) {
-      return NextResponse.json({ error: "variantId is required" }, { status: 400 });
+      console.error(`[Lemon Squeezy Checkout Abort]: Missing Variant ID for plan='${planType}', interval='${billingInterval}'`);
+      return NextResponse.json(
+        { error: "Plan variant configuration is missing. Please contact support." },
+        { status: 400 }
+      );
     }
 
     const apiKey = (process.env.LEMONSQUEEZY_API_KEY || process.env.LEMON_SQUEEZY_API_KEY || "").trim();
     const storeId = (process.env.LEMONSQUEEZY_STORE_ID || process.env.LEMON_SQUEEZY_STORE_ID || "").trim();
-    const cleanVariantId = String(variantId).trim();
+    const cleanVariantId = variantId;
 
     if (!apiKey || !storeId) {
       console.error("[Lemon Squeezy Config Error]: Missing API Key or Store ID in environment variables.", { apiKeyPresent: !!apiKey, storeIdPresent: !!storeId });

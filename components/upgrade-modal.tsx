@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getLemonSqueezyVariantId } from "@/lib/plans-config";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -25,16 +26,8 @@ export function UpgradeModal({
 
   if (!open) return null;
 
-  const monthlyVariantId =
-    process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID ||
-    process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY ||
-    process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID ||
-    "1996077";
-  const yearlyVariantId =
-    process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
-    process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY ||
-    process.env.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID ||
-    "1996078";
+  const monthlyVariantId = getLemonSqueezyVariantId("pro", "monthly") || "";
+  const yearlyVariantId = getLemonSqueezyVariantId("pro", "yearly") || "";
 
   const handleUpgrade = async () => {
     setIsCheckoutLoading(true);
@@ -45,7 +38,11 @@ export function UpgradeModal({
       const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId: selectedVariantId, planType: "pro" }),
+        body: JSON.stringify({
+          variantId: selectedVariantId || undefined,
+          planType: "pro",
+          billingInterval,
+        }),
       });
 
       const data = await res.json();
