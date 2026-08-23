@@ -250,20 +250,26 @@ function OnboardingWizardFooterNav({
   );
 }
 
+interface ReadinessData {
+  hasAvatar: boolean;
+  hasBio: boolean;
+  hasLinks: boolean;
+  hasReels: boolean;
+  hasLeadEmail: boolean;
+  score: number;
+  is100Percent: boolean;
+}
+
 function PublishSuccessModal({
   open,
   onClose,
   username,
-  hasAvatar,
-  hasBio,
-  hasLinks,
+  readiness,
 }: {
   open: boolean;
   onClose: () => void;
   username: string;
-  hasAvatar?: boolean;
-  hasBio?: boolean;
-  hasLinks?: boolean;
+  readiness: ReadinessData;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -292,9 +298,6 @@ function PublishSuccessModal({
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const readinessScore = (hasAvatar ? 1 : 0) + (hasBio ? 1 : 0) + (hasLinks ? 1 : 0);
-  const isFullyReady = readinessScore === 3;
-
   return (
     <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto">
       <div className="bg-white rounded-3xl border border-zinc-200 max-w-md w-full p-6 shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-200 my-auto">
@@ -305,43 +308,24 @@ function PublishSuccessModal({
         <div>
           <h3 className="text-xl font-black text-zinc-950 tracking-tight">Your Page is Live</h3>
           <p className="text-xs font-semibold text-zinc-500 mt-1">
-            Congratulations! Your creator bio page has been published and is ready to share.
+            Congratulations! Your creator bio page is 100% complete and published.
           </p>
         </div>
 
-        {/* Readiness Preparation Checklist Banner */}
-        <div className={cn(
-          "p-3.5 rounded-2xl border text-left text-xs space-y-2",
-          isFullyReady
-            ? "bg-emerald-50/80 border-emerald-200 text-emerald-900"
-            : "bg-amber-50/80 border-amber-200 text-amber-900"
-        )}>
+        {/* 100% Readiness Badge */}
+        <div className="p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/80 text-emerald-900 text-left text-xs space-y-1.5">
           <div className="flex items-center justify-between font-extrabold">
             <span className="flex items-center gap-1.5">
-              {isFullyReady ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              ) : (
-                <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-              )}
-              <span>Page Readiness ({readinessScore}/3 Completed)</span>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <span>Page Readiness ({readiness.score}/5 Completed)</span>
             </span>
-            <span className={cn(
-              "text-[10px] uppercase font-black px-2 py-0.5 rounded-full border",
-              isFullyReady
-                ? "bg-emerald-100 border-emerald-300 text-emerald-800"
-                : "bg-amber-100 border-amber-300 text-amber-800"
-            )}>
-              {isFullyReady ? "100% Ready" : "Optimization Tip"}
+            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-emerald-100 border-emerald-300 text-emerald-800">
+              100% Ready
             </span>
           </div>
-
-          {!isFullyReady && (
-            <div className="space-y-1 text-[11px] font-medium text-amber-800/90 pl-5">
-              {!hasAvatar && <p>• Upload a custom profile picture for identity</p>}
-              {!hasBio && <p>• Write a brief bio to tell visitors who you are</p>}
-              {!hasLinks && <p>• Add at least 1 custom link button</p>}
-            </div>
-          )}
+          <p className="text-[11px] font-medium text-emerald-800/90 pl-5">
+            All profile criteria met: Avatar, bio, custom links, video reels, and lead notification email.
+          </p>
         </div>
 
         {/* Public URL Box */}
@@ -370,7 +354,7 @@ function PublishSuccessModal({
           </Button>
         </div>
 
-        {/* Action Buttons Container (Clean, no overflow) */}
+        {/* Action Buttons Container (Side-by-side flex layout) */}
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
           <Link href={`/${username}`} target="_blank" className="w-full sm:flex-1">
             <Button
@@ -388,6 +372,140 @@ function PublishSuccessModal({
             className="w-full sm:flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
           >
             <span className="truncate">Go to Dashboard</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DraftWarningModal({
+  open,
+  onClose,
+  username,
+  readiness,
+}: {
+  open: boolean;
+  onClose: () => void;
+  username: string;
+  readiness: ReadinessData;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  if (!open) return null;
+
+  const publicUrl = `https://feedm.ee/${username || "main"}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const checklistItems = [
+    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar },
+    { label: "Bio Description Text", isMet: readiness.hasBio },
+    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks },
+    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels },
+    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white rounded-3xl border border-zinc-200 max-w-md w-full p-6 shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-200 my-auto">
+        <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
+          <AlertCircle className="h-7 w-7 text-amber-600" />
+        </div>
+
+        <div>
+          <h3 className="text-xl font-black text-zinc-950 tracking-tight">Page Saved as Draft</h3>
+          <p className="text-xs font-semibold text-zinc-500 mt-1">
+            Your page is saved, but complete the 5 readiness items below for optimal visitor conversion.
+          </p>
+        </div>
+
+        {/* 5-Criteria Readiness Checklist */}
+        <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50/70 text-left text-xs space-y-2.5">
+          <div className="flex items-center justify-between font-extrabold border-b border-amber-200/80 pb-2">
+            <span className="flex items-center gap-1.5 text-amber-900">
+              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>Readiness Score ({readiness.score}/5 Criteria Met)</span>
+            </span>
+            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-amber-100 border-amber-300 text-amber-800">
+              Draft Status
+            </span>
+          </div>
+
+          <div className="space-y-1.5 pt-1">
+            {checklistItems.map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between text-[11px] font-semibold">
+                <span className="flex items-center gap-2 text-zinc-800">
+                  {item.isMet ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                  )}
+                  <span className={item.isMet ? "text-zinc-700" : "text-amber-900 font-bold"}>
+                    {item.label}
+                  </span>
+                </span>
+                <span className={cn(
+                  "text-[9px] font-black uppercase px-1.5 py-0.2 rounded border",
+                  item.isMet
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                    : "bg-amber-100 text-amber-800 border-amber-300"
+                )}>
+                  {item.isMet ? "Complete" : "Missing"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Public URL Box */}
+        <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-between gap-2">
+          <span className="text-xs font-extrabold text-zinc-800 truncate font-mono">
+            {publicUrl}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="h-8 px-3 text-xs font-bold rounded-xl gap-1 shrink-0 bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100 cursor-pointer"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5 text-zinc-500" />
+                <span>Copy Link</span>
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Action Buttons Container (Side-by-side flex layout) */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+          <Link href={`/${username}`} target="_blank" className="w-full sm:flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11 text-xs font-extrabold rounded-xl border-zinc-200 text-zinc-700 hover:bg-zinc-100 gap-1.5 cursor-pointer"
+            >
+              <ExternalLink className="h-4 w-4 text-zinc-500 shrink-0" />
+              <span className="truncate">View Draft Feed</span>
+            </Button>
+          </Link>
+          <Button
+            type="button"
+            onClick={onClose}
+            className="w-full sm:flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
+          >
+            <span className="truncate">Continue Editing</span>
           </Button>
         </div>
       </div>
@@ -519,8 +637,32 @@ function DashboardContent() {
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
   const [showPublishSuccessModal, setShowPublishSuccessModal] = useState<boolean>(false);
+  const [showDraftWarningModal, setShowDraftWarningModal] = useState<boolean>(false);
 
-  const handleWizardStepChange = (step: 1 | 2 | 3) => {
+  const evaluateReadiness = (): ReadinessData => {
+    const hasAvatar = !!avatarUrl && avatarUrl.trim().length > 0 && !avatarUrl.includes("unsplash.com");
+    const hasBio = !!bio && bio.trim().length > 0;
+    const validLinks = customLinks.filter((l: any) => l.title?.trim() && l.url?.trim());
+    const hasLinks = validLinks.length >= 1;
+    const validReels = reels.filter((r: any) => r.videoUrl || r.url);
+    const hasReels = planType === "free" ? true : validReels.length >= 1;
+    const hasLeadEmail = !!leadForm?.target && leadForm.target.trim().length > 0 && leadForm.target.includes("@");
+
+    const score = (hasAvatar ? 1 : 0) + (hasBio ? 1 : 0) + (hasLinks ? 1 : 0) + (hasReels ? 1 : 0) + (hasLeadEmail ? 1 : 0);
+    const is100Percent = score === 5;
+
+    return {
+      hasAvatar,
+      hasBio,
+      hasLinks,
+      hasReels,
+      hasLeadEmail,
+      score,
+      is100Percent,
+    };
+  };
+
+  const handleWizardStepChange = async (step: 1 | 2 | 3) => {
     setWizardStep(step);
     if (step === 1) {
       setActiveTab("bio");
@@ -528,6 +670,21 @@ function DashboardContent() {
       setActiveTab("reels");
     } else if (step === 3) {
       setActiveTab("design");
+    }
+
+    const targetUsername = username.toLowerCase().trim();
+    if (typeof window !== "undefined" && targetUsername) {
+      localStorage.setItem(`feedmee_onboarding_step_${targetUsername}`, String(step));
+    }
+    try {
+      if (targetUsername) {
+        await supabase
+          .from("profiles")
+          .update({ onboarding_step: step, updated_at: new Date().toISOString() })
+          .or(`username.eq.${targetUsername}`);
+      }
+    } catch (err) {
+      console.warn("Failed to persist onboarding_step to Supabase profiles:", err);
     }
   };
 
@@ -556,7 +713,13 @@ function DashboardContent() {
   const handleFinishAndPublish = async () => {
     await handleSave();
     await markOnboardingCompletedInDB();
-    setShowPublishSuccessModal(true);
+
+    const readiness = evaluateReadiness();
+    if (readiness.is100Percent) {
+      setShowPublishSuccessModal(true);
+    } else {
+      setShowDraftWarningModal(true);
+    }
   };
 
   // Serialize current state for dirty checking
@@ -719,7 +882,7 @@ function DashboardContent() {
             if (loadedAppearance.bgColor) setCustomHexColor(loadedAppearance.bgColor);
           }
 
-          // FTUE Onboarding Completed check
+          // FTUE Onboarding Completed & Step check
           const isCompletedInDB = profile.onboarding_completed === true;
           const isCompletedInLocal = typeof window !== "undefined" && localStorage.getItem(`feedmee_onboarding_completed_${(profile.username || userHandle).toLowerCase()}`) === "true";
           const hasExistingContent = (profile.custom_links && profile.custom_links.length > 0) || (profile.reels && profile.reels.length > 0);
@@ -728,6 +891,14 @@ function DashboardContent() {
             setOnboardingCompleted(true);
           } else {
             setOnboardingCompleted(false);
+            const savedStepDB = Number(profile.onboarding_step);
+            const savedStepLocal = typeof window !== "undefined" ? Number(localStorage.getItem(`feedmee_onboarding_step_${(profile.username || userHandle).toLowerCase()}`)) : NaN;
+            const restoredStep = (savedStepDB >= 1 && savedStepDB <= 3) ? savedStepDB : ((savedStepLocal >= 1 && savedStepLocal <= 3) ? savedStepLocal : 1);
+            
+            setWizardStep(restoredStep as 1 | 2 | 3);
+            if (restoredStep === 1) setActiveTab("bio");
+            else if (restoredStep === 2) setActiveTab("reels");
+            else if (restoredStep === 3) setActiveTab("design");
           }
 
           setSavedSnapshot(JSON.stringify({
@@ -2196,9 +2367,15 @@ function DashboardContent() {
         open={showPublishSuccessModal}
         onClose={() => setShowPublishSuccessModal(false)}
         username={username}
-        hasAvatar={!!avatarUrl && avatarUrl.trim().length > 0}
-        hasBio={!!bio && bio.trim().length > 0}
-        hasLinks={customLinks && customLinks.length > 0}
+        readiness={evaluateReadiness()}
+      />
+
+      {/* FTUE Onboarding Wizard Draft Warning Modal */}
+      <DraftWarningModal
+        open={showDraftWarningModal}
+        onClose={() => setShowDraftWarningModal(false)}
+        username={username}
+        readiness={evaluateReadiness()}
       />
       {/* In-App Upgrade Modal */}
       <UpgradeModal
