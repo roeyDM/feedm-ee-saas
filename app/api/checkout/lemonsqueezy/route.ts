@@ -13,10 +13,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "variantId is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.LEMONSQUEEZY_API_KEY || process.env.LEMON_SQUEEZY_API_KEY;
-    const storeId = process.env.LEMONSQUEEZY_STORE_ID || process.env.LEMON_SQUEEZY_STORE_ID;
+    const apiKey = (process.env.LEMONSQUEEZY_API_KEY || process.env.LEMON_SQUEEZY_API_KEY || "").trim();
+    const storeId = (process.env.LEMONSQUEEZY_STORE_ID || process.env.LEMON_SQUEEZY_STORE_ID || "").trim();
+    const cleanVariantId = String(variantId).trim();
 
     if (!apiKey || !storeId) {
+      console.error("[Lemon Squeezy Config Error]: Missing API Key or Store ID in environment variables.", { apiKeyPresent: !!apiKey, storeIdPresent: !!storeId });
       return NextResponse.json(
         { error: "Lemon Squeezy API Key or Store ID is missing in environment variables" },
         { status: 500 }
@@ -41,8 +43,10 @@ export async function POST(req: Request) {
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const redirectUrl = `${origin}/dashboard?checkout=success`;
 
+    console.log(`[Lemon Squeezy Checkout Attempt]: Store ID=${storeId}, Variant ID=${cleanVariantId}, User ID=${userId || "guest"}`);
+
     // Create Lemon Squeezy Checkout
-    const checkoutResponse = await createCheckout(storeId, String(variantId), {
+    const checkoutResponse = await createCheckout(storeId, cleanVariantId, {
       checkoutData: {
         custom: {
           user_id: userId,
@@ -54,24 +58,52 @@ export async function POST(req: Request) {
     });
 
     if (checkoutResponse.error) {
-      console.error("[Lemon Squeezy Checkout Error]:", checkoutResponse.error);
+      const errorObj = checkoutResponse.error;
+      const errorMessage = errorObj.message || "Failed to create Lemon Squeezy checkout";
+      const errorCause = (errorObj as any).cause || (errorObj as any).errors || JSON.stringify(errorObj);
+
+      console.error("[Lemon Squeezy Checkout Error Details]:", {
+        storeId,
+        variantId: cleanVariantId,
+        message: errorMessage,
+        cause: errorCause,
+        rawError: errorObj,
+      });
+
+      const isVariantError =
+        errorMessage.toLowerCase().includes("variant") ||
+        errorMessage.toLowerCase().includes("unprocessable") ||
+        errorMessage.includes("422") ||
+        JSON.stringify(errorCause).toLowerCase().includes("variant");
+
+      const userFacingError = isVariantError
+        ? `Invalid LemonSqueezy Variant ID (${cleanVariantId}) for Store (${storeId}). Please check store configuration.`
+        : errorMessage;
+
       return NextResponse.json(
-        { error: checkoutResponse.error.message || "Failed to create Lemon Squeezy checkout" },
-        { status: 500 }
+        { error: userFacingError, details: errorCause },
+        { status: 422 }
       );
     }
 
     const checkoutUrl = checkoutResponse.data?.data?.attributes?.url;
 
     if (!checkoutUrl) {
+      console.error("[Lemon Squeezy Checkout Error]: URL not returned from Lemon Squeezy response", checkoutResponse);
       return NextResponse.json({ error: "Checkout URL not returned from Lemon Squeezy API" }, { status: 500 });
     }
 
     return NextResponse.json({ url: checkoutUrl, success: true });
   } catch (err: any) {
-    console.error("[Lemon Squeezy Checkout Exception]:", err);
+    console.error("[Lemon Squeezy Checkout Exception]:", err?.response?.data || err?.message || err);
+    const errString = JSON.stringify(err?.response?.data || err?.message || err);
+    const isVariantError = errString.toLowerCase().includes("variant") || errString.includes("422");
+    const userFacingError = isVariantError
+      ? `Invalid LemonSqueezy Variant ID. Please check store configuration.`
+      : (err.message || "Internal server error");
+
     return NextResponse.json(
-      { error: err.message || "Internal server error" },
+      { error: userFacingError, details: err?.response?.data || err?.message },
       { status: 500 }
     );
   }
