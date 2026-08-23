@@ -144,6 +144,7 @@ export interface LeadFormSettings {
   is_email_required?: boolean;
   is_enabled?: boolean;
   is_leadform_enabled?: boolean;
+  enabled?: boolean;
 }
 
 export interface AppearanceSettings {

@@ -273,6 +273,7 @@ interface ReadinessData {
   hasLinks: boolean;
   hasReels: boolean;
   hasLeadEmail: boolean;
+  hasContactPhone: boolean;
   score: number;
   is100Percent: boolean;
 }
@@ -334,14 +335,14 @@ function PublishSuccessModal({
           <div className="flex items-center justify-between font-extrabold">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Page Readiness ({readiness.score}/5 Completed)</span>
+              <span>Page Readiness ({readiness.score}/6 Completed)</span>
             </span>
             <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-emerald-100 border-emerald-300 text-emerald-800">
               100% Ready
             </span>
           </div>
           <p className="text-[11px] font-medium text-emerald-800/90 pl-5">
-            All profile criteria met: Avatar, bio, custom links, video reels, and lead notification email.
+            All profile criteria met: Avatar, bio, custom links, video reels, notification email, and contact phone.
           </p>
         </div>
 
@@ -411,11 +412,12 @@ function DraftWarningModal({
   if (!open) return null;
 
   const checklistItems = [
-    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
-    { label: "Bio Description Text", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
-    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
-    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Profile Picture", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
+    { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
+    { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
+    { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
+    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "leads" as const, targetId: "lead-email-input" },
   ];
 
   return (
@@ -428,16 +430,16 @@ function DraftWarningModal({
         <div>
           <h3 className="text-xl font-black text-zinc-950 tracking-tight">Page Saved as Draft</h3>
           <p className="text-xs font-semibold text-zinc-500 mt-1">
-            Your page is saved, but complete the 5 readiness items below for optimal visitor conversion.
+            Your page is saved, but complete the readiness items below for optimal visitor conversion.
           </p>
         </div>
 
-        {/* 5-Criteria Readiness Checklist */}
+        {/* Readiness Checklist */}
         <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50/70 text-left text-xs space-y-2.5">
           <div className="flex items-center justify-between font-extrabold border-b border-amber-200/80 pb-2">
             <span className="flex items-center gap-1.5 text-amber-900">
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Readiness Score ({readiness.score}/5 Criteria Met)</span>
+              <span>Readiness Score ({readiness.score}/6 Criteria Met)</span>
             </span>
             <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-amber-100 border-amber-300 text-amber-800">
               Draft Status
@@ -455,20 +457,20 @@ function DraftWarningModal({
                     onNavigateToItem(item.tab, item.targetId);
                   }
                 }}
-                className="w-full flex items-center justify-between text-[11px] font-semibold hover:bg-amber-100/60 p-1.5 rounded-xl transition-all cursor-pointer text-left group"
+                className="w-full flex items-center justify-between text-[11px] font-semibold hover:bg-amber-100/60 p-1.5 rounded-xl transition-all cursor-pointer text-left group min-w-0"
               >
-                <span className="flex items-center gap-2 text-zinc-800">
+                <span className="flex items-center gap-2 text-zinc-800 min-w-0 pr-1 overflow-hidden">
                   {item.isMet ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                   ) : (
                     <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                   )}
-                  <span className={item.isMet ? "text-zinc-700" : "text-amber-900 font-bold"}>
+                  <span className={cn("whitespace-nowrap overflow-hidden text-ellipsis", item.isMet ? "text-zinc-700" : "text-amber-900 font-bold")}>
                     {item.label}
                   </span>
                 </span>
                 <span className={cn(
-                  "text-[9px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0",
+                  "text-[9px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0 ml-1",
                   item.isMet
                     ? "bg-emerald-100 text-emerald-700 border-emerald-200"
                     : "bg-amber-100 text-amber-800 border-amber-300 group-hover:bg-amber-200"
@@ -503,34 +505,35 @@ function SidebarReadinessWidget({
   onNavigateToItem: (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const percent = Math.round((readiness.score / 5) * 100);
+  const percent = Math.round((readiness.score / 6) * 100);
 
   const checklistItems = [
-    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
-    { label: "Bio Description Text", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
-    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
-    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Profile Picture", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
+    { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
+    { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
+    { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
+    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "leads" as const, targetId: "lead-email-input" },
   ];
 
   return (
-    <div className="mt-2 rounded-2xl border border-zinc-200/90 bg-white shadow-2xs overflow-hidden transition-all">
+    <div className="mt-2 rounded-2xl border border-zinc-200/90 bg-white shadow-2xs overflow-hidden transition-all max-w-full">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
         className="w-full p-3 flex flex-col gap-2 hover:bg-zinc-50 transition-colors text-left cursor-pointer"
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black text-zinc-900 flex items-center gap-1.5">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-xs font-black text-zinc-900 flex items-center gap-1.5 min-w-0">
             {readiness.is100Percent ? (
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
             ) : (
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
             )}
-            <span>Page Readiness</span>
+            <span className="whitespace-nowrap overflow-hidden text-ellipsis">Page Readiness</span>
           </span>
           <span className={cn(
-            "text-[9px] font-black uppercase px-2 py-0.5 rounded-full border",
+            "text-[9px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0",
             readiness.is100Percent
               ? "bg-emerald-100 text-emerald-800 border-emerald-300"
               : "bg-amber-100 text-amber-800 border-amber-300"
@@ -541,7 +544,7 @@ function SidebarReadinessWidget({
 
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold text-zinc-500">
-            <span>{readiness.score}/5 Criteria</span>
+            <span>{readiness.score}/6 Criteria</span>
             <span>{percent}%</span>
           </div>
           <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
@@ -564,20 +567,23 @@ function SidebarReadinessWidget({
               key={idx}
               type="button"
               onClick={() => onNavigateToItem(item.tab, item.targetId)}
-              className="w-full flex items-center justify-between p-2 rounded-xl text-[11px] font-semibold hover:bg-white hover:shadow-2xs transition-all text-left group cursor-pointer"
+              className="w-full flex items-center justify-between p-2 rounded-xl text-[11px] font-semibold hover:bg-white hover:shadow-2xs transition-all text-left group cursor-pointer min-w-0"
             >
-              <div className="flex items-center gap-1.5 min-w-0 pr-1">
+              <div className="flex items-center gap-1.5 min-w-0 pr-1 overflow-hidden">
                 {item.isMet ? (
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                 ) : (
                   <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                 )}
-                <span className={cn("truncate", item.isMet ? "text-zinc-600" : "text-amber-900 font-extrabold")}>
+                <span className={cn(
+                  "whitespace-nowrap overflow-hidden text-ellipsis text-[11px]",
+                  item.isMet ? "text-zinc-600" : "text-amber-900 font-extrabold"
+                )}>
                   {item.label}
                 </span>
               </div>
               <span className={cn(
-                "text-[8px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0",
+                "text-[8px] font-black uppercase px-1.5 py-0.2 rounded border shrink-0 ml-1",
                 item.isMet
                   ? "bg-emerald-100 text-emerald-700 border-emerald-200"
                   : "bg-amber-100 text-amber-800 border-amber-300"
@@ -599,7 +605,7 @@ function MobileReadinessFloatingBadge({
   readiness: ReadinessData;
   onClick: () => void;
 }) {
-  const percent = Math.round((readiness.score / 5) * 100);
+  const percent = Math.round((readiness.score / 6) * 100);
 
   return (
     <button
@@ -635,14 +641,15 @@ function MobileReadinessSheet({
 }) {
   if (!open) return null;
 
-  const percent = Math.round((readiness.score / 5) * 100);
+  const percent = Math.round((readiness.score / 6) * 100);
 
   const checklistItems = [
-    { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
-    { label: "Bio Description Text", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
-    { label: "At least 1 Active Custom Link", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
-    { label: "At least 1 Video Reel (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Valid Lead Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Profile Picture", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
+    { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
+    { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
+    { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
+    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "leads" as const, targetId: "lead-email-input" },
   ];
 
   return (
@@ -655,7 +662,7 @@ function MobileReadinessSheet({
             ) : (
               <AlertCircle className="h-5 w-5 text-amber-600" />
             )}
-            <h3 className="text-sm font-black text-zinc-950">Page Readiness ({readiness.score}/5 - {percent}%)</h3>
+            <h3 className="text-sm font-black text-zinc-950">Page Readiness ({readiness.score}/6 - {percent}%)</h3>
           </div>
           <button
             type="button"
@@ -675,20 +682,20 @@ function MobileReadinessSheet({
                 onClose();
                 onNavigateToItem(item.tab, item.targetId);
               }}
-              className="w-full flex items-center justify-between p-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 hover:bg-white text-left transition-all cursor-pointer"
+              className="w-full flex items-center justify-between p-3 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 hover:bg-white text-left transition-all cursor-pointer min-w-0"
             >
-              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <div className="flex items-center gap-2.5 min-w-0 pr-2 overflow-hidden">
                 {item.isMet ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                 ) : (
                   <AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
                 )}
-                <span className={cn("text-xs font-bold truncate", item.isMet ? "text-zinc-700" : "text-amber-900 font-extrabold")}>
+                <span className={cn("text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis", item.isMet ? "text-zinc-700" : "text-amber-900 font-extrabold")}>
                   {item.label}
                 </span>
               </div>
               <span className={cn(
-                "text-[9px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0",
+                "text-[9px] font-black uppercase px-2 py-0.5 rounded-full border shrink-0 ml-1",
                 item.isMet
                   ? "bg-emerald-100 text-emerald-800 border-emerald-300"
                   : "bg-amber-100 text-amber-800 border-amber-300"
@@ -863,10 +870,17 @@ function DashboardContent() {
     const hasLinks = validLinks.length >= 1;
     const validReels = reels.filter((r: any) => r.videoUrl || r.url);
     const hasReels = planType === "free" ? true : validReels.length >= 1;
-    const hasLeadEmail = !!leadForm?.target && leadForm.target.trim().length > 0 && leadForm.target.includes("@");
+    // 1. CONDITIONAL LEAD FORM EMAIL READINESS: Evaluate target email ONLY if leadForm is enabled
+    const isLeadFormEnabled = leadForm?.enabled !== undefined ? leadForm.enabled : (leadForm?.is_enabled !== undefined ? leadForm.is_enabled : (leadForm?.is_leadform_enabled !== undefined ? leadForm.is_leadform_enabled : true));
+    const hasLeadEmail = !isLeadFormEnabled || (!!leadForm?.target && leadForm.target.trim().length > 0 && leadForm.target.includes("@"));
 
-    const score = (hasAvatar ? 1 : 0) + (hasBio ? 1 : 0) + (hasLinks ? 1 : 0) + (hasReels ? 1 : 0) + (hasLeadEmail ? 1 : 0);
-    const is100Percent = score === 5;
+    // 2. REEL / LEAD PHONE VALIDATION: If WhatsApp or Phone Call button is enabled, check phoneTarget
+    const isPhoneRequired = (isLeadFormEnabled && (leadForm?.showWhatsappButton || leadForm?.showCallButton || leadForm?.is_phone_required)) ||
+      reels.some((r: any) => r.promoEnabled && (r.promoPhone || r.showWhatsappButton || r.showCallButton));
+    const hasContactPhone = !isPhoneRequired || (!!leadForm?.phoneTarget && leadForm.phoneTarget.replace(/[^0-9]/g, "").length >= 7);
+
+    const score = (hasAvatar ? 1 : 0) + (hasBio ? 1 : 0) + (hasLinks ? 1 : 0) + (hasReels ? 1 : 0) + (hasLeadEmail ? 1 : 0) + (hasContactPhone ? 1 : 0);
+    const is100Percent = score === 6;
 
     return {
       hasAvatar,
@@ -874,6 +888,7 @@ function DashboardContent() {
       hasLinks,
       hasReels,
       hasLeadEmail,
+      hasContactPhone,
       score,
       is100Percent,
     };
@@ -2580,8 +2595,8 @@ function DashboardContent() {
         </div>
       )}
 
-      {/* Floating Unsaved Changes Reminder Toast Bar - STRICTLY SCOPED to Builder Tabs (Bio, Reels, Design) */}
-      {isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
+      {/* Floating Unsaved Changes Reminder Toast Bar - STRICTLY SCOPED to Builder Tabs (Bio, Reels, Design) when Wizard is Completed */}
+      {onboardingCompleted && isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
         <>
           {/* Mobile Compact Single-Line Strip */}
           <div className="fixed bottom-16 left-4 right-4 z-[90] bg-slate-900/95 border border-slate-700 p-2.5 rounded-full flex items-center justify-between shadow-2xl backdrop-blur-md block md:hidden animate-in slide-in-from-bottom-4 duration-200">
