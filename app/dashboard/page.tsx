@@ -210,32 +210,33 @@ function OnboardingWizardFooterNav({
   const nextLabel = currentStep === 1 ? (isFreePlan ? "Next: Design & Themes" : "Next: Videos & Reels") : "Next: Design & Themes";
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 max-w-[92vw]">
-      <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-2xl shadow-2xl px-4 sm:px-5 py-3 flex items-center gap-3 sm:gap-5 text-xs font-medium">
-        <div className="flex items-center gap-2 shrink-0">
+    <div className="fixed bottom-[68px] sm:bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 max-w-[96vw] sm:max-w-[92vw]">
+      <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-2xl shadow-2xl px-3 sm:px-5 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-5 text-xs font-medium">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <span className="font-extrabold text-slate-200 hidden md:inline">
             Step {currentStep}: {stepLabel}
           </span>
           <button
             type="button"
             onClick={onSkipStep}
-            className="text-slate-400 hover:text-slate-200 text-xs font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-slate-400 hover:text-slate-200 text-[11px] sm:text-xs font-semibold hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>Skip this step</span>
-            <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+            <span className="hidden sm:inline">Skip this step</span>
+            <span className="inline sm:hidden">Skip</span>
+            <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-slate-400" />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {currentStep > 1 && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onBack}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 h-9 px-3 text-xs font-bold gap-1.5 cursor-pointer rounded-xl"
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 h-8 sm:h-9 px-2.5 sm:px-3 text-[11px] sm:text-xs font-bold gap-1 cursor-pointer rounded-xl"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span>Back</span>
             </Button>
           )}
@@ -245,20 +246,22 @@ function OnboardingWizardFooterNav({
               type="button"
               size="sm"
               onClick={onNext}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-9 px-4 text-xs shadow-md gap-1.5 cursor-pointer rounded-xl"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-8 sm:h-9 px-3 sm:px-4 text-[11px] sm:text-xs shadow-md gap-1 sm:gap-1.5 cursor-pointer rounded-xl"
             >
-              <span>{nextLabel}</span>
-              <ArrowRight className="h-4 w-4" />
+              <span className="hidden sm:inline">{nextLabel}</span>
+              <span className="inline sm:hidden">Next</span>
+              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           ) : (
             <Button
               type="button"
               size="sm"
               onClick={onFinish}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black h-9 px-4 sm:px-5 text-xs shadow-lg gap-1.5 cursor-pointer rounded-xl"
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black h-8 sm:h-9 px-3 sm:px-5 text-[11px] sm:text-xs shadow-lg gap-1 sm:gap-1.5 cursor-pointer rounded-xl"
             >
-              <Sparkles className="h-4 w-4 text-slate-950" />
-              <span>Finish &amp; Publish Page</span>
+              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-950" />
+              <span className="hidden sm:inline">Finish &amp; Publish Page</span>
+              <span className="inline sm:hidden">Publish</span>
             </Button>
           )}
         </div>
@@ -1479,30 +1482,30 @@ function DashboardContent() {
       </div>
 
       {/* MOBILE STICKY TOP BAR & DRAWER (Visible on mobile only) */}
-      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between block md:hidden">
+      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 sm:px-4 py-2.5 flex items-center justify-between block md:hidden gap-2">
         {/* Left Slot: Hamburger Button */}
-        <div className="w-1/4 flex justify-start">
+        <div className="flex items-center shrink-0">
           <button
             type="button"
             onClick={() => setMobileDrawerOpen(true)}
             className="p-1.5 rounded-xl bg-slate-800/80 text-slate-200 hover:text-white border border-slate-700/80 cursor-pointer"
             aria-label="Open Navigation Menu"
           >
-            <Menu className="w-6 h-6 text-slate-200" />
+            <Menu className="w-5 h-5 text-slate-200" />
           </button>
         </div>
 
         {/* Center Slot: Centered FeedM.ee Brand Logo */}
-        <div className="w-2/4 flex justify-center items-center">
+        <div className="flex justify-center items-center shrink-0">
           <Link href="/dashboard" className="flex items-center justify-center">
             <Logo showText={false} />
           </Link>
         </div>
 
-        {/* Right Slot: Plan Badge */}
-        <div className="w-1/4 flex justify-end">
+        {/* Right Slot: Plan Badge & Mobile Readiness Badge (Side-by-side flex row, zero overlap) */}
+        <div className="flex items-center gap-1.5 shrink-0 min-w-0">
           {planType === "pro" ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
               <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
               <span className="hidden sm:inline">PRO TRIAL ACTIVE</span>
               <span className="sm:hidden">PRO</span>
@@ -1511,10 +1514,21 @@ function DashboardContent() {
             <button
               type="button"
               onClick={() => setShowUpgradeModal(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer"
+              className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer"
             >
               <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
               <span>FREE</span>
+            </button>
+          )}
+
+          {!evaluateReadiness().is100Percent && (
+            <button
+              type="button"
+              onClick={() => setMobileReadinessSheetOpen(true)}
+              className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-950/80 border border-amber-700/80 text-amber-300 text-[10px] font-extrabold shrink-0 cursor-pointer"
+            >
+              <AlertCircle className="w-3 h-3 text-amber-400 shrink-0" />
+              <span>Draft: {evaluateReadiness().percent}%</span>
             </button>
           )}
         </div>
@@ -2120,14 +2134,6 @@ function DashboardContent() {
             )}
           </div>
         </aside>
-
-        {/* Mobile Floating Readiness Badge (Phase B - Auto-hidden when 100% complete) */}
-        {!evaluateReadiness().is100Percent && (
-          <MobileReadinessFloatingBadge
-            readiness={evaluateReadiness()}
-            onClick={() => setMobileReadinessSheetOpen(true)}
-          />
-        )}
 
         {/* CENTER WORKSPACE */}
         <div className={cn("min-w-0 flex flex-col w-full flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
