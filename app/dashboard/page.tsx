@@ -80,17 +80,19 @@ function StripeCheckoutStatus({
 
 function OnboardingWizardHeader({
   currentStep,
+  isFreePlan = false,
   onStepClick,
   onSkip,
 }: {
   currentStep: 1 | 2 | 3;
+  isFreePlan?: boolean;
   onStepClick: (step: 1 | 2 | 3) => void;
   onSkip: () => void;
 }) {
   const steps = [
-    { number: 1, label: "Profile & Links", icon: Link2 },
-    { number: 2, label: "Media & Reels", icon: Film },
-    { number: 3, label: "Theme & Design", icon: Palette },
+    { number: 1, label: "Bio & Links", icon: Link2 },
+    { number: 2, label: isFreePlan ? "Videos & Reels (Pro)" : "Videos & Reels", icon: Film },
+    { number: 3, label: "Design & Themes", icon: Palette },
   ];
 
   const progressPercent = currentStep === 1 ? 33 : currentStep === 2 ? 66 : 100;
@@ -106,10 +108,10 @@ function OnboardingWizardHeader({
             </div>
             <div>
               <h2 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                Setup Wizard <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-800/80">Step {currentStep} of 3</span>
+                Setup Wizard <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-800/80">Step {currentStep} of {isFreePlan ? "2" : "3"}</span>
               </h2>
               <p className="text-[11px] font-medium text-slate-400 mt-0.5 hidden sm:block">
-                Follow these 3 quick steps to launch your creator page.
+                Follow these quick steps to launch your creator page.
               </p>
             </div>
           </div>
@@ -129,18 +131,25 @@ function OnboardingWizardHeader({
           {steps.map((s) => {
             const isActive = currentStep === s.number;
             const isDone = currentStep > s.number;
+            const isSkippedStep = isFreePlan && s.number === 2;
 
             return (
               <button
                 key={s.number}
                 type="button"
-                onClick={() => onStepClick(s.number as 1 | 2 | 3)}
+                onClick={() => {
+                  if (isSkippedStep) return;
+                  onStepClick(s.number as 1 | 2 | 3);
+                }}
+                disabled={isSkippedStep}
                 className={cn(
                   "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer",
                   isActive
                     ? "bg-emerald-600 text-white shadow-xs"
                     : isDone
                     ? "text-emerald-400 hover:bg-slate-800"
+                    : isSkippedStep
+                    ? "text-slate-600 opacity-50 cursor-not-allowed"
                     : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                 )}
               >
@@ -184,21 +193,28 @@ function OnboardingWizardHeader({
 
 function OnboardingWizardFooterNav({
   currentStep,
-  onStepChange,
+  isFreePlan = false,
+  onNext,
+  onBack,
   onFinish,
   onSkip,
 }: {
   currentStep: 1 | 2 | 3;
-  onStepChange: (step: 1 | 2 | 3) => void;
+  isFreePlan?: boolean;
+  onNext: () => void;
+  onBack: () => void;
   onFinish: () => void;
   onSkip: () => void;
 }) {
+  const stepLabel = currentStep === 1 ? "Bio & Links" : currentStep === 2 ? "Videos & Reels" : "Design & Themes";
+  const nextLabel = currentStep === 1 ? (isFreePlan ? "Next: Design & Themes" : "Next: Videos & Reels") : "Next: Design & Themes";
+
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 max-w-[92vw]">
       <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 text-white rounded-2xl shadow-2xl px-4 sm:px-5 py-3 flex items-center gap-3 sm:gap-5 text-xs font-medium">
         <div className="flex items-center gap-2 shrink-0">
           <span className="font-extrabold text-slate-200 hidden md:inline">
-            Step {currentStep}: {currentStep === 1 ? "Bio & Links" : currentStep === 2 ? "Media & Reels" : "Theme & Design"}
+            Step {currentStep}: {stepLabel}
           </span>
           <button
             type="button"
@@ -215,7 +231,7 @@ function OnboardingWizardFooterNav({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => onStepChange((currentStep - 1) as 1 | 2 | 3)}
+              onClick={onBack}
               className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 h-9 px-3 text-xs font-bold gap-1.5 cursor-pointer rounded-xl"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -227,10 +243,10 @@ function OnboardingWizardFooterNav({
             <Button
               type="button"
               size="sm"
-              onClick={() => onStepChange((currentStep + 1) as 1 | 2 | 3)}
+              onClick={onNext}
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-black h-9 px-4 text-xs shadow-md gap-1.5 cursor-pointer rounded-xl"
             >
-              <span>{currentStep === 1 ? "Next: Media & Reels" : "Next: Design"}</span>
+              <span>{nextLabel}</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
@@ -382,25 +398,14 @@ function PublishSuccessModal({
 function DraftWarningModal({
   open,
   onClose,
-  username,
   readiness,
 }: {
   open: boolean;
   onClose: () => void;
-  username: string;
+  username?: string;
   readiness: ReadinessData;
 }) {
-  const [copied, setCopied] = useState(false);
-
   if (!open) return null;
-
-  const publicUrl = `https://feedm.ee/${username || "main"}`;
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
 
   const checklistItems = [
     { label: "Profile Picture / Avatar", isMet: readiness.hasAvatar },
@@ -462,50 +467,14 @@ function DraftWarningModal({
           </div>
         </div>
 
-        {/* Public URL Box */}
-        <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 flex items-center justify-between gap-2">
-          <span className="text-xs font-extrabold text-zinc-800 truncate font-mono">
-            {publicUrl}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleCopy}
-            className="h-8 px-3 text-xs font-bold rounded-xl gap-1 shrink-0 bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100 cursor-pointer"
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5 text-zinc-500" />
-                <span>Copy Link</span>
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* Action Buttons Container (Side-by-side flex layout) */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-          <Link href={`/${username}`} target="_blank" className="w-full sm:flex-1">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 text-xs font-extrabold rounded-xl border-zinc-200 text-zinc-700 hover:bg-zinc-100 gap-1.5 cursor-pointer"
-            >
-              <ExternalLink className="h-4 w-4 text-zinc-500 shrink-0" />
-              <span className="truncate">View Draft Feed</span>
-            </Button>
-          </Link>
+        {/* Single Centered Full-Width Primary Action Button */}
+        <div className="flex w-full justify-center">
           <Button
             type="button"
             onClick={onClose}
-            className="w-full sm:flex-1 h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
+            className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
           >
-            <span className="truncate">Continue Editing</span>
+            <span>Continue Editing</span>
           </Button>
         </div>
       </div>
@@ -708,6 +677,48 @@ function DashboardContent() {
 
   const handleSkipWizard = async () => {
     await markOnboardingCompletedInDB();
+  };
+
+  const handleWizardNext = async () => {
+    if (wizardStep === 1) {
+      // Step 1 Validation: Bio text and at least 1 active link required
+      const activeLinks = customLinks.filter((l: any) => l.title?.trim() && l.url?.trim());
+      if (!bio || !bio.trim() || activeLinks.length < 1) {
+        setSaveStatus("error");
+        setStatusMsg("Please enter a bio and add at least 1 valid link before proceeding.");
+        return;
+      }
+
+      // Free plan bypasses Step 2 (Videos & Reels) and goes directly to Step 3
+      if (planType === "free") {
+        await handleWizardStepChange(3);
+      } else {
+        await handleWizardStepChange(2);
+      }
+    } else if (wizardStep === 2) {
+      // Step 2 Validation: Reels count >= 1 for non-free plans
+      if (planType !== "free") {
+        const activeReels = reels.filter((r: any) => r.videoUrl || r.url);
+        if (activeReels.length < 1) {
+          setSaveStatus("error");
+          setStatusMsg("Please add at least 1 video reel before proceeding to Design & Themes.");
+          return;
+        }
+      }
+      await handleWizardStepChange(3);
+    }
+  };
+
+  const handleWizardBack = async () => {
+    if (wizardStep === 3) {
+      if (planType === "free") {
+        await handleWizardStepChange(1);
+      } else {
+        await handleWizardStepChange(2);
+      }
+    } else if (wizardStep === 2) {
+      await handleWizardStepChange(1);
+    }
   };
 
   const handleFinishAndPublish = async () => {
@@ -1817,6 +1828,7 @@ function DashboardContent() {
           {!onboardingCompleted && (
             <OnboardingWizardHeader
               currentStep={wizardStep}
+              isFreePlan={planType === "free"}
               onStepClick={handleWizardStepChange}
               onSkip={handleSkipWizard}
             />
@@ -2356,7 +2368,9 @@ function DashboardContent() {
       {!onboardingCompleted && (
         <OnboardingWizardFooterNav
           currentStep={wizardStep}
-          onStepChange={handleWizardStepChange}
+          isFreePlan={planType === "free"}
+          onNext={handleWizardNext}
+          onBack={handleWizardBack}
           onFinish={handleFinishAndPublish}
           onSkip={handleSkipWizard}
         />
