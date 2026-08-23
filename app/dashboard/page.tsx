@@ -416,8 +416,8 @@ function DraftWarningModal({
     { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
     { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
     { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
-    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "bio" as const, targetId: "lead-form-settings" },
+    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "reels" as const, targetId: "reel-action-buttons" },
   ];
 
   return (
@@ -512,8 +512,8 @@ function SidebarReadinessWidget({
     { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
     { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
     { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
-    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "bio" as const, targetId: "lead-form-settings" },
+    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "reels" as const, targetId: "reel-action-buttons" },
   ];
 
   return (
@@ -648,8 +648,8 @@ function MobileReadinessSheet({
     { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
     { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
     { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "leads" as const, targetId: "lead-email-input" },
-    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "leads" as const, targetId: "lead-email-input" },
+    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "bio" as const, targetId: "lead-form-settings" },
+    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "reels" as const, targetId: "reel-action-buttons" },
   ];
 
   return (
@@ -855,11 +855,14 @@ function DashboardContent() {
         const el = document.getElementById(targetId) || document.querySelector(`[name="${targetId}"]`);
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
-          if ("focus" in el && typeof el.focus === "function") {
-            (el as HTMLElement).focus();
+          const targetInput = (el.tagName === "INPUT" || el.tagName === "TEXTAREA")
+            ? el
+            : el.querySelector("input[type='email'], input[type='tel'], input[type='text'], input, textarea");
+          if (targetInput && "focus" in targetInput && typeof (targetInput as HTMLElement).focus === "function") {
+            (targetInput as HTMLElement).focus();
           }
         }
-      }, 150);
+      }, 200);
     }
   };
 

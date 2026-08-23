@@ -707,7 +707,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
 
       {/* Reel Action Buttons & Contact Phone */}
       {leadForm && setLeadForm && (
-        <Card id="reel-settings-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
+        <Card id="reel-action-buttons" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
           <CardHeader>
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
               <MessageCircle className="h-4.5 w-4.5 text-emerald-600" /> Reel Action Buttons & Contact Phone
@@ -723,6 +723,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
                   onChange={(val) => setLeadForm({ ...leadForm, phoneCountryCode: val })} 
                 />
                 <Input
+                  id="lead-phone-input"
                   value={leadForm.phoneTarget || ""}
                   onChange={(e) => setLeadForm({ ...leadForm, phoneTarget: e.target.value })}
                   placeholder="Local phone number (e.g. 5551234567)"

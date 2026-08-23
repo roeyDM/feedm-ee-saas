@@ -840,7 +840,7 @@ export function ProfileEditor({
       </Card>
 
       {/* 4. Lead Form Settings */}
-      <Card className="bg-white border-zinc-200/80 shadow-sm relative overflow-hidden">
+      <Card id="lead-form-settings" className="bg-white border-zinc-200/80 shadow-sm relative overflow-hidden scroll-mt-28">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
@@ -966,6 +966,7 @@ export function ProfileEditor({
             <div className="space-y-1">
               <Label className="text-xs font-bold text-zinc-700">Target Email (For Form Submissions)</Label>
               <Input
+                id="lead-email-input"
                 type="email"
                 value={leadForm.target || ""}
                 onChange={(e) => setLeadForm({ ...leadForm, target: e.target.value })}
