@@ -8,21 +8,24 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { variantId: bodyVariantId, planType = "pro", billingInterval = "monthly", userId: bodyUserId } = body;
+    const { variantId: bodyVariantId, planType: inputPlan, plan, billingInterval: inputInterval, billingCycle, cycle, userId: bodyUserId } = body;
 
-    // Resolve variant ID dynamically if not explicitly provided
+    const targetPlan = inputPlan || plan || "pro";
+    const targetInterval = (inputInterval || billingCycle || cycle || "monthly") as "monthly" | "yearly";
+
+    // Dynamically resolve variant ID from server environment variables if not provided or empty
     let variantId = bodyVariantId ? String(bodyVariantId).trim() : "";
     if (!variantId || variantId === "undefined" || variantId === "null") {
-      const resolved = getLemonSqueezyVariantId(planType, billingInterval as "monthly" | "yearly");
+      const resolved = getLemonSqueezyVariantId(targetPlan, targetInterval);
       if (resolved) {
         variantId = resolved;
       }
     }
 
     if (!variantId) {
-      console.error(`[Lemon Squeezy Checkout Abort]: Missing Variant ID for plan='${planType}', interval='${billingInterval}'`);
+      console.error(`[Lemon Squeezy Checkout Abort]: Missing Variant ID for plan='${targetPlan}', interval='${targetInterval}' in environment variables.`);
       return NextResponse.json(
-        { error: "Plan variant configuration is missing. Please contact support." },
+        { error: "Plan variant configuration missing in Netlify" },
         { status: 400 }
       );
     }
