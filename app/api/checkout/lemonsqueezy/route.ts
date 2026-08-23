@@ -63,9 +63,11 @@ export async function POST(req: Request) {
     const formattedStoreId = String(storeId).trim();
     const formattedVariantId = String(cleanVariantId).trim();
 
-    // Ensure custom data contains non-null string key-value pairs
+    // Force string sanitization for user_id to ensure it is ALWAYS a valid non-empty string
+    const sanitizedUserId = String(userId || bodyUserId || `anon_${Date.now()}`);
+
     const customData: Record<string, string> = {
-      user_id: String(userId || ""),
+      user_id: String(sanitizedUserId),
       plan_type: String(targetPlan),
       billing_interval: String(targetInterval),
     };
