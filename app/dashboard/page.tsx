@@ -837,6 +837,7 @@ function DashboardContent() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showExtraFeedModal, setShowExtraFeedModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
 
   // FTUE Onboarding Wizard State (Local Experiment)
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
@@ -1218,16 +1219,18 @@ function DashboardContent() {
   }, [searchParams]);
 
   // Sync snapshot right after hydration completes to ensure no false-positive isDirty on refresh
-  const isHydratedRef = useRef(false);
   useEffect(() => {
-    if (!isProfileLoading && !isHydratedRef.current) {
-      setSavedSnapshot(getCurrentStateJSON());
-      isHydratedRef.current = true;
+    if (!isProfileLoading && !isInitialLoadDone) {
+      const timer = setTimeout(() => {
+        setSavedSnapshot(getCurrentStateJSON());
+        setIsInitialLoadDone(true);
+      }, 350);
+      return () => clearTimeout(timer);
     }
-  }, [isProfileLoading, name, bio, avatarUrl, customHexColor, planType, socialLinks, customLinks, reels, leadForm, appearance]);
+  }, [isProfileLoading, isInitialLoadDone, name, bio, avatarUrl, customHexColor, planType, socialLinks, customLinks, reels, leadForm, appearance]);
 
   // Dirty State calculation & Browser Navigation Protection
-  const isDirty = !isProfileLoading && savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
+  const isDirty = isInitialLoadDone && !isProfileLoading && savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -2100,19 +2103,23 @@ function DashboardContent() {
               )}
             </div>
 
-            {/* Desktop Sidebar Readiness Widget (Phase B) */}
-            <SidebarReadinessWidget
-              readiness={evaluateReadiness()}
-              onNavigateToItem={handleNavigateToItem}
-            />
+            {/* Desktop Sidebar Readiness Widget (Phase B - Auto-hidden when 100% complete) */}
+            {!evaluateReadiness().is100Percent && (
+              <SidebarReadinessWidget
+                readiness={evaluateReadiness()}
+                onNavigateToItem={handleNavigateToItem}
+              />
+            )}
           </div>
         </aside>
 
-        {/* Mobile Floating Readiness Badge (Phase B) */}
-        <MobileReadinessFloatingBadge
-          readiness={evaluateReadiness()}
-          onClick={() => setMobileReadinessSheetOpen(true)}
-        />
+        {/* Mobile Floating Readiness Badge (Phase B - Auto-hidden when 100% complete) */}
+        {!evaluateReadiness().is100Percent && (
+          <MobileReadinessFloatingBadge
+            readiness={evaluateReadiness()}
+            onClick={() => setMobileReadinessSheetOpen(true)}
+          />
+        )}
 
         {/* CENTER WORKSPACE */}
         <div className={cn("min-w-0 flex flex-col w-full flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
