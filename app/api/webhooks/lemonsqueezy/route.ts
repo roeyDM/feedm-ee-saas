@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     const signature = req.headers.get("x-signature") || "";
-    const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+    const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET || process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
 
     if (!secret) {
       console.error("[Lemon Squeezy Webhook Error]: LEMONSQUEEZY_WEBHOOK_SECRET is missing.");

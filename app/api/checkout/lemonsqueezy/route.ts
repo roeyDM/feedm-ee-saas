@@ -13,8 +13,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "variantId is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.LEMONSQUEEZY_API_KEY;
-    const storeId = process.env.LEMONSQUEEZY_STORE_ID;
+    const apiKey = process.env.LEMONSQUEEZY_API_KEY || process.env.LEMON_SQUEEZY_API_KEY;
+    const storeId = process.env.LEMONSQUEEZY_STORE_ID || process.env.LEMON_SQUEEZY_STORE_ID;
 
     if (!apiKey || !storeId) {
       return NextResponse.json(

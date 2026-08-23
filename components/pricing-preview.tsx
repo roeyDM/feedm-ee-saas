@@ -42,16 +42,16 @@ export function PricingPreview() {
       let variantId = "";
       if (planType === "personal") {
         variantId = billingCycle === "yearly"
-          ? (process.env.LEMONSQUEEZY_VARIANT_PERSONAL_YEARLY || "1996076")
-          : (process.env.LEMONSQUEEZY_VARIANT_PERSONAL_MONTHLY || "1996051");
+          ? (process.env.LEMONSQUEEZY_VARIANT_PERSONAL_YEARLY || process.env.LEMON_SQUEEZY_PERSONAL_YEARLY_VARIANT_ID || "1996076")
+          : (process.env.LEMONSQUEEZY_VARIANT_PERSONAL_MONTHLY || process.env.LEMON_SQUEEZY_PERSONAL_MONTHLY_VARIANT_ID || "1996051");
       } else if (planType === "pro") {
         variantId = billingCycle === "yearly"
-          ? (process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY || "1996078")
-          : (process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY || "1996077");
+          ? (process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID || process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY || process.env.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID || "1996078")
+          : (process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID || process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY || process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID || "1996077");
       } else if (planType === "business") {
         variantId = billingCycle === "yearly"
-          ? (process.env.LEMONSQUEEZY_VARIANT_BUSINESS_YEARLY || "1996084")
-          : (process.env.LEMONSQUEEZY_VARIANT_BUSINESS_MONTHLY || "1996082");
+          ? (process.env.LEMONSQUEEZY_VARIANT_BUSINESS_YEARLY || process.env.LEMON_SQUEEZY_BUSINESS_YEARLY_VARIANT_ID || "1996084")
+          : (process.env.LEMONSQUEEZY_VARIANT_BUSINESS_MONTHLY || process.env.LEMON_SQUEEZY_BUSINESS_MONTHLY_VARIANT_ID || "1996082");
       }
 
       const res = await fetch("/api/checkout/lemonsqueezy", {

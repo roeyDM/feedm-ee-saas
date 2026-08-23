@@ -28,10 +28,12 @@ export function UpgradeModal({
   const monthlyVariantId =
     process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID ||
     process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY ||
+    process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID ||
     "1996077";
   const yearlyVariantId =
     process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
     process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY ||
+    process.env.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID ||
     "1996078";
 
   const handleUpgrade = async () => {
