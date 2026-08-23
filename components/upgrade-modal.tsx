@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface UpgradeModalProps {
@@ -21,6 +21,7 @@ export function UpgradeModal({
 }: UpgradeModalProps) {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -35,21 +36,28 @@ export function UpgradeModal({
 
   const handleUpgrade = async () => {
     setIsCheckoutLoading(true);
+    setErrorMsg(null);
     const selectedVariantId = billingInterval === "yearly" ? yearlyVariantId : monthlyVariantId;
+
     try {
       const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ variantId: selectedVariantId, planType: "pro" }),
       });
+
       const data = await res.json();
-      if (data.url) {
+
+      if (res.ok && data.url) {
         window.location.href = data.url;
+        return;
       } else {
-        window.location.href = `/dashboard?upgrade=pro&cycle=${billingInterval}`;
+        const errorDetail = data?.error || "Unable to start checkout session. Please contact support if this persists.";
+        setErrorMsg(errorDetail);
       }
-    } catch (_) {
-      window.location.href = `/dashboard?upgrade=pro&cycle=${billingInterval}`;
+    } catch (err: any) {
+      console.error("[Checkout Exception]:", err);
+      setErrorMsg("Unable to connect to checkout service. Please check your connection and try again.");
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -79,6 +87,14 @@ export function UpgradeModal({
         <p className="text-xs sm:text-sm font-medium text-zinc-600 mt-2 leading-relaxed">
           {subtitle}
         </p>
+
+        {/* Error Feedback Banner */}
+        {errorMsg && (
+          <div className="w-full mt-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center gap-2 text-left animate-in fade-in duration-150">
+            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+            <span className="leading-snug">{errorMsg}</span>
+          </div>
+        )}
 
         {/* Clean Monthly / Yearly Toggle Switch */}
         <div className="my-5 flex items-center justify-center p-1 bg-zinc-100 rounded-2xl border border-zinc-200/80 w-full">

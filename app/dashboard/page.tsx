@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -1504,12 +1504,24 @@ function DashboardContent() {
 
         {/* Right Slot: Plan Badge & Mobile Readiness Badge (Side-by-side flex row, zero overlap) */}
         <div className="flex items-center gap-1.5 shrink-0 min-w-0">
-          {planType === "pro" ? (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
-              <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
-              <span className="hidden sm:inline">PRO TRIAL ACTIVE</span>
-              <span className="sm:hidden">PRO</span>
-            </div>
+          {planType !== "free" ? (
+            subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0) ? (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-950/80 border border-amber-700/80 text-amber-300 text-[10px] font-extrabold shrink-0">
+                <Clock className="w-3 h-3 text-amber-400 shrink-0 animate-pulse" />
+                <span className="hidden sm:inline">
+                  {getRemainingTrialDays(trialEndsAt) > 1 ? `PRO TRIAL (${getRemainingTrialDays(trialEndsAt)}d)` : getRemainingTrialDays(trialEndsAt) === 1 ? "PRO TRIAL (1d)" : "PRO TRIAL (Today)"}
+                </span>
+                <span className="sm:hidden">
+                  {getRemainingTrialDays(trialEndsAt) > 1 ? `PRO (${getRemainingTrialDays(trialEndsAt)}d)` : "PRO (1d)"}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
+                <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
+                <span className="hidden sm:inline">PRO PLAN ACTIVE</span>
+                <span className="sm:hidden">PRO</span>
+              </div>
+            )
           ) : (
             <button
               type="button"

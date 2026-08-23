@@ -2,10 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
-import { ExternalLink, Zap, Sparkles, ArrowRight } from "lucide-react";
+import { ExternalLink, Zap, Sparkles, ArrowRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlanType } from "@/lib/supabase";
-
+import { getRemainingTrialDays } from "@/lib/auth-guards";
 import { Logo } from "@/components/logo";
 
 interface DashboardHeaderProps {
@@ -27,6 +27,10 @@ export function DashboardHeader({
   isSaving = false,
   onUpgradeClick,
 }: DashboardHeaderProps) {
+  const remainingDays = getRemainingTrialDays(trialEndsAt);
+  const isTrialActive = planType !== "free" && (subscriptionStatus === "trialing" || remainingDays > 0);
+  const trialText = remainingDays > 1 ? `PRO TRIAL (${remainingDays} Days Left)` : remainingDays === 1 ? "PRO TRIAL (1 Day Left)" : "PRO TRIAL (Ends Today)";
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white backdrop-blur-md">
       <div className="flex h-14 w-full items-center justify-between pl-4 lg:pl-6 pr-4 lg:pr-8">
@@ -38,7 +42,7 @@ export function DashboardHeader({
           </Link>
         </div>
 
-        {/* Dynamic Status / Trial Bar in Top Header (No emojis, flat SVG icons) */}
+        {/* Dynamic Status / Trial Bar in Top Header */}
         <div className="flex-1 flex justify-center px-4">
           {planType === "free" ? (
             <button
@@ -53,6 +57,18 @@ export function DashboardHeader({
                 <ArrowRight className="h-3 w-3 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
               </span>
             </button>
+          ) : isTrialActive ? (
+            <div className="inline-flex items-center gap-2.5 rounded-full bg-amber-950/80 px-3.5 py-1 text-xs font-bold text-amber-300 border border-amber-500/40 shadow-2xs">
+              <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0 animate-pulse" />
+              <span>{trialText}</span>
+              <button
+                type="button"
+                onClick={onUpgradeClick}
+                className="rounded bg-amber-400/20 hover:bg-amber-400/30 px-2 py-0.5 text-[9px] font-black uppercase text-amber-200 border border-amber-400/30 shrink-0 cursor-pointer transition-colors"
+              >
+                Keep Pro
+              </button>
+            </div>
           ) : (
             <div className="inline-flex items-center gap-2.5 rounded-full bg-emerald-950/70 px-3.5 py-1 text-xs font-bold text-emerald-300 border border-emerald-500/40 shadow-2xs">
               <Zap className="h-3.5 w-3.5 text-emerald-400 fill-current animate-pulse shrink-0" />
@@ -64,7 +80,7 @@ export function DashboardHeader({
           )}
         </div>
 
-        {/* Quick Actions (Save and View Live moved out) */}
+        {/* Quick Actions */}
         <div className="flex items-center gap-3">
           <Link href={`/${username}`} target="_blank" className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition">
             <span>feedm.ee/{username}</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Shield, Building2, Mail, Send, X, Sparkles, ArrowDown } from "lucide-react";
+import { Check, Shield, Building2, Mail, Send, X, Sparkles, ArrowDown, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { FaqAccordion, PRICING_FAQS } from "@/components/faq-accordion";
@@ -14,6 +14,7 @@ export function PricingPreview() {
   const [agencyEmail, setAgencyEmail] = useState("");
   const [agencyMsg, setAgencyMsg] = useState("");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const handleCheckout = async (planType: "free" | "personal" | "pro" | "business") => {
     if (planType === "business") {
@@ -37,6 +38,7 @@ export function PricingPreview() {
 
     try {
       setIsCheckoutLoading(true);
+      setCheckoutError(null);
       let variantId = "";
       if (planType === "personal") {
         variantId = billingCycle === "yearly"
@@ -59,13 +61,16 @@ export function PricingPreview() {
       });
 
       const data = await res.json();
-      if (data.url) {
+      if (res.ok && data.url) {
         window.location.href = data.url;
+        return;
       } else {
-        window.location.href = `/dashboard?upgrade=${planType}&cycle=${billingCycle}`;
+        const errorDetail = data?.error || "Unable to start checkout session. Please contact support if this persists.";
+        setCheckoutError(errorDetail);
       }
-    } catch (err) {
-      window.location.href = `/dashboard?upgrade=${planType}&cycle=${billingCycle}`;
+    } catch (err: any) {
+      console.error("[Pricing Checkout Exception]:", err);
+      setCheckoutError("Unable to connect to checkout service. Please try again.");
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -107,6 +112,13 @@ export function PricingPreview() {
           <p className="mx-auto mt-4 max-w-xl text-base font-medium text-zinc-600 sm:text-lg">
             Start for free, then upgrade to unlock 3 snap video reels, custom domains, and instant WhatsApp lead forms.
           </p>
+
+          {checkoutError && (
+            <div className="mx-auto mt-4 max-w-md p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center justify-center gap-2 text-center animate-in fade-in duration-150 shadow-xs">
+              <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>{checkoutError}</span>
+            </div>
+          )}
 
           {/* Annual / Monthly Toggle Container (Exact copy from live page) */}
           <div className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-white/80 p-1.5 border border-zinc-200/80 shadow-md backdrop-blur-md">
