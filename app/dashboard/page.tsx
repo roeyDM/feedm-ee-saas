@@ -267,6 +267,14 @@ function OnboardingWizardFooterNav({
   );
 }
 
+export interface ReadinessItem {
+  id: string;
+  label: string;
+  isMet: boolean;
+  tab: "bio" | "reels" | "design" | "leads";
+  targetId: string;
+}
+
 interface ReadinessData {
   hasAvatar: boolean;
   hasBio: boolean;
@@ -275,7 +283,10 @@ interface ReadinessData {
   hasLeadEmail: boolean;
   hasContactPhone: boolean;
   score: number;
+  totalCriteria: number;
+  percent: number;
   is100Percent: boolean;
+  items: ReadinessItem[];
 }
 
 function PublishSuccessModal({
@@ -335,14 +346,14 @@ function PublishSuccessModal({
           <div className="flex items-center justify-between font-extrabold">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Page Readiness ({readiness.score}/6 Completed)</span>
+              <span>Page Readiness ({readiness.score}/{readiness.totalCriteria} Completed)</span>
             </span>
             <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-emerald-100 border-emerald-300 text-emerald-800">
               100% Ready
             </span>
           </div>
           <p className="text-[11px] font-medium text-emerald-800/90 pl-5">
-            All profile criteria met: Avatar, bio, custom links, video reels, notification email, and contact phone.
+            All profile criteria met for your active plan.
           </p>
         </div>
 
@@ -411,15 +422,6 @@ function DraftWarningModal({
 }) {
   if (!open) return null;
 
-  const checklistItems = [
-    { label: "Profile Picture", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
-    { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
-    { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
-    { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "bio" as const, targetId: "lead-form-settings" },
-    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "reels" as const, targetId: "reel-action-buttons" },
-  ];
-
   return (
     <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto">
       <div className="bg-white rounded-3xl border border-zinc-200 max-w-md w-full p-6 shadow-2xl space-y-5 text-center animate-in zoom-in-95 duration-200 my-auto">
@@ -439,7 +441,7 @@ function DraftWarningModal({
           <div className="flex items-center justify-between font-extrabold border-b border-amber-200/80 pb-2">
             <span className="flex items-center gap-1.5 text-amber-900">
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>Readiness Score ({readiness.score}/6 Criteria Met)</span>
+              <span>Readiness Score ({readiness.score}/{readiness.totalCriteria} Criteria Met)</span>
             </span>
             <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-amber-100 border-amber-300 text-amber-800">
               Draft Status
@@ -447,7 +449,7 @@ function DraftWarningModal({
           </div>
 
           <div className="space-y-1.5 pt-1">
-            {checklistItems.map((item, idx) => (
+            {readiness.items.map((item, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -505,16 +507,6 @@ function SidebarReadinessWidget({
   onNavigateToItem: (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const percent = Math.round((readiness.score / 6) * 100);
-
-  const checklistItems = [
-    { label: "Profile Picture", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
-    { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
-    { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
-    { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "bio" as const, targetId: "lead-form-settings" },
-    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "reels" as const, targetId: "reel-action-buttons" },
-  ];
 
   return (
     <div className="mt-2 rounded-2xl border border-zinc-200/90 bg-white shadow-2xs overflow-hidden transition-all max-w-full">
@@ -544,8 +536,8 @@ function SidebarReadinessWidget({
 
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold text-zinc-500">
-            <span>{readiness.score}/6 Criteria</span>
-            <span>{percent}%</span>
+            <span>{readiness.score}/{readiness.totalCriteria} Criteria</span>
+            <span>{readiness.percent}%</span>
           </div>
           <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
             <div
@@ -553,7 +545,7 @@ function SidebarReadinessWidget({
                 "h-full rounded-full transition-all duration-300",
                 readiness.is100Percent ? "bg-emerald-500" : "bg-amber-500"
               )}
-              style={{ width: `${percent}%` }}
+              style={{ width: `${readiness.percent}%` }}
             />
           </div>
         </div>
@@ -562,7 +554,7 @@ function SidebarReadinessWidget({
       {/* Expanded Checklist View */}
       {expanded && (
         <div className="p-2 pt-0.5 border-t border-zinc-100 space-y-1 bg-zinc-50/50 animate-in fade-in duration-150">
-          {checklistItems.map((item, idx) => (
+          {readiness.items.map((item, idx) => (
             <button
               key={idx}
               type="button"
@@ -605,8 +597,6 @@ function MobileReadinessFloatingBadge({
   readiness: ReadinessData;
   onClick: () => void;
 }) {
-  const percent = Math.round((readiness.score / 6) * 100);
-
   return (
     <button
       type="button"
@@ -623,7 +613,7 @@ function MobileReadinessFloatingBadge({
       ) : (
         <AlertCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
       )}
-      <span>{readiness.is100Percent ? "Live" : "Draft"}: {percent}%</span>
+      <span>{readiness.is100Percent ? "Live" : "Draft"}: {readiness.percent}%</span>
     </button>
   );
 }
@@ -641,17 +631,6 @@ function MobileReadinessSheet({
 }) {
   if (!open) return null;
 
-  const percent = Math.round((readiness.score / 6) * 100);
-
-  const checklistItems = [
-    { label: "Profile Picture", isMet: readiness.hasAvatar, tab: "bio" as const, targetId: "avatar-upload-container" },
-    { label: "Bio Description", isMet: readiness.hasBio, tab: "bio" as const, targetId: "bio" },
-    { label: "Active Links", isMet: readiness.hasLinks, tab: "bio" as const, targetId: "custom-links-container" },
-    { label: "Video Reels (Pro)", isMet: readiness.hasReels, tab: "reels" as const, targetId: "reels-container" },
-    { label: "Notification Email", isMet: readiness.hasLeadEmail, tab: "bio" as const, targetId: "lead-form-settings" },
-    { label: "Contact Phone", isMet: readiness.hasContactPhone, tab: "reels" as const, targetId: "reel-action-buttons" },
-  ];
-
   return (
     <div className="md:hidden fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-end justify-center animate-in fade-in duration-200">
       <div className="bg-white rounded-t-3xl border-t border-zinc-200 w-full p-5 shadow-2xl space-y-4 animate-in slide-in-from-bottom duration-200 max-h-[80vh] overflow-y-auto">
@@ -662,7 +641,7 @@ function MobileReadinessSheet({
             ) : (
               <AlertCircle className="h-5 w-5 text-amber-600" />
             )}
-            <h3 className="text-sm font-black text-zinc-950">Page Readiness ({readiness.score}/6 - {percent}%)</h3>
+            <h3 className="text-sm font-black text-zinc-950">Page Readiness ({readiness.score}/{readiness.totalCriteria} - {readiness.percent}%)</h3>
           </div>
           <button
             type="button"
@@ -674,7 +653,7 @@ function MobileReadinessSheet({
         </div>
 
         <div className="space-y-2">
-          {checklistItems.map((item, idx) => (
+          {readiness.items.map((item, idx) => (
             <button
               key={idx}
               type="button"
@@ -868,23 +847,50 @@ function DashboardContent() {
   };
 
   const evaluateReadiness = (): ReadinessData => {
+    const isFreePlan = planType === "free";
+
     const hasAvatar = !!avatarUrl && avatarUrl.trim().length > 0 && !avatarUrl.includes("unsplash.com");
     const hasBio = !!bio && bio.trim().length > 0;
     const validLinks = customLinks.filter((l: any) => l.title?.trim() && l.url?.trim());
     const hasLinks = validLinks.length >= 1;
     const validReels = reels.filter((r: any) => r.videoUrl || r.url);
-    const hasReels = planType === "free" ? true : validReels.length >= 1;
+    const hasReels = validReels.length >= 1;
+
     // 1. CONDITIONAL LEAD FORM EMAIL READINESS: Evaluate target email ONLY if leadForm is enabled
     const isLeadFormEnabled = leadForm?.enabled !== undefined ? leadForm.enabled : (leadForm?.is_enabled !== undefined ? leadForm.is_enabled : (leadForm?.is_leadform_enabled !== undefined ? leadForm.is_leadform_enabled : true));
-    const hasLeadEmail = !isLeadFormEnabled || (!!leadForm?.target && leadForm.target.trim().length > 0 && leadForm.target.includes("@"));
+    const hasLeadEmail = !!leadForm?.target && leadForm.target.trim().length > 0 && leadForm.target.includes("@");
 
-    // 2. REEL / LEAD PHONE VALIDATION: If WhatsApp or Phone Call button is enabled, check phoneTarget
+    // 2. REEL / LEAD PHONE VALIDATION: Evaluate phone ONLY if WhatsApp or Phone Call button is enabled
     const isPhoneRequired = (isLeadFormEnabled && (leadForm?.showWhatsappButton || leadForm?.showCallButton || leadForm?.is_phone_required)) ||
       reels.some((r: any) => r.promoEnabled && (r.promoPhone || r.showWhatsappButton || r.showCallButton));
-    const hasContactPhone = !isPhoneRequired || (!!leadForm?.phoneTarget && leadForm.phoneTarget.replace(/[^0-9]/g, "").length >= 7);
+    const hasContactPhone = !!leadForm?.phoneTarget && leadForm.phoneTarget.replace(/[^0-9]/g, "").length >= 7;
 
-    const score = (hasAvatar ? 1 : 0) + (hasBio ? 1 : 0) + (hasLinks ? 1 : 0) + (hasReels ? 1 : 0) + (hasLeadEmail ? 1 : 0) + (hasContactPhone ? 1 : 0);
-    const is100Percent = score === 6;
+    // Build dynamic checklist items array based on plan & active options
+    const items: ReadinessItem[] = [
+      { id: "avatar", label: "Profile Picture", isMet: hasAvatar, tab: "bio", targetId: "avatar-upload-container" },
+      { id: "bio", label: "Bio Description", isMet: hasBio, tab: "bio", targetId: "bio" },
+      { id: "links", label: "Active Links", isMet: hasLinks, tab: "bio", targetId: "custom-links-container" },
+    ];
+
+    // IF plan !== 'free' (Pro/Personal), include Video Reels
+    if (!isFreePlan) {
+      items.push({ id: "reels", label: "Video Reels (Pro)", isMet: hasReels, tab: "reels", targetId: "reels-container" });
+    }
+
+    // IF lead form is enabled, include Notification Email
+    if (isLeadFormEnabled) {
+      items.push({ id: "leadEmail", label: "Notification Email", isMet: hasLeadEmail, tab: "bio", targetId: "lead-form-settings" });
+    }
+
+    // IF phone/whatsapp buttons are enabled, include Contact Phone
+    if (isPhoneRequired) {
+      items.push({ id: "contactPhone", label: "Contact Phone", isMet: hasContactPhone, tab: "reels", targetId: "reel-action-buttons" });
+    }
+
+    const score = items.filter((item) => item.isMet).length;
+    const totalCriteria = items.length;
+    const percent = totalCriteria > 0 ? Math.round((score / totalCriteria) * 100) : 100;
+    const is100Percent = score === totalCriteria && totalCriteria > 0;
 
     return {
       hasAvatar,
@@ -894,7 +900,10 @@ function DashboardContent() {
       hasLeadEmail,
       hasContactPhone,
       score,
+      totalCriteria,
+      percent,
       is100Percent,
+      items,
     };
   };
 
