@@ -60,14 +60,22 @@ export async function POST(req: Request) {
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const redirectUrl = `${origin}/dashboard?checkout=success`;
 
-    console.log(`[Lemon Squeezy Checkout Attempt]: Store ID=${storeId}, Variant ID=${cleanVariantId}, User ID=${userId || "guest"}`);
+    const formattedStoreId = String(storeId).trim();
+    const formattedVariantId = String(cleanVariantId).trim();
+
+    // Ensure custom data contains non-null string key-value pairs
+    const customData: Record<string, string> = {
+      user_id: String(userId || ""),
+      plan_type: String(targetPlan),
+      billing_interval: String(targetInterval),
+    };
+
+    console.log(`[Lemon Squeezy Checkout Attempt]: Store ID=${formattedStoreId}, Variant ID=${formattedVariantId}, CustomData=`, customData);
 
     // Create Lemon Squeezy Checkout
-    const checkoutResponse = await createCheckout(storeId, cleanVariantId, {
+    const checkoutResponse = await createCheckout(formattedStoreId, formattedVariantId, {
       checkoutData: {
-        custom: {
-          user_id: userId,
-        },
+        custom: customData,
       },
       productOptions: {
         redirectUrl,
@@ -75,6 +83,7 @@ export async function POST(req: Request) {
     });
 
     if (checkoutResponse.error) {
+      console.error("[Lemon Squeezy Full Response Error]:", JSON.stringify(checkoutResponse, null, 2));
       const errorObj = checkoutResponse.error;
       const errorMessage = errorObj.message || "Failed to create Lemon Squeezy checkout";
       const errorCause = (errorObj as any).cause || (errorObj as any).errors || JSON.stringify(errorObj);
