@@ -198,6 +198,31 @@ export function getLemonSqueezyVariantId(
   planType?: string | null,
   interval: "monthly" | "yearly" = "monthly"
 ): string | null {
+  const rawLower = String(planType || "").toLowerCase().trim();
+
+  if (
+    rawLower === "extra_feed" ||
+    rawLower === "extra_feed_addon" ||
+    rawLower === "extrafeed" ||
+    rawLower === "addon" ||
+    rawLower.includes("extra_feed")
+  ) {
+    if (interval === "yearly") {
+      const val =
+        process.env.NEXT_PUBLIC_LEMONSQUEEZY_EXTRA_FEED_YEARLY_VARIANT_ID ||
+        process.env.LEMON_SQUEEZY_EXTRA_FEED_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_EXTRA_FEED_YEARLY_VARIANT_ID ||
+        process.env.LEMONSQUEEZY_VARIANT_EXTRA_FEED_YEARLY;
+      return val ? String(val).trim() : null;
+    }
+    const val =
+      process.env.NEXT_PUBLIC_LEMONSQUEEZY_EXTRA_FEED_MONTHLY_VARIANT_ID ||
+      process.env.LEMON_SQUEEZY_EXTRA_FEED_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_EXTRA_FEED_MONTHLY_VARIANT_ID ||
+      process.env.LEMONSQUEEZY_VARIANT_EXTRA_FEED_MONTHLY;
+    return val ? String(val).trim() : null;
+  }
+
   const normalizedPlan = normalizePlanTier(planType);
 
   if (normalizedPlan === "personal") {

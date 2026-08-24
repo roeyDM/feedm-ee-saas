@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X, Sparkles, Plus, CheckCircle2, ArrowRight, ShieldCheck, Zap, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getLemonSqueezyVariantId } from "@/lib/plans-config";
 
 interface ExtraFeedModalProps {
   isOpen: boolean;
@@ -29,38 +30,36 @@ export function ExtraFeedModal({
 
   const isProOrBusiness = planType === "pro" || planType === "business" || planType === "super_admin";
 
-  const VARIANT_MONTHLY = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_EXTRA_FEED_MONTHLY || "1279130";
-  const VARIANT_ANNUAL = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VARIANT_EXTRA_FEED_ANNUAL || "1999882";
+  const targetVariantId = getLemonSqueezyVariantId("extra_feed", billingCycle === "annual" ? "yearly" : "monthly") || "";
 
   const handleCheckout = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-
-    const targetVariantId = billingCycle === "annual" ? VARIANT_ANNUAL : VARIANT_MONTHLY;
 
     try {
       const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          variantId: targetVariantId,
+          variantId: targetVariantId || undefined,
+          planType: "extra_feed",
+          billingInterval: billingCycle === "annual" ? "yearly" : "monthly",
           userEmail,
           username,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok || !data.checkoutUrl) {
-        throw new Error(data.error || "Failed to initialize checkout.");
+      const checkoutUrl = data.url || data.checkoutUrl;
+
+      if (!res.ok || !checkoutUrl) {
+        throw new Error(data.error || "Plan variant configuration missing in Netlify");
       }
 
-      window.location.href = data.checkoutUrl;
+      window.location.href = checkoutUrl;
     } catch (err: any) {
       console.error("[ExtraFeedModal] Checkout Error:", err);
-      setErrorMsg(err.message || "Checkout error. Redirecting to pricing...");
-      setTimeout(() => {
-        window.location.href = `/pricing?variant=${targetVariantId}`;
-      }, 1500);
+      setErrorMsg(err.message || "Failed to start checkout session. Please try again.");
     } finally {
       setIsLoading(false);
     }
