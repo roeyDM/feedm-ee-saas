@@ -73,6 +73,8 @@ export async function POST(req: Request) {
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
       const supabase = createClient(supabaseUrl, supabaseKey);
 
+      let profileData: any = null;
+
       if (userId) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -80,32 +82,32 @@ export async function POST(req: Request) {
           .eq("id", userId)
           .maybeSingle();
 
-        if (profile) {
-          const p = (profile.plan_type || profile.plan || "free").toLowerCase();
-          currentPlan = profile.is_super_admin ? "pro" : p;
-          if (profile.is_trial || profile.subscription_status === "trialing") {
-            currentPlan = "pro";
-          }
-          if (profile.is_super_admin || currentPlan === "pro" || currentPlan === "business") {
-            isEligibleUser = true;
-          }
-        }
-      } else if (body.userEmail) {
+        profileData = profile;
+      }
+
+      if (!profileData && body.userEmail) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("plan_type, plan, is_super_admin, is_trial, subscription_status")
-          .eq("email", body.userEmail.toLowerCase().trim())
+          .eq("email", String(body.userEmail).toLowerCase().trim())
           .maybeSingle();
 
-        if (profile) {
-          const p = (profile.plan_type || profile.plan || "free").toLowerCase();
-          currentPlan = profile.is_super_admin ? "pro" : p;
-          if (profile.is_trial || profile.subscription_status === "trialing") {
-            currentPlan = "pro";
-          }
-          if (profile.is_super_admin || currentPlan === "pro" || currentPlan === "business") {
-            isEligibleUser = true;
-          }
+        profileData = profile;
+      }
+
+      if (profileData) {
+        const normalizedPlan = String(profileData.plan_type || profileData.plan || "free").toLowerCase().trim();
+        currentPlan = normalizedPlan;
+
+        if (
+          normalizedPlan.includes("pro") ||
+          normalizedPlan.includes("business") ||
+          normalizedPlan.includes("agency") ||
+          profileData.is_super_admin === true ||
+          profileData.is_trial === true ||
+          profileData.subscription_status === "trialing"
+        ) {
+          isEligibleUser = true;
         }
       }
 
