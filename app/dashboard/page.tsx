@@ -1891,7 +1891,13 @@ function DashboardContent() {
                 {/* Add More Feeds Option */}
                 <button 
                   onClick={() => {
-                    setShowExtraFeedModal(true);
+                    const isTrialActiveUser = subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0);
+                    const isProOrBusinessUser = isSuperAdmin || planType === "pro" || planType === "business" || isTrialActiveUser;
+                    if (!isProOrBusinessUser) {
+                      setShowUpgradeModal(true);
+                    } else {
+                      setShowExtraFeedModal(true);
+                    }
                     setAccountMenuOpen(false);
                   }}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 text-xs font-semibold mt-1 transition-colors cursor-pointer min-w-0 group"

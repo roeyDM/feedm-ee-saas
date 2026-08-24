@@ -57,6 +57,67 @@ export async function POST(req: Request) {
       if (user) userId = user.id;
     }
 
+    // Server-side gate: Restrict Extra Feed Add-ons exclusively to Pro and Business plan subscribers
+    const isExtraFeedAddon =
+      targetPlan === "extra_feed" ||
+      targetPlan === "extra_feed_addon" ||
+      targetPlan === "extrafeed" ||
+      targetPlan === "addon" ||
+      String(targetPlan).includes("extra_feed");
+
+    if (isExtraFeedAddon) {
+      let currentPlan = "free";
+      let isEligibleUser = false;
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://slyjhprwovcwxfcnxjpn.supabase.co";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      if (userId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("plan_type, plan, is_super_admin, is_trial, subscription_status")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profile) {
+          const p = (profile.plan_type || profile.plan || "free").toLowerCase();
+          currentPlan = profile.is_super_admin ? "pro" : p;
+          if (profile.is_trial || profile.subscription_status === "trialing") {
+            currentPlan = "pro";
+          }
+          if (profile.is_super_admin || currentPlan === "pro" || currentPlan === "business") {
+            isEligibleUser = true;
+          }
+        }
+      } else if (body.userEmail) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("plan_type, plan, is_super_admin, is_trial, subscription_status")
+          .eq("email", body.userEmail.toLowerCase().trim())
+          .maybeSingle();
+
+        if (profile) {
+          const p = (profile.plan_type || profile.plan || "free").toLowerCase();
+          currentPlan = profile.is_super_admin ? "pro" : p;
+          if (profile.is_trial || profile.subscription_status === "trialing") {
+            currentPlan = "pro";
+          }
+          if (profile.is_super_admin || currentPlan === "pro" || currentPlan === "business") {
+            isEligibleUser = true;
+          }
+        }
+      }
+
+      if (!isEligibleUser) {
+        console.warn(`[Lemon Squeezy Gate 403]: User ${userId || body.userEmail || "guest"} on plan '${currentPlan}' attempted extra feed checkout. Rejecting.`);
+        return NextResponse.json(
+          { error: "Extra Feed Add-ons are exclusively available for Pro and Business subscribers." },
+          { status: 403 }
+        );
+      }
+    }
+
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const redirectUrl = `${origin}/dashboard?checkout=success`;
 
