@@ -66,14 +66,12 @@ export async function POST(req: Request) {
       String(targetPlan).includes("extra_feed");
 
     if (isExtraFeedAddon) {
-      let currentPlan = "free";
       let isEligibleUser = false;
+      let profileData: any = null;
 
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://slyjhprwovcwxfcnxjpn.supabase.co";
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
       const supabase = createClient(supabaseUrl, supabaseKey);
-
-      let profileData: any = null;
 
       if (userId) {
         const { data: profile } = await supabase
@@ -95,24 +93,42 @@ export async function POST(req: Request) {
         profileData = profile;
       }
 
+      const userPlan = profileData?.plan_type || profileData?.plan || "";
+      const subStatus = profileData?.subscription_status || "";
+
+      console.log("[Checkout API] Extra feed check for user:", userId || body.userEmail || "guest", "Plan raw:", userPlan, "Subscription status:", subStatus);
+
       if (profileData) {
-        const normalizedPlan = String(profileData.plan_type || profileData.plan || "free").toLowerCase().trim();
-        currentPlan = normalizedPlan;
+        const plan = String(userPlan).toLowerCase().trim();
+        const status = String(subStatus).toLowerCase().trim();
 
         if (
-          normalizedPlan.includes("pro") ||
-          normalizedPlan.includes("business") ||
-          normalizedPlan.includes("agency") ||
+          plan.includes("pro") ||
+          plan.includes("business") ||
+          plan.includes("agency") ||
+          status === "active" ||
+          status === "trialing" ||
+          status === "on_trial" ||
           profileData.is_super_admin === true ||
-          profileData.is_trial === true ||
-          profileData.subscription_status === "trialing"
+          profileData.is_trial === true
         ) {
           isEligibleUser = true;
         }
       }
 
       if (!isEligibleUser) {
-        console.warn(`[Lemon Squeezy Gate 403]: User ${userId || body.userEmail || "guest"} on plan '${currentPlan}' attempted extra feed checkout. Rejecting.`);
+        const mismatchReason = !profileData
+          ? `Profile not found for userId='${userId}' and userEmail='${body.userEmail}'`
+          : `Profile found (plan='${userPlan}', status='${subStatus}', is_super_admin=${profileData.is_super_admin}, is_trial=${profileData.is_trial}) but does not match Pro/Business criteria.`;
+
+        console.warn("[Checkout API 403 Block]: Extra feed authorization failed.", {
+          userId: userId || "guest",
+          userEmail: body.userEmail || "N/A",
+          userPlan,
+          subStatus,
+          mismatchReason,
+        });
+
         return NextResponse.json(
           { error: "Extra Feed Add-ons are exclusively available for Pro and Business subscribers." },
           { status: 403 }
