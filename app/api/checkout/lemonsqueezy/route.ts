@@ -120,7 +120,7 @@ export async function POST(req: Request) {
       const userPlan = profileData?.plan_type || profileData?.plan || subscriptionRecord?.plan_name || "";
       const subStatus = profileData?.subscription_status || subscriptionRecord?.status || "";
 
-      console.log("[Checkout API] Extra feed attempt - userId:", userId, "userEmail:", userEmail, "userPlan:", userPlan);
+      console.log("[Checkout API Debug] User:", userId, "| Email:", userEmail, "| Plan:", userPlan);
 
       const normalizedPlan = (userPlan || "").toLowerCase();
       const status = (subStatus || "").toLowerCase();
@@ -128,10 +128,12 @@ export async function POST(req: Request) {
       if (
         normalizedPlan.includes("pro") ||
         normalizedPlan.includes("business") ||
+        normalizedPlan.includes("active") ||
         normalizedPlan.includes("agency") ||
         status === "active" ||
         status === "trialing" ||
         status === "on_trial" ||
+        !!subscriptionRecord ||
         profileData?.is_super_admin === true ||
         profileData?.is_trial === true
       ) {
