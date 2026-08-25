@@ -68,10 +68,13 @@ export async function POST(req: Request) {
     if (isExtraFeedAddon) {
       let isEligibleUser = false;
       let profileData: any = null;
+      let subscriptionRecord: any = null;
 
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://slyjhprwovcwxfcnxjpn.supabase.co";
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
       const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const userEmail = body.userEmail ? String(body.userEmail).toLowerCase().trim() : "";
 
       if (userId) {
         const { data: profile } = await supabase
@@ -83,52 +86,60 @@ export async function POST(req: Request) {
         profileData = profile;
       }
 
-      if (!profileData && body.userEmail) {
+      if (!profileData && userEmail) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("plan_type, plan, is_super_admin, is_trial, subscription_status")
-          .eq("email", String(body.userEmail).toLowerCase().trim())
+          .eq("email", userEmail)
           .maybeSingle();
 
         profileData = profile;
       }
 
-      const userPlan = profileData?.plan_type || profileData?.plan || "";
-      const subStatus = profileData?.subscription_status || "";
-
-      console.log("[Checkout API] Extra feed check for user:", userId || body.userEmail || "guest", "Plan raw:", userPlan, "Subscription status:", subStatus);
-
-      if (profileData) {
-        const normalizedPlan = userPlan?.toLowerCase() || "";
-        const status = subStatus?.toLowerCase() || "";
-
-        if (
-          normalizedPlan.includes("pro") ||
-          normalizedPlan.includes("business") ||
-          normalizedPlan.includes("agency") ||
-          status === "active" ||
-          status === "trialing" ||
-          status === "on_trial" ||
-          profileData.is_super_admin === true ||
-          profileData.is_trial === true
-        ) {
-          isEligibleUser = true;
+      // Check subscriptions table as well if available
+      try {
+        if (userId) {
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("status, plan_name, variant_id")
+            .eq("user_id", userId)
+            .maybeSingle();
+          subscriptionRecord = sub;
+        } else if (userEmail) {
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("status, plan_name, variant_id")
+            .eq("email", userEmail)
+            .maybeSingle();
+          subscriptionRecord = sub;
         }
+      } catch (err) {
+        // Ignored if subscriptions table does not exist
+      }
+
+      const userPlan = profileData?.plan_type || profileData?.plan || subscriptionRecord?.plan_name || "";
+      const subStatus = profileData?.subscription_status || subscriptionRecord?.status || "";
+
+      console.log("[Checkout API] Extra feed attempt - userId:", userId, "userEmail:", userEmail, "userPlan:", userPlan);
+
+      const normalizedPlan = (userPlan || "").toLowerCase();
+      const status = (subStatus || "").toLowerCase();
+
+      if (
+        normalizedPlan.includes("pro") ||
+        normalizedPlan.includes("business") ||
+        normalizedPlan.includes("agency") ||
+        status === "active" ||
+        status === "trialing" ||
+        status === "on_trial" ||
+        profileData?.is_super_admin === true ||
+        profileData?.is_trial === true
+      ) {
+        isEligibleUser = true;
       }
 
       if (!isEligibleUser) {
-        const mismatchReason = !profileData
-          ? `Profile not found for userId='${userId}' and userEmail='${body.userEmail}'`
-          : `Profile found (plan='${userPlan}', status='${subStatus}', is_super_admin=${profileData.is_super_admin}, is_trial=${profileData.is_trial}) but does not match Pro/Business criteria.`;
-
-        console.warn("[Checkout API 403 Block]: Extra feed authorization failed.", {
-          userId: userId || "guest",
-          userEmail: body.userEmail || "N/A",
-          userPlan,
-          subStatus,
-          mismatchReason,
-        });
-
+        console.log("[Checkout API] Access denied. Resolved plan was:", userPlan);
         return NextResponse.json(
           { error: "Extra Feed Add-ons are exclusively available for Pro and Business subscribers." },
           { status: 403 }
