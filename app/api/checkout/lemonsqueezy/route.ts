@@ -99,13 +99,13 @@ export async function POST(req: Request) {
       console.log("[Checkout API] Extra feed check for user:", userId || body.userEmail || "guest", "Plan raw:", userPlan, "Subscription status:", subStatus);
 
       if (profileData) {
-        const plan = String(userPlan).toLowerCase().trim();
-        const status = String(subStatus).toLowerCase().trim();
+        const normalizedPlan = userPlan?.toLowerCase() || "";
+        const status = subStatus?.toLowerCase() || "";
 
         if (
-          plan.includes("pro") ||
-          plan.includes("business") ||
-          plan.includes("agency") ||
+          normalizedPlan.includes("pro") ||
+          normalizedPlan.includes("business") ||
+          normalizedPlan.includes("agency") ||
           status === "active" ||
           status === "trialing" ||
           status === "on_trial" ||
