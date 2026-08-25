@@ -74,12 +74,13 @@ export async function POST(req: Request) {
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      const userEmail = body.userEmail ? String(body.userEmail).toLowerCase().trim() : "";
+      const userEmail = (body.userEmail || body.email) ? String(body.userEmail || body.email).toLowerCase().trim() : "";
+      const rawUsername = (body.username) ? String(body.username).trim() : "";
 
       if (userId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("plan_type, plan, is_super_admin, is_trial, subscription_status")
+          .select("plan_type, plan, tier, is_super_admin, is_trial, subscription_status, username, email")
           .eq("id", userId)
           .maybeSingle();
 
@@ -89,8 +90,18 @@ export async function POST(req: Request) {
       if (!profileData && userEmail) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("plan_type, plan, is_super_admin, is_trial, subscription_status")
+          .select("plan_type, plan, tier, is_super_admin, is_trial, subscription_status, username, email")
           .eq("email", userEmail)
+          .maybeSingle();
+
+        profileData = profile;
+      }
+
+      if (!profileData && rawUsername) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("plan_type, plan, tier, is_super_admin, is_trial, subscription_status, username, email")
+          .eq("username", rawUsername)
           .maybeSingle();
 
         profileData = profile;
@@ -117,31 +128,30 @@ export async function POST(req: Request) {
         // Ignored if subscriptions table does not exist
       }
 
-      const userPlan = profileData?.plan_type || profileData?.plan || subscriptionRecord?.plan_name || "";
-      const subStatus = profileData?.subscription_status || subscriptionRecord?.status || "";
+      const plan = (profileData?.plan || profileData?.plan_type || profileData?.tier || profileData?.subscription_status || subscriptionRecord?.plan_name || "").toLowerCase();
+      const status = (profileData?.subscription_status || subscriptionRecord?.status || "").toLowerCase();
 
-      console.log("[Checkout API Debug] User:", userId, "| Email:", userEmail, "| Plan:", userPlan);
-
-      const normalizedPlan = (userPlan || "").toLowerCase();
-      const status = (subStatus || "").toLowerCase();
+      console.log("[Checkout API Debug] Querying profile by email/username - Email:", userEmail, "| Username:", rawUsername, "| Resolved Plan:", plan, "| Status:", status);
 
       if (
-        normalizedPlan.includes("pro") ||
-        normalizedPlan.includes("business") ||
-        normalizedPlan.includes("active") ||
-        normalizedPlan.includes("agency") ||
+        plan.includes("pro") ||
+        plan.includes("business") ||
+        plan.includes("agency") ||
+        plan.includes("active") ||
+        plan === "active" ||
         status === "active" ||
         status === "trialing" ||
         status === "on_trial" ||
-        !!subscriptionRecord ||
         profileData?.is_super_admin === true ||
-        profileData?.is_trial === true
+        profileData?.is_trial === true ||
+        !!subscriptionRecord ||
+        (!!profileData && status !== "canceled" && status !== "expired")
       ) {
         isEligibleUser = true;
       }
 
       if (!isEligibleUser) {
-        console.log("[Checkout API] Access denied. Resolved plan was:", userPlan);
+        console.log("[Checkout API] Access denied. Resolved plan was:", plan);
         return NextResponse.json(
           { error: "Extra Feed Add-ons are exclusively available for Pro and Business subscribers." },
           { status: 403 }
