@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles, AlertCircle } from "lucide-react";
+import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles, AlertCircle, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLemonSqueezyVariantId } from "@/lib/plans-config";
 
 interface UpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  targetPlan?: "personal" | "pro";
   title?: string;
   subtitle?: string;
   onActivateTrial?: () => void;
@@ -16,8 +17,9 @@ interface UpgradeModalProps {
 export function UpgradeModal({
   open,
   onOpenChange,
-  title = "Upgrade to Pro",
-  subtitle = "Unlock 3 Vertical Video Reels, Page 5 Lead Form, Custom Domain, and White-Label Branding.",
+  targetPlan = "pro",
+  title,
+  subtitle,
   onActivateTrial,
 }: UpgradeModalProps) {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
@@ -26,8 +28,17 @@ export function UpgradeModal({
 
   if (!open) return null;
 
-  const monthlyVariantId = getLemonSqueezyVariantId("pro", "monthly") || "";
-  const yearlyVariantId = getLemonSqueezyVariantId("pro", "yearly") || "";
+  const isPersonal = targetPlan === "personal";
+
+  const modalTitle = title || (isPersonal ? "Upgrade to Personal" : "Upgrade to Pro");
+  const modalSubtitle =
+    subtitle ||
+    (isPersonal
+      ? "Unlock custom handle URL, traffic analytics, and clean branding."
+      : "Unlock 3 Vertical Video Reels, Page 5 Lead Form, Custom Domain, and White-Label Branding.");
+
+  const monthlyVariantId = getLemonSqueezyVariantId(isPersonal ? "personal" : "pro", "monthly") || "";
+  const yearlyVariantId = getLemonSqueezyVariantId(isPersonal ? "personal" : "pro", "yearly") || "";
 
   const handleUpgrade = async () => {
     setIsCheckoutLoading(true);
@@ -40,7 +51,7 @@ export function UpgradeModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           variantId: selectedVariantId || undefined,
-          planType: "pro",
+          planType: isPersonal ? "personal" : "pro",
           billingInterval,
         }),
       });
@@ -76,15 +87,19 @@ export function UpgradeModal({
 
         {/* Icon Header */}
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 text-emerald-400 shadow-xl shadow-zinc-950/10 mb-4 relative">
-          <Zap className="h-7 w-7 stroke-[2.5] fill-current" />
+          {isPersonal ? (
+            <UserCheck className="h-7 w-7 stroke-[2.5] text-emerald-400" />
+          ) : (
+            <Zap className="h-7 w-7 stroke-[2.5] fill-current" />
+          )}
         </div>
 
         {/* Title & Subtitle */}
         <h3 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
-          {title}
+          {modalTitle}
         </h3>
         <p className="text-xs sm:text-sm font-medium text-zinc-600 mt-2 leading-relaxed">
-          {subtitle}
+          {modalSubtitle}
         </p>
 
         {/* Error Feedback Banner */}
@@ -106,7 +121,7 @@ export function UpgradeModal({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            Monthly ($15/mo)
+            {isPersonal ? "Monthly ($8/mo)" : "Monthly ($15/mo)"}
           </button>
           <button
             type="button"
@@ -117,35 +132,58 @@ export function UpgradeModal({
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            <span>Yearly ($12/mo)</span>
+            <span>{isPersonal ? "Yearly ($6/mo)" : "Yearly ($12/mo)"}</span>
             <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.5 rounded-md">
-              Save 20%
+              {isPersonal ? "Save 25%" : "Save 20%"}
             </span>
           </button>
         </div>
 
-        {/* Pro Feature Checklist */}
+        {/* Feature Checklist */}
         <div className="mb-5 w-full rounded-2xl bg-zinc-50 border border-zinc-200/80 p-4 text-left">
           <span className="text-[11px] font-black text-zinc-800 uppercase tracking-wider block mb-2.5">
-            Included in Pro Plan:
+            Included in {isPersonal ? "Personal Plan" : "Pro Plan"}:
           </span>
           <ul className="space-y-2 text-xs font-semibold text-zinc-700">
-            <li className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>3 Vertical Video Reels (Pages 2–4)</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>Unlimited Lead Capture &amp; CRM Export</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>Marketing Pixels (Meta, TikTok, Google)</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-              <span>100% White-Label Branding Removal</span>
-            </li>
+            {isPersonal ? (
+              <>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Custom Feed Handle URL</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Full Analytics &amp; Traffic Insights</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Remove FeedM.ee Branding</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>24/7 Priority Email Support</span>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>3 Vertical Video Reels (Pages 2–4)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Unlimited Lead Capture &amp; CRM Export</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Marketing Pixels (Meta, TikTok, Google)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>100% White-Label Branding Removal</span>
+                </li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -162,22 +200,26 @@ export function UpgradeModal({
           ) : (
             <>
               <span>
-                {billingInterval === "yearly"
-                  ? "Upgrade to Pro — $12/mo ($144/yr)"
-                  : "Upgrade to Pro — $15/mo"}
+                {isPersonal
+                  ? billingInterval === "yearly"
+                    ? "Upgrade to Personal — $6/mo ($72/yr)"
+                    : "Upgrade to Personal — $8/mo"
+                  : billingInterval === "yearly"
+                    ? "Upgrade to Pro — $12/mo ($144/yr)"
+                    : "Upgrade to Pro — $15/mo"}
               </span>
               <ArrowRight className="h-4 w-4" />
             </>
           )}
         </Button>
 
-        {/* Secondary CTA: Continue with Free Plan */}
+        {/* Secondary CTA: Continue with Current Plan */}
         <button
           type="button"
           onClick={() => onOpenChange(false)}
           className="w-full mt-2.5 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition cursor-pointer"
         >
-          Continue with Free Plan
+          Continue with Current Plan
         </button>
 
         {/* Trust Guarantee Micro-copy */}

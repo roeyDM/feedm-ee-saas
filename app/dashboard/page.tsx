@@ -26,11 +26,12 @@ import {
 import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { ExtraFeedModal } from "@/components/extra-feed-modal";
+import { BusinessContactModal } from "@/components/business-contact-modal";
 import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -707,6 +708,8 @@ function DashboardContent() {
   const [planType, setPlanType] = useState<PlanType>("free");
   const [analyticsTier, setAnalyticsTier] = useState<"free" | "personal" | "pro">("free");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeTargetPlan, setUpgradeTargetPlan] = useState<"personal" | "pro">("pro");
+  const [showBusinessContactModal, setShowBusinessContactModal] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [showMobilePreviewModal, setShowMobilePreviewModal] = useState(false);
   const [mobileAccordions, setMobileAccordions] = useState<Record<string, boolean>>({
@@ -719,17 +722,41 @@ function DashboardContent() {
   const hasLeadsCrmExport = canAccess("hasLeadsCrmExport");
   const hasMarketingPixels = canAccess("hasMarketingPixels");
 
+  const handleTriggerUpgrade = (forcedTargetPlan?: "personal" | "pro" | "business") => {
+    const currentTier = (planType || "free").toLowerCase();
+
+    if (forcedTargetPlan) {
+      if (forcedTargetPlan === "business") {
+        setShowBusinessContactModal(true);
+      } else {
+        setUpgradeTargetPlan(forcedTargetPlan);
+        setShowUpgradeModal(true);
+      }
+      return;
+    }
+
+    if (currentTier === "free") {
+      setUpgradeTargetPlan("personal");
+      setShowUpgradeModal(true);
+    } else if (currentTier === "personal") {
+      setUpgradeTargetPlan("pro");
+      setShowUpgradeModal(true);
+    } else if (currentTier === "pro") {
+      setShowBusinessContactModal(true);
+    }
+  };
+
   const handleTabClick = (tab: "bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels") => {
     if (tab === "reels" && maxReels === 0) {
-      setShowUpgradeModal(true);
+      handleTriggerUpgrade("pro");
       return;
     }
     if (tab === "leads" && !hasLeadsCrmExport) {
-      setShowUpgradeModal(true);
+      handleTriggerUpgrade("pro");
       return;
     }
     if (tab === "pixels" && !hasMarketingPixels) {
-      setShowUpgradeModal(true);
+      handleTriggerUpgrade("pro");
       return;
     }
     setActiveTab(tab);
@@ -820,6 +847,7 @@ function DashboardContent() {
   const [showExtraFeedModal, setShowExtraFeedModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  const isTrialActive = planType !== "free" && (subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0));
 
   // FTUE Onboarding Wizard State (Local Experiment)
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
@@ -1477,7 +1505,7 @@ function DashboardContent() {
           trialEndsAt={trialEndsAt}
           onSave={handleSave}
           isSaving={isSaving}
-          onUpgradeClick={() => setShowUpgradeModal(true)}
+          onUpgradeClick={() => handleTriggerUpgrade()}
         />
       </div>
 
@@ -1504,33 +1532,47 @@ function DashboardContent() {
 
         {/* Right Slot: Plan Badge & Mobile Readiness Badge (Side-by-side flex row, zero overlap) */}
         <div className="flex items-center gap-1.5 shrink-0 min-w-0">
-          {planType !== "free" ? (
-            subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0) ? (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-950/80 border border-amber-700/80 text-amber-300 text-[10px] font-extrabold shrink-0">
-                <Clock className="w-3 h-3 text-amber-400 shrink-0 animate-pulse" />
-                <span className="hidden sm:inline">
-                  {getRemainingTrialDays(trialEndsAt) > 1 ? `PRO TRIAL (${getRemainingTrialDays(trialEndsAt)}d)` : getRemainingTrialDays(trialEndsAt) === 1 ? "PRO TRIAL (1d)" : "PRO TRIAL (Today)"}
-                </span>
-                <span className="sm:hidden">
-                  {getRemainingTrialDays(trialEndsAt) > 1 ? `PRO (${getRemainingTrialDays(trialEndsAt)}d)` : "PRO (1d)"}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
-                <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
-                <span className="hidden sm:inline">PRO PLAN ACTIVE</span>
-                <span className="sm:hidden">PRO</span>
-              </div>
-            )
-          ) : (
+          {planType === "free" ? (
             <button
               type="button"
-              onClick={() => setShowUpgradeModal(true)}
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer"
+              onClick={() => handleTriggerUpgrade("personal")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer hover:bg-amber-500/20 transition-colors"
             >
               <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
               <span>FREE</span>
             </button>
+          ) : planType === "personal" ? (
+            <button
+              type="button"
+              onClick={() => handleTriggerUpgrade("pro")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer hover:bg-emerald-500/20 transition-colors"
+            >
+              <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
+              <span>PERSONAL</span>
+            </button>
+          ) : planType === "pro" ? (
+            <button
+              type="button"
+              onClick={() => handleTriggerUpgrade("business")}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[10px] font-extrabold uppercase shrink-0 cursor-pointer hover:bg-teal-500/20 transition-colors"
+            >
+              <Building2 className="w-3 h-3 text-teal-400" />
+              <span>PRO</span>
+            </button>
+          ) : isTrialActive ? (
+            <button
+              type="button"
+              onClick={() => handleTriggerUpgrade("pro")}
+              className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-950/80 border border-amber-700/80 text-amber-300 text-[10px] font-extrabold shrink-0 cursor-pointer"
+            >
+              <Clock className="w-3 h-3 text-amber-400 shrink-0 animate-pulse" />
+              <span>{getRemainingTrialDays(trialEndsAt)}d TRIAL</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold uppercase shrink-0">
+              <Zap className="w-3 h-3 text-emerald-400 fill-emerald-400 animate-pulse" />
+              <span>BUSINESS</span>
+            </div>
           )}
 
           {!evaluateReadiness().is100Percent && (
@@ -1592,6 +1634,30 @@ function DashboardContent() {
                   </div>
                 </div>
               </div>
+
+              {/* PROMINENT MOBILE DRAWER UPGRADE CTA BUTTON */}
+              {planType !== "business" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleTriggerUpgrade();
+                    setMobileDrawerOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-950 via-zinc-900 to-teal-950 text-white border border-emerald-500/40 shadow-sm hover:border-emerald-400 transition-all cursor-pointer group text-left my-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Zap className="h-4 w-4 text-emerald-400 fill-current shrink-0 animate-pulse" />
+                    <span className="text-xs font-extrabold text-white truncate">
+                      {planType === "free"
+                        ? "Upgrade to Personal"
+                        : planType === "personal"
+                        ? "Upgrade to Pro"
+                        : "Upgrade to Business"}
+                    </span>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                </button>
+              )}
 
               {/* ACCURATE MOBILE DRAWER NAVIGATION STRUCTURE (1:1 DESKTOP PARITY) */}
               <nav className="flex flex-col gap-2.5">
@@ -1670,9 +1736,6 @@ function DashboardContent() {
                     <BarChart3 className="h-4 w-4 text-emerald-400" />
                     <span>ANALYTICS / INSIGHTS</span>
                   </div>
-                  <span className="text-[9px] font-extrabold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
-                    Active
-                  </span>
                 </button>
 
                 {/* 3. MARKETING TOOLS (Collapsible Group) */}
@@ -1687,7 +1750,6 @@ function DashboardContent() {
                       <span>MARKETING TOOLS</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-extrabold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">Active</span>
                       <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform duration-200", mobileAccordions.marketing && "rotate-180")} />
                     </div>
                   </button>
@@ -1708,12 +1770,8 @@ function DashboardContent() {
                           <Inbox className="h-4 w-4 shrink-0 text-emerald-400" />
                           <span>Leads CRM</span>
                         </div>
-                        {!hasLeadsCrmExport ? (
+                        {!hasLeadsCrmExport && (
                           <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                        ) : (
-                          <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
-                            New
-                          </span>
                         )}
                       </button>
 
@@ -1731,12 +1789,8 @@ function DashboardContent() {
                           <Target className="h-4 w-4 shrink-0 text-emerald-400" />
                           <span>Marketing Pixels</span>
                         </div>
-                        {!hasMarketingPixels ? (
+                        {!hasMarketingPixels && (
                           <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                        ) : (
-                          <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 uppercase">
-                            New
-                          </span>
                         )}
                       </button>
                     </div>
@@ -1894,7 +1948,7 @@ function DashboardContent() {
                     const isTrialActiveUser = subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0);
                     const isProOrBusinessUser = isSuperAdmin || planType === "pro" || planType === "business" || isTrialActiveUser;
                     if (!isProOrBusinessUser) {
-                      setShowUpgradeModal(true);
+                      handleTriggerUpgrade("pro");
                     } else {
                       setShowExtraFeedModal(true);
                     }
@@ -1909,19 +1963,27 @@ function DashboardContent() {
                 </button>
 
                 {/* Compact Mini Upgrade Badge CTA */}
-                <button 
-                  onClick={() => {
-                    setShowUpgradeModal(true);
-                    setAccountMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-950 via-zinc-900 to-teal-950 text-white border border-emerald-500/40 shadow-2xs hover:border-emerald-400 transition-all cursor-pointer group text-left mt-1"
-                >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <Zap className="h-3 w-3 text-emerald-400 fill-current shrink-0 animate-pulse" />
-                    <span className="text-[10px] font-extrabold text-white truncate">Upgrade to Business</span>
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                </button>
+                {planType !== "business" && (
+                  <button 
+                    onClick={() => {
+                      handleTriggerUpgrade();
+                      setAccountMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-950 via-zinc-900 to-teal-950 text-white border border-emerald-500/40 shadow-2xs hover:border-emerald-400 transition-all cursor-pointer group text-left mt-1"
+                  >
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Zap className="h-3 w-3 text-emerald-400 fill-current shrink-0 animate-pulse" />
+                      <span className="text-[10px] font-extrabold text-white truncate">
+                        {planType === "free"
+                          ? "Upgrade to Personal"
+                          : planType === "personal"
+                          ? "Upgrade to Pro"
+                          : "Upgrade to Business"}
+                      </span>
+                    </div>
+                    <ArrowRight className="h-3 w-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  </button>
+                )}
 
                 {/* Single Divider Line separating MY FEEDS from Settings */}
                 <div className="my-2 border-t border-zinc-100"></div>
@@ -2717,12 +2779,20 @@ function DashboardContent() {
       {/* In-App Upgrade Modal */}
       <UpgradeModal
         open={showUpgradeModal}
+        targetPlan={upgradeTargetPlan}
         onOpenChange={(open) => {
           setShowUpgradeModal(open);
           if (!open && typeof window !== "undefined") {
             sessionStorage.setItem("feedmee_trial_expired_dismissed", "true");
           }
         }}
+      />
+      {/* Business Early Access Contact Modal */}
+      <BusinessContactModal
+        open={showBusinessContactModal}
+        onOpenChange={setShowBusinessContactModal}
+        userEmail={userEmail}
+        username={username}
       />
       {/* Contextual Extra Feed Add-on Modal */}
       <ExtraFeedModal
