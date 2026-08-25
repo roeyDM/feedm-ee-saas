@@ -2037,14 +2037,6 @@ function DashboardContent() {
                   <BarChart2 className={cn("h-4 w-4", activeTab === "analytics" ? "text-emerald-400" : "text-emerald-600")} />
                   <span>Analytics / Insights</span>
                 </div>
-                <span className={cn(
-                  "text-[9px] font-extrabold px-1.5 py-0.5 rounded border uppercase",
-                  activeTab === "analytics"
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                    : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                )}>
-                  Active
-                </span>
               </button>
             </div>
 
@@ -2089,7 +2081,6 @@ function DashboardContent() {
                   <span>Marketing Tools</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-extrabold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">Active</span>
                   <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", openAccordions.settings && "rotate-180")} />
                 </div>
               </button>
@@ -2109,12 +2100,8 @@ function DashboardContent() {
                       <Inbox className="h-4 w-4 shrink-0 text-emerald-500" />
                       <span>Leads CRM</span>
                     </div>
-                    {!hasLeadsCrmExport ? (
+                    {!hasLeadsCrmExport && (
                       <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    ) : (
-                      <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
-                        New
-                      </span>
                     )}
                   </button>
 
@@ -2131,12 +2118,8 @@ function DashboardContent() {
                       <Target className="h-4 w-4 shrink-0 text-emerald-500" />
                       <span>Marketing Pixels</span>
                     </div>
-                    {!hasMarketingPixels ? (
+                    {!hasMarketingPixels && (
                       <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    ) : (
-                      <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 uppercase">
-                        New
-                      </span>
                     )}
                   </button>
                 </div>
