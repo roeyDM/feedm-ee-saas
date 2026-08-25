@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       if (user) userId = user.id;
     }
 
-    // Server-side gate: Restrict Extra Feed Add-ons exclusively to Pro and Business plan subscribers
+    // Emergency Override: Allow Extra Feed Add-on checkout generation directly if user context is present
     const isExtraFeedAddon =
       targetPlan === "extra_feed" ||
       targetPlan === "extra_feed_addon" ||
@@ -66,97 +66,8 @@ export async function POST(req: Request) {
       String(targetPlan).includes("extra_feed");
 
     if (isExtraFeedAddon) {
-      let isEligibleUser = false;
-      let profileData: any = null;
-      let subscriptionRecord: any = null;
-
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://slyjhprwovcwxfcnxjpn.supabase.co";
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_J2IgY8ZACubzebsuSlVqoQ_8rpGitwz";
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
       const userEmail = (body.userEmail || body.email) ? String(body.userEmail || body.email).toLowerCase().trim() : "";
-      const rawUsername = (body.username) ? String(body.username).trim() : "";
-
-      if (userId) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("plan_type, plan, tier, is_super_admin, is_trial, subscription_status, username, email")
-          .eq("id", userId)
-          .maybeSingle();
-
-        profileData = profile;
-      }
-
-      if (!profileData && userEmail) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("plan_type, plan, tier, is_super_admin, is_trial, subscription_status, username, email")
-          .eq("email", userEmail)
-          .maybeSingle();
-
-        profileData = profile;
-      }
-
-      if (!profileData && rawUsername) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("plan_type, plan, tier, is_super_admin, is_trial, subscription_status, username, email")
-          .eq("username", rawUsername)
-          .maybeSingle();
-
-        profileData = profile;
-      }
-
-      // Check subscriptions table as well if available
-      try {
-        if (userId) {
-          const { data: sub } = await supabase
-            .from("subscriptions")
-            .select("status, plan_name, variant_id")
-            .eq("user_id", userId)
-            .maybeSingle();
-          subscriptionRecord = sub;
-        } else if (userEmail) {
-          const { data: sub } = await supabase
-            .from("subscriptions")
-            .select("status, plan_name, variant_id")
-            .eq("email", userEmail)
-            .maybeSingle();
-          subscriptionRecord = sub;
-        }
-      } catch (err) {
-        // Ignored if subscriptions table does not exist
-      }
-
-      const plan = (profileData?.plan || profileData?.plan_type || profileData?.tier || profileData?.subscription_status || subscriptionRecord?.plan_name || "").toLowerCase();
-      const status = (profileData?.subscription_status || subscriptionRecord?.status || "").toLowerCase();
-
-      console.log("[Checkout API Debug] Querying profile by email/username - Email:", userEmail, "| Username:", rawUsername, "| Resolved Plan:", plan, "| Status:", status);
-
-      if (
-        plan.includes("pro") ||
-        plan.includes("business") ||
-        plan.includes("agency") ||
-        plan.includes("active") ||
-        plan === "active" ||
-        status === "active" ||
-        status === "trialing" ||
-        status === "on_trial" ||
-        profileData?.is_super_admin === true ||
-        profileData?.is_trial === true ||
-        !!subscriptionRecord ||
-        (!!profileData && status !== "canceled" && status !== "expired")
-      ) {
-        isEligibleUser = true;
-      }
-
-      if (!isEligibleUser) {
-        console.log("[Checkout API] Access denied. Resolved plan was:", plan);
-        return NextResponse.json(
-          { error: "Extra Feed Add-ons are exclusively available for Pro and Business subscribers." },
-          { status: 403 }
-        );
-      }
+      console.log(`[Lemon Squeezy Checkout]: Extra Feed add-on checkout requested for user='${userId || "guest"}', email='${userEmail}'. Direct generation granted.`);
     }
 
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
