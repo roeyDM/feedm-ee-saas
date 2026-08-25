@@ -35,7 +35,7 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("plan, plan_type, subscription_tier, is_trial, is_super_admin, is_admin, role")
+          .select("*")
           .eq("id", user.id)
           .maybeSingle();
 
