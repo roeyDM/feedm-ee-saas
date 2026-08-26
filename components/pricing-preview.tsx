@@ -17,55 +17,19 @@ export function PricingPreview() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const handleCheckout = async (planType: "free" | "personal" | "pro" | "business") => {
+  const handleCheckout = (planType: "free" | "personal" | "pro" | "business") => {
     if (planType === "business") {
       setContactModalOpen(true);
       return;
     }
 
-    // Check if user is logged in
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      // Unauthenticated guest -> route to registration page with plan params
-      window.location.href = `/register?plan=${planType}&billing=${billingCycle}`;
-      return;
-    }
-
     if (planType === "free") {
-      window.location.href = "/dashboard";
+      window.location.href = "/register?plan=free";
       return;
     }
 
-    try {
-      setIsCheckoutLoading(true);
-      setCheckoutError(null);
-      const variantId = getLemonSqueezyVariantId(planType, billingCycle) || "";
-
-      const res = await fetch("/api/checkout/lemonsqueezy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          variantId: variantId || undefined,
-          planType,
-          billingInterval: billingCycle,
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url;
-        return;
-      } else {
-        const errorDetail = data?.error || "Unable to start checkout session. Please contact support if this persists.";
-        setCheckoutError(errorDetail);
-      }
-    } catch (err: any) {
-      console.error("[Pricing Checkout Exception]:", err);
-      setCheckoutError("Unable to connect to checkout service. Please try again.");
-    } finally {
-      setIsCheckoutLoading(false);
-    }
+    // Direct registration navigation for public pricing visitors
+    window.location.href = `/register?plan=${planType}&trial=true&billing=${billingCycle}`;
   };
 
   const handleContactSubmit = (e: React.FormEvent) => {

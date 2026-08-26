@@ -305,11 +305,8 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
       {/* Universal Upgrade Modal */}
       <UpgradeModal 
         open={showUpgradeModal} 
+        targetPlan="personal"
         onOpenChange={setShowUpgradeModal} 
-        onActivateTrial={() => {
-          if (setPlanType) setPlanType("pro");
-          showToast("success", "🎉 Pro Trial Activated! You now have full access to Video Reels & Lead Forms.");
-        }}
       />
 
       {/* Toast Notification Banner */}
@@ -324,14 +321,14 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
           <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2 text-amber-950 flex items-center justify-between gap-2 shadow-2xs md:hidden">
             <div className="flex items-center gap-2 min-w-0">
               <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="text-xs font-bold truncate">Free Tier Mode: Upgrade to unlock all features</span>
+              <span className="text-xs font-bold truncate">Free Tier Mode: Upgrade to unlock video reels</span>
             </div>
             <Button
               type="button"
               onClick={() => setShowUpgradeModal(true)}
               className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-[10px] h-7 px-2.5 rounded-lg shrink-0 gap-1 cursor-pointer shadow-2xs"
             >
-              <span>Activate Pro</span> <Zap className="w-3 h-3 fill-current" />
+              <span>Upgrade to Personal</span> <Zap className="w-3 h-3 fill-current" />
             </Button>
           </div>
 
@@ -344,7 +341,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
               <div>
                 <h4 className="text-xs font-black">Video Reels &amp; Pages 2–4 Locked</h4>
                 <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
-                  Upgrade to Pro to unlock 3 vertical video reels, lead form, and remove branding.
+                  Upgrade to Personal Plan to unlock video reels, lead forms, and custom branding.
                 </p>
               </div>
             </div>

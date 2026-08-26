@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Loader2,
   LucideIcon,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +31,7 @@ interface AnalyticsManagerProps {
   activeTier?: "free" | "personal" | "pro";
   onTierChange?: (tier: "free" | "personal" | "pro") => void;
   username?: string;
+  onUpgradeClick?: () => void;
 }
 
 interface AnalyticsData {
@@ -73,8 +75,10 @@ export function AnalyticsManager({
   activeTier: controlledTier,
   onTierChange,
   username: propUsername,
+  onUpgradeClick,
 }: AnalyticsManagerProps) {
-  const { currentPlan } = useFeatureAccess(initialPlan);
+  const { currentPlan, isSuperAdmin } = useFeatureAccess(initialPlan);
+  const isFreePlanUser = currentPlan === "free" && !isSuperAdmin;
 
   // Local state for draft tier switcher preview
   const [internalTier, setInternalTier] = useState<"free" | "personal" | "pro">("pro");
@@ -624,286 +628,317 @@ export function AnalyticsManager({
           </div>
 
           {/* ======================================================== */}
-          {/* MAIN VISUAL CHART / ELEGANT EMPTY STATE */}
+          {/* LOWER ANALYTICS CONTAINER WITH BLUR OVERLAY FOR FREE USERS */}
           {/* ======================================================== */}
-          <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-black text-zinc-950">Daily Traffic Overview</h3>
-                <p className="text-xs text-zinc-500 font-medium">Comparison of total page views vs outbound clicks</p>
-              </div>
-              {totalViews > 0 && (
-                <div className="flex items-center gap-4 text-xs font-bold">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full bg-emerald-500" />
-                    <span className="text-zinc-600">Page Views</span>
+          <div className="relative overflow-hidden rounded-2xl">
+            <div className={isFreePlanUser ? "blur-md select-none pointer-events-none opacity-40 transition-all filter space-y-8" : "space-y-8"}>
+              {/* ======================================================== */}
+              {/* MAIN VISUAL CHART / ELEGANT EMPTY STATE */}
+              {/* ======================================================== */}
+              <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-sm font-black text-zinc-950">Daily Traffic Overview</h3>
+                    <p className="text-xs text-zinc-500 font-medium">Comparison of total page views vs outbound clicks</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full bg-blue-500" />
-                    <span className="text-zinc-600">Link Clicks</span>
+                  {totalViews > 0 && (
+                    <div className="flex items-center gap-4 text-xs font-bold">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 rounded-full bg-emerald-500" />
+                        <span className="text-zinc-600">Page Views</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 rounded-full bg-blue-500" />
+                        <span className="text-zinc-600">Link Clicks</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center text-zinc-400 gap-2">
+                    <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
+                    <p className="text-xs font-bold text-zinc-600">Fetching live Supabase analytics...</p>
+                  </div>
+                ) : dailyData.length > 0 && totalViews > 0 ? (
+                  /* Real Chart Rendering when events exist */
+                  <div className="pt-6 pb-2">
+                    <div className="h-48 w-full flex items-end justify-between gap-3 sm:gap-6 border-b border-zinc-100 pb-2">
+                      {dailyData.map((d, idx) => (
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                          <div className="w-full flex items-end justify-center gap-1 h-full">
+                            <div style={{ height: `${d.views}%` }} className="w-full max-w-[28px] bg-emerald-500 rounded-t-lg" />
+                            <div style={{ height: `${d.clicks}%` }} className="w-full max-w-[28px] bg-blue-500 rounded-t-lg" />
+                          </div>
+                          <span className="text-[11px] font-extrabold text-zinc-500">{d.day}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* Elegant Creative Empty State */
+                  <ElegantEmptyState
+                    icon={Signal}
+                    title="Awaiting First Signal"
+                    description="Your feed is live and ready. Share your FeedM.ee link to capture your first views."
+                    minHeight="h-52"
+                  />
+                )}
+              </div>
+
+              {/* ======================================================== */}
+              {/* TIER 1 LOCK TEASER BANNER (Only on Free Tier) */}
+              {/* ======================================================== */}
+              {activeTier === "free" && (
+                <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-emerald-500/30">
+                  <div className="space-y-1 text-center sm:text-left">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30 mb-1">
+                      <Sparkles className="h-3.5 w-3.5" /> Unlock Advanced Analytics
+                    </div>
+                    <h4 className="text-base font-black">Upgrade to Personal or Pro Plan</h4>
+                    <p className="text-xs text-zinc-300 font-medium max-w-xl">
+                      Get full visibility into Video Reels plays, lead conversion tracking, top clicked links, traffic sources, and device demographics.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => handleTierChange("personal")}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-black text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg cursor-pointer"
+                  >
+                    Upgrade Plan 🚀
+                  </Button>
+                </div>
+              )}
+
+              {/* ======================================================== */}
+              {/* TIER 2 & TIER 3: PERSONAL + PRO SPECIFIC PANELS */}
+              {/* ======================================================== */}
+              {activeTier !== "free" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Top Clicked Links List */}
+                  <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black text-zinc-950">Top Outbound Links</h3>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase">Ranked by Clicks</span>
+                    </div>
+                    {topLinks.length > 0 ? (
+                      <div className="space-y-3 pt-2">
+                        {topLinks.map((link, i) => (
+                          <div key={i} className="flex flex-col gap-1.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-extrabold text-zinc-900 truncate max-w-[240px]">{link.name}</span>
+                              <span className="font-black text-emerald-600">{link.clicks} clicks</span>
+                            </div>
+                            <div className="w-full bg-zinc-200 rounded-full h-1.5 overflow-hidden">
+                              <div style={{ width: `${link.percentage}%` }} className="bg-emerald-500 h-full rounded-full" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <ElegantEmptyState
+                        icon={MousePointerClick}
+                        title="Awaiting First Signal"
+                        description="Your feed is live and ready. Share your FeedM.ee link to capture your first views."
+                        minHeight="h-44"
+                      />
+                    )}
+                  </div>
+
+                  {/* Video Reels Engagement */}
+                  <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black text-zinc-950">Video Reels Performance</h3>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase">3 Reels Active</span>
+                    </div>
+                    {reelEngagement.length > 0 ? (
+                      <div className="space-y-3 pt-2">
+                        {reelEngagement.map((reel, i) => (
+                          <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-50 border border-zinc-100">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                #{i + 1}
+                              </div>
+                              <div>
+                                <p className="text-xs font-extrabold text-zinc-900">{reel.title}</p>
+                                <span className="text-[10px] text-zinc-500 font-medium">Completion Rate: {reel.finishRate}</span>
+                              </div>
+                            </div>
+                            <span className="text-xs font-black text-zinc-900">{reel.plays} plays</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <ElegantEmptyState
+                        icon={PlayCircle}
+                        title="No Plays Recorded Yet"
+                        description="Visitors haven't watched your video reels in this timeframe."
+                        minHeight="h-44"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ======================================================== */}
+              {/* TIER 2 LOCK TEASER BANNER (Only on Personal Tier) */}
+              {/* ======================================================== */}
+              {activeTier === "personal" && (
+                <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-900 to-zinc-950 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-zinc-800">
+                  <div className="space-y-1 text-center sm:text-left">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30 mb-1">
+                      <Sparkles className="h-3.5 w-3.5" /> Unlock Conversion Tracking
+                    </div>
+                    <h4 className="text-base font-black">Upgrade to Pro / Business Plan</h4>
+                    <p className="text-xs text-zinc-300 font-medium max-w-xl">
+                      Unlock full Lead Conversion Funnel, Marketing Pixel Events (Meta, TikTok, Google), and detailed Traffic Sources breakdown!
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => handleTierChange("pro")}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-black text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg cursor-pointer"
+                  >
+                    Go Pro ⭐
+                  </Button>
+                </div>
+              )}
+
+              {/* ======================================================== */}
+              {/* TIER 3: PRO / BUSINESS ADVANCED ENTERPRISE ANALYTICS */}
+              {/* ======================================================== */}
+              {activeTier === "pro" && (
+                <div className="space-y-6 pt-2">
+                  {/* High Impact Lead Metrics Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-2xl bg-emerald-950 text-white border border-emerald-800/80 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-emerald-300 uppercase tracking-wider">Total Leads Converted</span>
+                        <Inbox className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div className="mt-3 flex items-baseline justify-between">
+                        <span className="text-4xl font-black text-white">{leadsCount}</span>
+                        <span className="text-xs font-bold text-emerald-300 bg-emerald-900/80 px-2.5 py-1 rounded-full border border-emerald-700">
+                          CRM Synced
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-5 rounded-2xl bg-zinc-900 text-white border border-zinc-800 shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Lead Form Conversion Rate</span>
+                        <Percent className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div className="mt-3 flex items-baseline justify-between">
+                        <span className="text-4xl font-black text-emerald-400">{convRate}</span>
+                        <span className="text-xs font-bold text-zinc-400">Conversion Rate</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Traffic Sources & Conversion Funnel Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Traffic Sources Breakdown */}
+                    <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-zinc-950 flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-emerald-600" /> Traffic Sources Breakdown
+                        </h3>
+                        <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
+                          Pro Feature
+                        </span>
+                      </div>
+
+                      {trafficSources.length > 0 ? (
+                        <div className="space-y-3 pt-2">
+                          {trafficSources.map((src, idx) => (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex items-center justify-between text-xs font-bold text-zinc-800">
+                                <span>{src.source}</span>
+                                <span>{src.percent}% ({src.count} visits)</span>
+                              </div>
+                              <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden">
+                                <div style={{ width: `${src.percent}%` }} className={`${src.color} h-full rounded-full`} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <ElegantEmptyState
+                          icon={Globe}
+                          title="Gathering Referral Data"
+                          description="Once visitors arrive from external links, top sources will display here."
+                          minHeight="h-44"
+                        />
+                      )}
+                    </div>
+
+                    {/* Conversion Funnel Progress */}
+                    <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-zinc-950 flex items-center gap-2">
+                          <Filter className="h-4 w-4 text-purple-600" /> Conversion Funnel Analysis
+                        </h3>
+                        <span className="text-[10px] font-extrabold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 uppercase">
+                          Historic Funnel
+                        </span>
+                      </div>
+
+                      {totalViews > 0 || leadsCount > 0 ? (
+                        <div className="space-y-3 pt-2">
+                          {[
+                            { step: "1. Page Visit", value: totalViews, percent: 100 },
+                            { step: "2. Video Play", value: reelPlays, percent: totalViews > 0 ? Math.round((reelPlays / totalViews) * 100) : 0 },
+                            { step: "3. Form Opened", value: formOpens, percent: totalViews > 0 ? Math.round((formOpens / totalViews) * 100) : 0 },
+                            { step: "4. Lead Submitted", value: leadsCount, percent: totalViews > 0 ? Math.round((leadsCount / totalViews) * 100) : 0 },
+                          ].map((st, i) => (
+                            <div key={i} className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between">
+                              <span className="text-xs font-extrabold text-zinc-900">{st.step}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-black text-zinc-950">{st.value}</span>
+                                <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                  {st.percent}%
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <ElegantEmptyState
+                          icon={Activity}
+                          title="Your Funnel is Ready"
+                          description="No contact submissions yet. Incoming leads will appear here automatically."
+                          minHeight="h-44"
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-zinc-400 gap-2">
-                <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
-                <p className="text-xs font-bold text-zinc-600">Fetching live Supabase analytics...</p>
-              </div>
-            ) : dailyData.length > 0 && totalViews > 0 ? (
-              /* Real Chart Rendering when events exist */
-              <div className="pt-6 pb-2">
-                <div className="h-48 w-full flex items-end justify-between gap-3 sm:gap-6 border-b border-zinc-100 pb-2">
-                  {dailyData.map((d, idx) => (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                      <div className="w-full flex items-end justify-center gap-1 h-full">
-                        <div style={{ height: `${d.views}%` }} className="w-full max-w-[28px] bg-emerald-500 rounded-t-lg" />
-                        <div style={{ height: `${d.clicks}%` }} className="w-full max-w-[28px] bg-blue-500 rounded-t-lg" />
-                      </div>
-                      <span className="text-[11px] font-extrabold text-zinc-500">{d.day}</span>
-                    </div>
-                  ))}
+            {/* CENTERING LOCK OVERLAY FOR FREE PLAN */}
+            {isFreePlanUser && (
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-zinc-950/30 backdrop-blur-md text-center animate-in fade-in duration-200">
+                <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-zinc-200 flex flex-col items-center text-center">
+                  <div className="h-12 w-12 rounded-2xl bg-zinc-900 text-emerald-400 flex items-center justify-center shadow-lg mb-3">
+                    <Lock className="h-6 w-6 stroke-[2.5]" />
+                  </div>
+                  <h4 className="text-base sm:text-lg font-black text-zinc-950 tracking-tight">
+                    Unlock Detailed Analytics &amp; Breakdown
+                  </h4>
+                  <p className="text-xs font-medium text-zinc-600 mt-1.5 leading-relaxed mb-5">
+                    Unlock detailed analytics &amp; breakdown with Personal Plan. Get visibility into traffic trends, outbound clicks, and audience insights.
+                  </p>
+                  <Button
+                    onClick={onUpgradeClick || (() => {})}
+                    className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer gap-2 transition hover:scale-[1.01]"
+                  >
+                    <span>Upgrade to Personal</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            ) : (
-              /* Elegant Creative Empty State */
-              <ElegantEmptyState
-                icon={Signal}
-                title="Awaiting First Signal"
-                description="Your feed is live and ready. Share your FeedM.ee link to capture your first views."
-                minHeight="h-52"
-              />
             )}
           </div>
-
-          {/* ======================================================== */}
-          {/* TIER 1 LOCK TEASER BANNER (Only on Free Tier) */}
-          {/* ======================================================== */}
-          {activeTier === "free" && (
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-emerald-500/30">
-              <div className="space-y-1 text-center sm:text-left">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30 mb-1">
-                  <Sparkles className="h-3.5 w-3.5" /> Unlock Advanced Analytics
-                </div>
-                <h4 className="text-base font-black">Upgrade to Personal or Pro Plan</h4>
-                <p className="text-xs text-zinc-300 font-medium max-w-xl">
-                  Get full visibility into Video Reels plays, lead conversion tracking, top clicked links, traffic sources, and device demographics.
-                </p>
-              </div>
-              <Button
-                onClick={() => handleTierChange("personal")}
-                className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-black text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg cursor-pointer"
-              >
-                Upgrade Plan 🚀
-              </Button>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* TIER 2 & TIER 3: PERSONAL + PRO SPECIFIC PANELS */}
-          {/* ======================================================== */}
-          {activeTier !== "free" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Top Clicked Links List */}
-              <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-zinc-950">Top Outbound Links</h3>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">Ranked by Clicks</span>
-                </div>
-                {topLinks.length > 0 ? (
-                  <div className="space-y-3 pt-2">
-                    {topLinks.map((link, i) => (
-                      <div key={i} className="flex flex-col gap-1.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-extrabold text-zinc-900 truncate max-w-[240px]">{link.name}</span>
-                          <span className="font-black text-emerald-600">{link.clicks} clicks</span>
-                        </div>
-                        <div className="w-full bg-zinc-200 rounded-full h-1.5 overflow-hidden">
-                          <div style={{ width: `${link.percentage}%` }} className="bg-emerald-500 h-full rounded-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <ElegantEmptyState
-                    icon={MousePointerClick}
-                    title="Awaiting First Signal"
-                    description="Your feed is live and ready. Share your FeedM.ee link to capture your first views."
-                    minHeight="h-44"
-                  />
-                )}
-              </div>
-
-              {/* Video Reels Engagement */}
-              <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-zinc-950">Video Reels Performance</h3>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase">3 Reels Active</span>
-                </div>
-                {reelEngagement.length > 0 ? (
-                  <div className="space-y-3 pt-2">
-                    {reelEngagement.map((reel, i) => (
-                      <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-50 border border-zinc-100">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs shrink-0">
-                            #{i + 1}
-                          </div>
-                          <div>
-                            <p className="text-xs font-extrabold text-zinc-900">{reel.title}</p>
-                            <span className="text-[10px] text-zinc-500 font-medium">Completion Rate: {reel.finishRate}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-black text-zinc-900">{reel.plays} plays</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <ElegantEmptyState
-                    icon={PlayCircle}
-                    title="No Plays Recorded Yet"
-                    description="Visitors haven't watched your video reels in this timeframe."
-                    minHeight="h-44"
-                  />
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* TIER 2 LOCK TEASER BANNER (Only on Personal Tier) */}
-          {/* ======================================================== */}
-          {activeTier === "personal" && (
-            <div className="p-6 rounded-2xl bg-gradient-to-r from-zinc-900 to-zinc-950 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 border border-zinc-800">
-              <div className="space-y-1 text-center sm:text-left">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30 mb-1">
-                  <Sparkles className="h-3.5 w-3.5" /> Unlock Conversion Tracking
-                </div>
-                <h4 className="text-base font-black">Upgrade to Pro / Business Plan</h4>
-                <p className="text-xs text-zinc-300 font-medium max-w-xl">
-                  Unlock full Lead Conversion Funnel, Marketing Pixel Events (Meta, TikTok, Google), and detailed Traffic Sources breakdown!
-                </p>
-              </div>
-              <Button
-                onClick={() => handleTierChange("pro")}
-                className="bg-emerald-500 hover:bg-emerald-600 text-zinc-950 font-black text-xs h-11 px-6 rounded-xl shrink-0 shadow-lg cursor-pointer"
-              >
-                Go Pro ⭐
-              </Button>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* TIER 3: PRO / BUSINESS ADVANCED ENTERPRISE ANALYTICS */}
-          {/* ======================================================== */}
-          {activeTier === "pro" && (
-            <div className="space-y-6 pt-2">
-              {/* High Impact Lead Metrics Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-emerald-950 text-white border border-emerald-800/80 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-emerald-300 uppercase tracking-wider">Total Leads Converted</span>
-                    <Inbox className="h-5 w-5 text-emerald-400" />
-                  </div>
-                  <div className="mt-3 flex items-baseline justify-between">
-                    <span className="text-4xl font-black text-white">{leadsCount}</span>
-                    <span className="text-xs font-bold text-emerald-300 bg-emerald-900/80 px-2.5 py-1 rounded-full border border-emerald-700">
-                      CRM Synced
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-zinc-900 text-white border border-zinc-800 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Lead Form Conversion Rate</span>
-                    <Percent className="h-5 w-5 text-emerald-400" />
-                  </div>
-                  <div className="mt-3 flex items-baseline justify-between">
-                    <span className="text-4xl font-black text-emerald-400">{convRate}</span>
-                    <span className="text-xs font-bold text-zinc-400">Conversion Rate</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Traffic Sources & Conversion Funnel Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Traffic Sources Breakdown */}
-                <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-zinc-950 flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-emerald-600" /> Traffic Sources Breakdown
-                    </h3>
-                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 uppercase">
-                      Pro Feature
-                    </span>
-                  </div>
-
-                  {trafficSources.length > 0 ? (
-                    <div className="space-y-3 pt-2">
-                      {trafficSources.map((src, idx) => (
-                        <div key={idx} className="space-y-1">
-                          <div className="flex items-center justify-between text-xs font-bold text-zinc-800">
-                            <span>{src.source}</span>
-                            <span>{src.percent}% ({src.count} visits)</span>
-                          </div>
-                          <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden">
-                            <div style={{ width: `${src.percent}%` }} className={`${src.color} h-full rounded-full`} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <ElegantEmptyState
-                      icon={Globe}
-                      title="Gathering Referral Data"
-                      description="Once visitors arrive from external links, top sources will display here."
-                      minHeight="h-44"
-                    />
-                  )}
-                </div>
-
-                {/* Conversion Funnel Progress */}
-                <div className="p-6 rounded-2xl bg-white border border-zinc-200/90 shadow-2xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-zinc-950 flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-purple-600" /> Conversion Funnel Analysis
-                    </h3>
-                    <span className="text-[10px] font-extrabold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 uppercase">
-                      Historic Funnel
-                    </span>
-                  </div>
-
-                  {totalViews > 0 || leadsCount > 0 ? (
-                    <div className="space-y-3 pt-2">
-                      {[
-                        { step: "1. Page Visit", value: totalViews, percent: 100 },
-                        { step: "2. Video Play", value: reelPlays, percent: totalViews > 0 ? Math.round((reelPlays / totalViews) * 100) : 0 },
-                        { step: "3. Form Opened", value: formOpens, percent: totalViews > 0 ? Math.round((formOpens / totalViews) * 100) : 0 },
-                        { step: "4. Lead Submitted", value: leadsCount, percent: totalViews > 0 ? Math.round((leadsCount / totalViews) * 100) : 0 },
-                      ].map((st, i) => (
-                        <div key={i} className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-between">
-                          <span className="text-xs font-extrabold text-zinc-900">{st.step}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-black text-zinc-950">{st.value}</span>
-                            <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                              {st.percent}%
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <ElegantEmptyState
-                      icon={Activity}
-                      title="Your Funnel is Ready"
-                      description="No contact submissions yet. Incoming leads will appear here automatically."
-                      minHeight="h-44"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

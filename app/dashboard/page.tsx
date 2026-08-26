@@ -2379,6 +2379,7 @@ function DashboardContent() {
                     activeTier={analyticsTier}
                     onTierChange={setAnalyticsTier}
                     username={username}
+                    onUpgradeClick={() => handleTriggerUpgrade("personal")}
                   />
                 </div>
               )}
