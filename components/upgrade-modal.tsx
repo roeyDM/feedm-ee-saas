@@ -73,13 +73,13 @@ export function UpgradeModal({
         window.location.href = data.url;
         return;
       } else {
-        console.warn("[Checkout API Fallback]: Direct redirect to pay.feedm.ee checkout link");
-        const fallbackUrl = buildLemonSqueezyCheckoutUrl(variantId, activeUserId);
+        console.warn("[Checkout API Fallback]: Direct redirect to Lemon Squeezy checkout link");
+        const fallbackUrl = buildLemonSqueezyCheckoutUrl(variantId, activeUserId, planToCheckout);
         window.location.href = data.url || fallbackUrl;
       }
     } catch (err: any) {
-      console.warn("[Checkout API Exception Fallback]: Direct redirect to pay.feedm.ee checkout link", err);
-      const fallbackUrl = buildLemonSqueezyCheckoutUrl(variantId, activeUserId);
+      console.warn("[Checkout API Exception Fallback]: Direct redirect to Lemon Squeezy checkout link", err);
+      const fallbackUrl = buildLemonSqueezyCheckoutUrl(variantId, activeUserId, planToCheckout);
       window.location.href = fallbackUrl;
     } finally {
       setIsCheckoutLoading(false);

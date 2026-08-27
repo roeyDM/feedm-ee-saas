@@ -280,18 +280,36 @@ export function getLemonSqueezyVariantId(
 }
 
 /**
- * Helper to build Lemon Squeezy checkout URL pointing strictly to https://pay.feedm.ee/checkout/buy/${variantId}
+ * Helper to build Lemon Squeezy checkout URL ensuring proper path formation
  */
-export function buildLemonSqueezyCheckoutUrl(variantId: string, userId?: string): string {
+export function buildLemonSqueezyCheckoutUrl(variantId: string, userId?: string, planType?: string): string {
   const cleanId = String(variantId || "").trim();
-  const domain = (
+
+  // Check explicit checkout URL env variables if configured
+  if (planType === "personal" && process.env.NEXT_PUBLIC_LEMONSQUEEZY_PERSONAL_CHECKOUT_URL) {
+    const directUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_PERSONAL_CHECKOUT_URL;
+    return userId ? `${directUrl}?checkout[custom][user_id]=${encodeURIComponent(userId)}` : directUrl;
+  }
+  if (planType === "pro" && process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_CHECKOUT_URL) {
+    const directUrl = process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_CHECKOUT_URL;
+    return userId ? `${directUrl}?checkout[custom][user_id]=${encodeURIComponent(userId)}` : directUrl;
+  }
+
+  const rawDomain = (
     process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_DOMAIN ||
+    process.env.LEMONSQUEEZY_STORE_URL ||
     "https://pay.feedm.ee"
   ).replace(/\/+$/, "");
-  if (!cleanId) return domain;
-  const url = `${domain}/checkout/buy/${cleanId}`;
+
+  if (!cleanId) return rawDomain;
+
+  // Standard path segment (/buy/)
+  const basePath = rawDomain.includes("lemonsqueezy.com") ? "/buy" : "/buy";
+  const baseUrl = rawDomain.endsWith("/buy") || rawDomain.endsWith("/checkout/buy") ? rawDomain : `${rawDomain}${basePath}`;
+  const fullUrl = `${baseUrl.replace(/\/+$/, "")}/${cleanId}`;
+
   if (userId) {
-    return `${url}?checkout[custom][user_id]=${encodeURIComponent(userId)}`;
+    return `${fullUrl}?checkout[custom][user_id]=${encodeURIComponent(userId)}`;
   }
-  return url;
+  return fullUrl;
 }
