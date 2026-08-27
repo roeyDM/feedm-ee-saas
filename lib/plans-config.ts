@@ -232,14 +232,14 @@ export function getLemonSqueezyVariantId(
         process.env.LEMON_SQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_VARIANT_PERSONAL_YEARLY;
-      return val ? String(val).trim() : "1996076";
+      return val ? String(val).trim() : "2052896";
     }
     const val =
       process.env.NEXT_PUBLIC_LEMONSQUEEZY_PERSONAL_VARIANT_ID ||
       process.env.LEMON_SQUEEZY_PERSONAL_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_PERSONAL_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_VARIANT_PERSONAL_MONTHLY;
-    return val ? String(val).trim() : "1996051";
+    return val ? String(val).trim() : "2052878";
   }
 
   if (normalizedPlan === "pro") {
@@ -249,14 +249,14 @@ export function getLemonSqueezyVariantId(
         process.env.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY;
-      return val ? String(val).trim() : "1996078";
+      return val ? String(val).trim() : "2049607";
     }
     const val =
       process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID ||
       process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_PRO_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY;
-    return val ? String(val).trim() : "1996077";
+    return val ? String(val).trim() : "2049606";
   }
 
   if (normalizedPlan === "business") {
@@ -276,7 +276,7 @@ export function getLemonSqueezyVariantId(
     return val ? String(val).trim() : "1996082";
   }
 
-  return "1996077";
+  return "2049606";
 }
 
 /**

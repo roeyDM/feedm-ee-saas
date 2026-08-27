@@ -48,7 +48,7 @@ export function UpgradeModal({
     const planToCheckout = overridePlan || selectedPlan;
     setIsCheckoutLoading(true);
     setErrorMsg(null);
-    const variantId = getLemonSqueezyVariantId(planToCheckout, billingInterval) || (planToCheckout === "personal" ? "1996051" : "1996077");
+    const variantId = getLemonSqueezyVariantId(planToCheckout, billingInterval) || (planToCheckout === "personal" ? "2052878" : "2049606");
 
     let activeUserId: string | undefined = undefined;
     try {

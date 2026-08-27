@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     if (!variantId) {
-      variantId = targetPlan === "personal" ? "1996051" : "1996077";
+      variantId = targetPlan === "personal" ? "2052878" : "2049606";
     }
 
     const apiKey = (process.env.LEMONSQUEEZY_API_KEY || process.env.LEMON_SQUEEZY_API_KEY || "").trim();
