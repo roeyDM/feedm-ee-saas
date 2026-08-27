@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Zap, Check, X, ArrowRight, ShieldCheck, Sparkles, AlertCircle, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getLemonSqueezyVariantId } from "@/lib/plans-config";
+import { getLemonSqueezyVariantId, buildLemonSqueezyCheckoutUrl } from "@/lib/plans-config";
+import { supabase } from "@/lib/supabase";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -22,37 +23,47 @@ export function UpgradeModal({
   subtitle,
   onActivateTrial,
 }: UpgradeModalProps) {
+  const [selectedPlan, setSelectedPlan] = useState<"personal" | "pro">(targetPlan);
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Synchronize internal selectedPlan when targetPlan prop changes
+  React.useEffect(() => {
+    if (targetPlan) {
+      setSelectedPlan(targetPlan);
+    }
+  }, [targetPlan]);
+
   if (!open) return null;
 
-  const isPersonal = targetPlan === "personal";
+  const isPersonal = selectedPlan === "personal";
 
-  const modalTitle = title || (isPersonal ? "Upgrade to Personal" : "Upgrade to Pro");
+  const modalTitle = title || "Explore FeedM.ee Creator Plans";
   const modalSubtitle =
     subtitle ||
-    (isPersonal
-      ? "Unlock custom handle URL, traffic analytics, and clean branding."
-      : "Unlock 3 Vertical Video Reels, Page 5 Lead Form, Custom Domain, and White-Label Branding.");
+    "Upgrade from Free to unlock custom handles, traffic analytics, video reels, and lead capture.";
 
-  const monthlyVariantId = getLemonSqueezyVariantId(isPersonal ? "personal" : "pro", "monthly") || "";
-  const yearlyVariantId = getLemonSqueezyVariantId(isPersonal ? "personal" : "pro", "yearly") || "";
-
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (overridePlan?: "personal" | "pro") => {
+    const planToCheckout = overridePlan || selectedPlan;
     setIsCheckoutLoading(true);
     setErrorMsg(null);
-    const selectedVariantId = billingInterval === "yearly" ? yearlyVariantId : monthlyVariantId;
+    const variantId = getLemonSqueezyVariantId(planToCheckout, billingInterval) || (planToCheckout === "personal" ? "1996051" : "1996077");
 
+    let activeUserId: string | undefined = undefined;
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) activeUserId = user.id;
+
       const res = await fetch("/api/checkout/lemonsqueezy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          variantId: selectedVariantId || undefined,
-          planType: isPersonal ? "personal" : "pro",
+          variantId,
+          planType: planToCheckout,
           billingInterval,
+          userId: user?.id,
+          userEmail: user?.email,
         }),
       });
 
@@ -62,12 +73,14 @@ export function UpgradeModal({
         window.location.href = data.url;
         return;
       } else {
-        const errorDetail = data?.error || "Unable to start checkout session. Please contact support if this persists.";
-        setErrorMsg(errorDetail);
+        console.warn("[Checkout API Fallback]: Direct redirect to pay.feedm.ee checkout link");
+        const fallbackUrl = buildLemonSqueezyCheckoutUrl(variantId, activeUserId);
+        window.location.href = data.url || fallbackUrl;
       }
     } catch (err: any) {
-      console.error("[Checkout Exception]:", err);
-      setErrorMsg("Unable to connect to checkout service. Please check your connection and try again.");
+      console.warn("[Checkout API Exception Fallback]: Direct redirect to pay.feedm.ee checkout link", err);
+      const fallbackUrl = buildLemonSqueezyCheckoutUrl(variantId, activeUserId);
+      window.location.href = fallbackUrl;
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -75,7 +88,7 @@ export function UpgradeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative flex flex-col items-center text-center animate-in zoom-in-95 duration-200 border border-zinc-200 overflow-hidden">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl relative flex flex-col items-center text-center animate-in zoom-in-95 duration-200 border border-zinc-200 overflow-hidden max-h-[90vh] overflow-y-auto">
         
         {/* Close Button */}
         <button
@@ -86,144 +99,198 @@ export function UpgradeModal({
         </button>
 
         {/* Icon Header */}
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 text-emerald-400 shadow-xl shadow-zinc-950/10 mb-4 relative">
-          {isPersonal ? (
-            <UserCheck className="h-7 w-7 stroke-[2.5] text-emerald-400" />
-          ) : (
-            <Zap className="h-7 w-7 stroke-[2.5] fill-current" />
-          )}
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 text-emerald-400 shadow-xl shadow-zinc-950/10 mb-3 relative shrink-0">
+          <Sparkles className="h-7 w-7 stroke-[2.5]" />
         </div>
 
         {/* Title & Subtitle */}
         <h3 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
           {modalTitle}
         </h3>
-        <p className="text-xs sm:text-sm font-medium text-zinc-600 mt-2 leading-relaxed">
+        <p className="text-xs sm:text-sm font-medium text-zinc-600 mt-1.5 leading-relaxed max-w-md">
           {modalSubtitle}
         </p>
 
         {/* Error Feedback Banner */}
         {errorMsg && (
-          <div className="w-full mt-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center gap-2 text-left animate-in fade-in duration-150">
+          <div className="w-full mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center gap-2 text-left animate-in fade-in duration-150">
             <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
             <span className="leading-snug">{errorMsg}</span>
           </div>
         )}
 
         {/* Clean Monthly / Yearly Toggle Switch */}
-        <div className="my-5 flex items-center justify-center p-1 bg-zinc-100 rounded-2xl border border-zinc-200/80 w-full">
+        <div className="my-4 flex items-center justify-center p-1 bg-zinc-100 rounded-2xl border border-zinc-200/80 w-full max-w-xs">
           <button
             type="button"
             onClick={() => setBillingInterval("monthly")}
-            className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer ${
+            className={`flex-1 py-1.5 text-xs font-extrabold rounded-xl transition cursor-pointer ${
               billingInterval === "monthly"
                 ? "bg-white text-zinc-950 shadow-sm border border-zinc-200/60"
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            {isPersonal ? "Monthly ($8/mo)" : "Monthly ($15/mo)"}
+            Monthly
           </button>
           <button
             type="button"
             onClick={() => setBillingInterval("yearly")}
-            className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-1.5 text-xs font-extrabold rounded-xl transition cursor-pointer flex items-center justify-center gap-1 ${
               billingInterval === "yearly"
                 ? "bg-white text-zinc-950 shadow-sm border border-zinc-200/60"
                 : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            <span>{isPersonal ? "Yearly ($6/mo)" : "Yearly ($12/mo)"}</span>
-            <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-1.5 py-0.5 rounded-md">
-              {isPersonal ? "Save 25%" : "Save 20%"}
+            <span>Yearly</span>
+            <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded-md">
+              Save 25%
             </span>
           </button>
         </div>
 
-        {/* Feature Checklist */}
-        <div className="mb-5 w-full rounded-2xl bg-zinc-50 border border-zinc-200/80 p-4 text-left">
-          <span className="text-[11px] font-black text-zinc-800 uppercase tracking-wider block mb-2.5">
-            Included in {isPersonal ? "Personal Plan" : "Pro Plan"}:
-          </span>
-          <ul className="space-y-2 text-xs font-semibold text-zinc-700">
-            {isPersonal ? (
-              <>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+        {/* Side-by-Side Plan Comparison Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full my-2 text-left">
+          
+          {/* PERSONAL PLAN CARD */}
+          <div
+            onClick={() => setSelectedPlan("personal")}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+              selectedPlan === "personal"
+                ? "border-emerald-500 bg-emerald-50/30 ring-2 ring-emerald-500/20 shadow-md"
+                : "border-zinc-200 bg-zinc-50/50 hover:border-zinc-300"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-black uppercase text-emerald-800 tracking-wider">Personal</span>
+                {selectedPlan === "personal" && (
+                  <span className="text-[10px] font-black bg-emerald-500 text-white px-2 py-0.5 rounded-full">
+                    Selected
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 my-1">
+                <span className="text-2xl font-black text-zinc-950">
+                  {billingInterval === "yearly" ? "$6" : "$8"}
+                </span>
+                <span className="text-xs font-bold text-zinc-500">/ month</span>
+              </div>
+              <p className="text-[11px] font-semibold text-zinc-500 mb-3">
+                Ideal for creators wanting clean branding &amp; handle.
+              </p>
+
+              <ul className="space-y-1.5 text-xs font-semibold text-zinc-700 border-t border-zinc-200/60 pt-2.5">
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
                   <span>Custom Feed Handle URL</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>Full Analytics &amp; Traffic Insights</span>
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Traffic &amp; Click Analytics</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
                   <span>Remove FeedM.ee Branding</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>24/7 Priority Email Support</span>
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>3 Vertical Video Reels (Pages 2–4)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>Unlimited Lead Capture &amp; CRM Export</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>Marketing Pixels (Meta, TikTok, Google)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 stroke-[3]" />
-                  <span>100% White-Label Branding Removal</span>
-                </li>
-              </>
-            )}
-          </ul>
-        </div>
+              </ul>
+            </div>
 
-        {/* Primary CTA Button */}
-        <Button
-          onClick={handleUpgrade}
-          disabled={isCheckoutLoading}
-          className="w-full h-12 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 cursor-pointer gap-2 transition hover:scale-[1.01]"
-        >
-          {isCheckoutLoading ? (
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 animate-spin" /> Redirecting to Checkout...
-            </span>
-          ) : (
-            <>
-              <span>
-                {isPersonal
-                  ? billingInterval === "yearly"
-                    ? "Upgrade to Personal — $6/mo ($72/yr)"
-                    : "Upgrade to Personal — $8/mo"
-                  : billingInterval === "yearly"
-                    ? "Upgrade to Pro — $12/mo ($144/yr)"
-                    : "Upgrade to Pro — $15/mo"}
-              </span>
-              <ArrowRight className="h-4 w-4" />
-            </>
-          )}
-        </Button>
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPlan("personal");
+                handleUpgrade("personal");
+              }}
+              disabled={isCheckoutLoading}
+              className="w-full mt-4 h-9 rounded-xl text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white shadow-sm cursor-pointer gap-1"
+            >
+              <span>Upgrade to Personal</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {/* PRO PLAN CARD */}
+          <div
+            onClick={() => setSelectedPlan("pro")}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative ${
+              selectedPlan === "pro"
+                ? "border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/30 shadow-md"
+                : "border-emerald-300 bg-white hover:border-emerald-400 shadow-xs"
+            }`}
+          >
+            {/* Recommended Badge */}
+            <div className="absolute -top-2.5 right-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-xs">
+              Most Popular ⭐
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-black uppercase text-emerald-800 tracking-wider">Pro Growth</span>
+                {selectedPlan === "pro" && (
+                  <span className="text-[10px] font-black bg-emerald-500 text-white px-2 py-0.5 rounded-full">
+                    Selected
+                  </span>
+                )}
+              </div>
+              <div className="flex items-baseline gap-1 my-1">
+                <span className="text-2xl font-black text-zinc-950">
+                  {billingInterval === "yearly" ? "$12" : "$15"}
+                </span>
+                <span className="text-xs font-bold text-zinc-500">/ month</span>
+              </div>
+              <p className="text-[11px] font-semibold text-zinc-500 mb-3">
+                For serious creators &amp; visual brands.
+              </p>
+
+              <ul className="space-y-1.5 text-xs font-semibold text-zinc-700 border-t border-zinc-200/60 pt-2.5">
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Everything in Personal +</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>3 Vertical Video Reels</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Lead Form &amp; CRM Export</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 stroke-[3]" />
+                  <span>Meta, TikTok &amp; Google Pixels</span>
+                </li>
+              </ul>
+            </div>
+
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPlan("pro");
+                handleUpgrade("pro");
+              }}
+              disabled={isCheckoutLoading}
+              className="w-full mt-4 h-9 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/25 cursor-pointer gap-1"
+            >
+              <span>Upgrade to Pro 🚀</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+        </div>
 
         {/* Secondary CTA: Continue with Current Plan */}
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="w-full mt-2.5 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition cursor-pointer"
+          className="w-full mt-2 py-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 rounded-xl transition cursor-pointer"
         >
-          Continue with Current Plan
+          Continue with Free Plan
         </button>
 
         {/* Trust Guarantee Micro-copy */}
-        <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-zinc-500">
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] font-medium text-zinc-500">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
           <span>Secure Checkout powered by Lemon Squeezy</span>
         </div>

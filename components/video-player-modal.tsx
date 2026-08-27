@@ -35,7 +35,14 @@ export function VideoPlayerModal({
       setIsPlaying(true);
       if (videoRef.current) {
         videoRef.current.currentTime = 0;
-        videoRef.current.play().catch((err) => console.log("Play failed", err));
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            if (error.name !== "AbortError") {
+              console.error("Video play error:", error);
+            }
+          });
+        }
       }
     }
   }, [currentIndex, isOpen]);
@@ -62,7 +69,14 @@ export function VideoPlayerModal({
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play().catch((err) => console.log("Play failed", err));
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            if (error.name !== "AbortError") {
+              console.error("Video play error:", error);
+            }
+          });
+        }
       }
       setIsPlaying(!isPlaying);
     }

@@ -1021,7 +1021,14 @@ export function MobilePreview({
 
                     el.muted = shouldBeMuted;
                     if (isVideoActive) {
-                      el.play().catch((err) => console.error("Play error:", err));
+                      const playPromise = el.play();
+                      if (playPromise !== undefined) {
+                        playPromise.catch((err) => {
+                          if (err.name !== "AbortError") {
+                            console.error("Play error:", err);
+                          }
+                        });
+                      }
                     } else {
                       el.pause();
                     }

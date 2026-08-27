@@ -913,8 +913,8 @@ function DashboardContent() {
       items.push({ id: "leadEmail", label: "Notification Email", isMet: hasLeadEmail, tab: "bio", targetId: "lead-form-settings" });
     }
 
-    // IF phone/whatsapp buttons are enabled, include Contact Phone
-    if (isPhoneRequired) {
+    // IF phone/whatsapp buttons are enabled AND plan !== 'free' (or isSuperAdmin), include Contact Phone
+    if (isPhoneRequired && (!isFreePlan || isSuperAdmin)) {
       items.push({ id: "contactPhone", label: "Contact Phone", isMet: hasContactPhone, tab: "reels", targetId: "reel-action-buttons" });
     }
 
@@ -1942,25 +1942,21 @@ function DashboardContent() {
                   <span className="text-[9px] text-emerald-700 font-black uppercase shrink-0 ml-1.5 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-200">Active</span>
                 </button>
 
-                {/* Add More Feeds Option */}
-                <button 
-                  onClick={() => {
-                    const isTrialActiveUser = subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0);
-                    const isProOrBusinessUser = isSuperAdmin || planType === "pro" || planType === "business" || isTrialActiveUser;
-                    if (!isProOrBusinessUser) {
-                      handleTriggerUpgrade("pro");
-                    } else {
+                {/* Add More Feeds Option - Restricted to Pro, Business, or Super Admin */}
+                {(isSuperAdmin || planType === "pro" || planType === "business" || subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0)) && (
+                  <button 
+                    onClick={() => {
                       setShowExtraFeedModal(true);
-                    }
-                    setAccountMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 text-xs font-semibold mt-1 transition-colors cursor-pointer min-w-0 group"
-                >
-                  <Plus className="h-3.5 w-3.5 text-zinc-400 group-hover:text-emerald-600 shrink-0" />
-                  <span className="truncate text-left text-xs font-bold text-zinc-700 group-hover:text-zinc-900">
-                    Add More Feeds
-                  </span>
-                </button>
+                      setAccountMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 text-xs font-semibold mt-1 transition-colors cursor-pointer min-w-0 group"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-zinc-400 group-hover:text-emerald-600 shrink-0" />
+                    <span className="truncate text-left text-xs font-bold text-zinc-700 group-hover:text-zinc-900">
+                      Add More Feeds
+                    </span>
+                  </button>
+                )}
 
                 {/* Compact Mini Upgrade Badge CTA */}
                 {planType !== "business" && (
@@ -2246,14 +2242,20 @@ function DashboardContent() {
                   </div>
                   <div>
                     <h2 className="text-xs font-black text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-                      Free Tier Mode <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Limited Access</span>
+                      FREE PLAN MODE <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Basic Bio Link Active</span>
                     </h2>
                     <p className="text-xs font-semibold text-zinc-600 mt-0.5">
-                      Page 1 (Bio &amp; Links) is active. Upgrade to Pro ($7/mo) to unlock Video Reels (Pages 2–4), Lead Form (Page 5), and White-Label Branding.
+                      You're using the basic bio link. Unlock video reels, lead capture &amp; analytics.
                     </p>
                   </div>
                 </div>
-
+                <Button
+                  type="button"
+                  onClick={() => handleTriggerUpgrade()}
+                  className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer shadow-sm"
+                >
+                  <span>Explore Plans →</span>
+                </Button>
               </div>
             ) : null
           )}

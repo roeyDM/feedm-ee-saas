@@ -27,10 +27,14 @@ export function FeedItemCard({ item, onClick, className }: FeedItemCardProps) {
     setIsHovered(true);
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
-      videoRef.current.play().catch((err) => {
-        // Autoplay might be blocked, fallback gracefully
-        console.log("Autoplay blocked", err);
-      });
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          if (error.name !== "AbortError") {
+            console.error("Video play error:", error);
+          }
+        });
+      }
     }
   };
 

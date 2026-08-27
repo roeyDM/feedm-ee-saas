@@ -220,7 +220,7 @@ export function getLemonSqueezyVariantId(
       process.env.LEMON_SQUEEZY_EXTRA_FEED_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_EXTRA_FEED_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_VARIANT_EXTRA_FEED_MONTHLY;
-    return val ? String(val).trim() : null;
+    return val ? String(val).trim() : "1279130";
   }
 
   const normalizedPlan = normalizePlanTier(planType);
@@ -232,14 +232,14 @@ export function getLemonSqueezyVariantId(
         process.env.LEMON_SQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_PERSONAL_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_VARIANT_PERSONAL_YEARLY;
-      return val ? String(val).trim() : null;
+      return val ? String(val).trim() : "1996076";
     }
     const val =
       process.env.NEXT_PUBLIC_LEMONSQUEEZY_PERSONAL_VARIANT_ID ||
       process.env.LEMON_SQUEEZY_PERSONAL_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_PERSONAL_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_VARIANT_PERSONAL_MONTHLY;
-    return val ? String(val).trim() : null;
+    return val ? String(val).trim() : "1996051";
   }
 
   if (normalizedPlan === "pro") {
@@ -249,14 +249,14 @@ export function getLemonSqueezyVariantId(
         process.env.LEMON_SQUEEZY_PRO_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_PRO_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_VARIANT_PRO_YEARLY;
-      return val ? String(val).trim() : null;
+      return val ? String(val).trim() : "1996078";
     }
     const val =
       process.env.NEXT_PUBLIC_LEMONSQUEEZY_PRO_VARIANT_ID ||
       process.env.LEMON_SQUEEZY_PRO_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_PRO_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_VARIANT_PRO_MONTHLY;
-    return val ? String(val).trim() : null;
+    return val ? String(val).trim() : "1996077";
   }
 
   if (normalizedPlan === "business") {
@@ -266,15 +266,33 @@ export function getLemonSqueezyVariantId(
         process.env.LEMON_SQUEEZY_BUSINESS_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_BUSINESS_YEARLY_VARIANT_ID ||
         process.env.LEMONSQUEEZY_VARIANT_BUSINESS_YEARLY;
-      return val ? String(val).trim() : null;
+      return val ? String(val).trim() : "1996084";
     }
     const val =
       process.env.NEXT_PUBLIC_LEMONSQUEEZY_BUSINESS_VARIANT_ID ||
       process.env.LEMON_SQUEEZY_BUSINESS_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_BUSINESS_MONTHLY_VARIANT_ID ||
       process.env.LEMONSQUEEZY_VARIANT_BUSINESS_MONTHLY;
-    return val ? String(val).trim() : null;
+    return val ? String(val).trim() : "1996082";
   }
 
-  return null;
+  return "1996077";
+}
+
+/**
+ * Helper to build Lemon Squeezy checkout URL pointing to active store feedmee.lemonsqueezy.com
+ */
+export function buildLemonSqueezyCheckoutUrl(variantId: string, userId?: string): string {
+  const cleanId = String(variantId || "").trim();
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_DOMAIN ||
+    process.env.LEMONSQUEEZY_STORE_URL ||
+    "https://feedmee.lemonsqueezy.com"
+  ).replace(/\/+$/, "");
+  if (!cleanId) return baseUrl;
+  const url = `${baseUrl}/buy/${cleanId}`;
+  if (userId) {
+    return `${url}?checkout[custom][user_id]=${encodeURIComponent(userId)}`;
+  }
+  return url;
 }

@@ -321,27 +321,27 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
           <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2 text-amber-950 flex items-center justify-between gap-2 shadow-2xs md:hidden">
             <div className="flex items-center gap-2 min-w-0">
               <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="text-xs font-bold truncate">Free Tier Mode: Upgrade to unlock video reels</span>
+              <span className="text-xs font-bold truncate">FREE PLAN MODE: Basic bio link active</span>
             </div>
             <Button
               type="button"
               onClick={() => setShowUpgradeModal(true)}
               className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-[10px] h-7 px-2.5 rounded-lg shrink-0 gap-1 cursor-pointer shadow-2xs"
             >
-              <span>Upgrade to Personal</span> <Zap className="w-3 h-3 fill-current" />
+              <span>Explore Plans →</span>
             </Button>
           </div>
 
-          {/* Desktop Banner (100% Untouched) */}
+          {/* Desktop Banner */}
           <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 items-start sm:items-center justify-between gap-3 shadow-xs hidden md:flex">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm font-black">
                 <Lock className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black">Video Reels &amp; Pages 2–4 Locked</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider">FREE PLAN MODE</h4>
                 <p className="text-[11px] font-semibold text-amber-800 mt-0.5">
-                  Upgrade to Personal Plan to unlock video reels, lead forms, and custom branding.
+                  You're using the basic bio link. Unlock video reels, lead capture &amp; analytics.
                 </p>
               </div>
             </div>
@@ -349,7 +349,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
               onClick={() => setShowUpgradeModal(true)}
               className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-3.5 rounded-xl shrink-0 gap-1.5 cursor-pointer shadow-xs"
             >
-              <span>Unlock Pro</span> <Zap className="h-3.5 w-3.5 fill-current" />
+              <span>Explore Plans →</span>
             </Button>
           </div>
         </>
