@@ -280,17 +280,16 @@ export function getLemonSqueezyVariantId(
 }
 
 /**
- * Helper to build Lemon Squeezy checkout URL pointing to active store feedmee.lemonsqueezy.com
+ * Helper to build Lemon Squeezy checkout URL pointing strictly to https://pay.feedm.ee/checkout/buy/${variantId}
  */
 export function buildLemonSqueezyCheckoutUrl(variantId: string, userId?: string): string {
   const cleanId = String(variantId || "").trim();
-  const baseUrl = (
+  const domain = (
     process.env.NEXT_PUBLIC_LEMONSQUEEZY_CHECKOUT_DOMAIN ||
-    process.env.LEMONSQUEEZY_STORE_URL ||
-    "https://feedmee.lemonsqueezy.com"
+    "https://pay.feedm.ee"
   ).replace(/\/+$/, "");
-  if (!cleanId) return baseUrl;
-  const url = `${baseUrl}/buy/${cleanId}`;
+  if (!cleanId) return domain;
+  const url = `${domain}/checkout/buy/${cleanId}`;
   if (userId) {
     return `${url}?checkout[custom][user_id]=${encodeURIComponent(userId)}`;
   }
