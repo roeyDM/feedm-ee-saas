@@ -37,7 +37,7 @@ export function VerificationCard({
 
   const isProOrSuperAdmin = planType === "pro" || planType === "business" || isSuperAdmin;
 
-  // Listen for return callback or automatically verify if user completed the Sandbox process
+  // Listen for return callback parameters from Didit or Lemon Squeezy redirection
   React.useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -49,7 +49,6 @@ export function VerificationCard({
         const params = new URLSearchParams(window.location.search);
         const hasReturnSignal = params.has("status") || params.has("verification") || params.has("session_id") || params.has("simulation");
 
-        // אם המשתמש חזר מ-Didit או נמצא במצב תשלום ממתין – נעדכן אוטומטית ל-VERIFIED
         if (hasReturnSignal || verificationStatus === "PAID_PENDING_KYC") {
           console.log("[Verification Active Sync]: Updating profile status to VERIFIED...");
 
@@ -94,7 +93,7 @@ export function VerificationCard({
     }
   };
 
-  // Handle Lemon Squeezy $14.99 Verification Checkout (Variant UUID: 451a2d31-b5ca-4b44-b84c-1122c42e2dd2)
+  // Handle Lemon Squeezy $14.99 Verification Checkout
   const handleBuyVerification = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -110,7 +109,6 @@ export function VerificationCard({
     const userEmail = user?.email || "";
     const variantId = process.env.LEMONSQUEEZY_VARIANT_VERIFICATION_FEE || "451a2d31-b5ca-4b44-b84c-1122c42e2dd2";
 
-    // העברת ה-user_id והאימייל המחובר ישירות לטופס התשלום!
     let targetUrl = `https://pay.feedm.ee/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
     if (userEmail) {
       targetUrl += `&checkout[email]=${encodeURIComponent(userEmail)}`;
@@ -120,7 +118,7 @@ export function VerificationCard({
     window.location.href = targetUrl;
   };
 
-  // Launch Didit KYC Session (Official Didit v3 Endpoint)
+  // Launch Didit KYC Session
   const handleStartKYC = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -185,7 +183,7 @@ export function VerificationCard({
           </p>
         </div>
 
-        {/* Right Live Interactive Hero Preview Card (Light Theme) */}
+        {/* Right Live Interactive Hero Preview Card */}
         <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 px-5 flex items-center gap-3.5 shadow-xs shrink-0">
           <div className="relative">
             {avatarUrl ? (
@@ -199,7 +197,7 @@ export function VerificationCard({
           <div className="flex flex-col text-left">
             <div className="flex items-center gap-1.5">
               <span className="text-sm font-black text-slate-900">{name || "Creator Name"}</span>
-              <VerifiedBadge size="md" showTooltip={true} />
+              {verificationStatus === "VERIFIED" && <VerifiedBadge size="md" showTooltip={true} />}
             </div>
             <span className="text-xs font-bold text-emerald-700">@{username || "handle"}</span>
           </div>
@@ -267,7 +265,7 @@ export function VerificationCard({
           </>
         )}
 
-        {/* STATE 2: PRO USER - UNVERIFIED ($14.99 Purchase CTA) */}
+        {/* STATE 2: PRO USER - UNVERIFIED */}
         {isProOrSuperAdmin && verificationStatus === "UNVERIFIED" && (
           <>
             <div>
@@ -293,7 +291,7 @@ export function VerificationCard({
           </>
         )}
 
-        {/* STATE 3: PRO USER - PAID_PENDING_KYC (Launch Didit Session) */}
+        {/* STATE 3: PRO USER - PAID_PENDING_KYC */}
         {isProOrSuperAdmin && verificationStatus === "PAID_PENDING_KYC" && (
           <>
             <div>
@@ -332,42 +330,22 @@ export function VerificationCard({
           </>
         )}
 
-        {/* STATE 4: PRO USER - VERIFIED (Badge Active Switch Toggle) */}
+        {/* STATE 4: PRO USER - VERIFIED */}
         {isProOrSuperAdmin && verificationStatus === "VERIFIED" && (
-          <>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-black text-emerald-700 uppercase tracking-wider flex items-center gap-2">
-                  <span>Account Verified Successfully!</span>
-                  <VerifiedBadge size="sm" />
-                </h4>
-                <p className="text-xs font-medium text-slate-600 mt-0.5">
-                  Your verified badge is active and displayed on your profile and video reels.
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
+              <CheckCircle2 className="h-5 w-5" />
             </div>
-
-            {/* Toggle Switch */}
-            <div className="flex items-center gap-3 bg-white p-2.5 px-4 rounded-xl border border-slate-200 shadow-2xs">
-              <span className="text-xs font-bold text-slate-700">Show Verified Badge on Profile &amp; Video Reels</span>
-              <button
-                type="button"
-                onClick={() => onBadgeToggle(!isVerifiedBadgeActive)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  isVerifiedBadgeActive ? "bg-emerald-500" : "bg-slate-300"
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    isVerifiedBadgeActive ? "translate-x-5" : "translate-x-0"
-                  }`}
-                />
-              </button>
+            <div>
+              <h4 className="text-xs font-black text-emerald-700 uppercase tracking-wider flex items-center gap-2">
+                <span>Account Verified Successfully!</span>
+                <VerifiedBadge size="sm" />
+              </h4>
+              <p className="text-xs font-medium text-slate-600 mt-0.5">
+                Your verified badge is active and automatically displayed on your public profile and video reels.
+              </p>
             </div>
-          </>
+          </div>
         )}
 
       </div>
@@ -380,7 +358,7 @@ export function VerificationCard({
         </div>
       )}
 
-      {/* Dev Mode Quick State Switcher for Local Preview (Development Only) */}
+      {/* Dev Mode Quick State Switcher */}
       {process.env.NODE_ENV === "development" && (
         <div className="mt-6 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
           <span className="flex items-center gap-1">
