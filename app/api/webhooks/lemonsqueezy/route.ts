@@ -47,9 +47,10 @@ export async function POST(req: NextRequest) {
 
     // Check for Verification Fee purchase ($14.99)
     const variantId = String(attributes.variant_id || customData.variant_id || payload.data?.attributes?.first_order_item?.variant_id || "");
-    const verificationVariant = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VERIFICATION_VARIANT_ID || "1323098";
-    
-    if (variantId === verificationVariant || eventName === "order_created") {
+    const verificationVariant = process.env.NEXT_PUBLIC_LEMONSQUEEZY_VERIFICATION_VARIANT_ID || "451a2d31-b5ca-4b44-b84c-1122c42e2dd2";
+    const isVerificationOrder = variantId === verificationVariant || variantId === "1323098" || variantId.includes("451a2d31");
+
+    if (isVerificationOrder || eventName === "order_created") {
       console.log(`[Verification Webhook Event]: State transition UNVERIFIED -> PAID_PENDING_KYC for Email=${userEmail}`);
       if (userEmail && supabaseAdmin) {
         await supabaseAdmin

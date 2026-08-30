@@ -37,7 +37,54 @@ export function VerificationCard({
 
   const isProOrSuperAdmin = planType === "pro" || planType === "business" || isSuperAdmin;
 
-  // Handle Lemon Squeezy $14.99 Verification Checkout (Variant ID: 1323098)
+  // Listen for return callback parameters from Didit or Lemon Squeezy redirection
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const hasSuccess = params.get("verification") === "success" || params.get("status") === "approved" || params.get("simulation") === "approved";
+    
+    if (hasSuccess) {
+      console.log("[Verification Callback Detected]: Syncing profile verification status...");
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          supabase
+            .from("profiles")
+            .select("verification_status, is_verified_badge_active, is_verified")
+            .eq("id", user.id)
+            .single()
+            .then(({ data: profile }) => {
+              if (profile) {
+                const status = (profile.verification_status || (profile.is_verified ? "VERIFIED" : "UNVERIFIED")) as "UNVERIFIED" | "PAID_PENDING_KYC" | "VERIFIED" | "REJECTED";
+                onStatusChange(status);
+                onBadgeToggle(profile.is_verified_badge_active ?? profile.is_verified ?? false);
+              }
+            });
+        }
+      });
+    }
+  }, []);
+
+  const handleDevStateUpdate = async (newStatus: "UNVERIFIED" | "PAID_PENDING_KYC" | "VERIFIED", isActive: boolean) => {
+    onStatusChange(newStatus);
+    onBadgeToggle(isActive);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({
+            verification_status: newStatus,
+            is_verified_badge_active: isActive,
+            is_verified: newStatus === "VERIFIED",
+          })
+          .eq("id", user.id);
+      }
+    } catch (devErr) {
+      console.warn("[Dev Simulator Supabase Update Warning]:", devErr);
+    }
+  };
+
+  // Handle Lemon Squeezy $14.99 Verification Checkout (Variant UUID: 451a2d31-b5ca-4b44-b84c-1122c42e2dd2)
   const handleBuyVerification = async (e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -50,19 +97,12 @@ export function VerificationCard({
     }
     const { data: { user } } = await supabase.auth.getUser();
     const activeUserId = user?.id || "guest";
+    const variantId = process.env.LEMONSQUEEZY_VARIANT_VERIFICATION_FEE || "451a2d31-b5ca-4b44-b84c-1122c42e2dd2";
 
-    // Correct URL structure with mandatory /checkout/
-    const storeSlug = process.env.NEXT_PUBLIC_LEMONSQUEEZY_STORE_SLUG || "pay.feedm.ee";
-    const variantId = process.env.LEMONSQUEEZY_VARIANT_VERIFICATION_FEE || "1323098";
+    // Official exact Lemon Squeezy UUID Checkout URL
+    const targetUrl = `https://pay.feedm.ee/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
 
-    let targetUrl = "";
-    if (storeSlug.includes(".")) {
-      targetUrl = `https://${storeSlug}/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
-    } else {
-      targetUrl = `https://${storeSlug}.lemonsqueezy.com/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
-    }
-
-    console.log("Redirecting to Correct Lemon Checkout URL:", targetUrl);
+    console.log("Redirecting to Verified Lemon Checkout URL:", targetUrl);
     window.location.href = targetUrl;
   };
 
@@ -82,7 +122,7 @@ export function VerificationCard({
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || "6aa990b0-7c2c-4493-9c3e-dd3012ed36c8";
+      const userId = user?.id || "guest";
       const res = await fetch("/api/verification/didit/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,13 +131,13 @@ export function VerificationCard({
 
       const data = await res.json();
       if (!res.ok || !data.session_url) {
-        const errDetail = data.error || JSON.stringify(data);
+        const errDetail = typeof data.error === "object" ? JSON.stringify(data.error) : (data.error || JSON.stringify(data));
         alert("Didit Error: " + errDetail);
         setErrorMsg("Didit Error: " + errDetail);
         return;
       }
 
-      window.location.assign(data.session_url);
+      window.location.href = data.session_url;
     } catch (err: any) {
       const netErr = "Network error launching Didit: " + err.message;
       alert(netErr);
@@ -337,7 +377,7 @@ export function VerificationCard({
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => onStatusChange("UNVERIFIED")}
+              onClick={() => handleDevStateUpdate("UNVERIFIED", false)}
               className={`px-2 py-0.5 rounded border transition ${
                 verificationStatus === "UNVERIFIED" ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold" : "bg-white border-slate-200 text-slate-500"
               }`}
@@ -346,7 +386,7 @@ export function VerificationCard({
             </button>
             <button
               type="button"
-              onClick={() => onStatusChange("PAID_PENDING_KYC")}
+              onClick={() => handleDevStateUpdate("PAID_PENDING_KYC", false)}
               className={`px-2 py-0.5 rounded border transition ${
                 verificationStatus === "PAID_PENDING_KYC" ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold" : "bg-white border-slate-200 text-slate-500"
               }`}
@@ -355,15 +395,12 @@ export function VerificationCard({
             </button>
             <button
               type="button"
-              onClick={() => {
-                onStatusChange("VERIFIED");
-                onBadgeToggle(true);
-              }}
+              onClick={() => handleDevStateUpdate("VERIFIED", true)}
               className={`px-2 py-0.5 rounded border transition ${
                 verificationStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold" : "bg-white border-slate-200 text-slate-500"
               }`}
             >
-              Verified Active
+              Fast Approve (Dev)
             </button>
           </div>
         </div>
