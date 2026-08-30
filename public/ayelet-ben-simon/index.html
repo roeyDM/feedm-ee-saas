@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ayelet Ben Simon | FeedM.ee</title>
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://feedm.ee/ayelet-ben-simon/">
+<meta property="og:title" content="איילת בן סימון - הפיד הרשמי 💫">
+<meta property="og:description" content="ברוכים הבאים לפיד הקישורים והווידאו שלי! כל ההמלצות, שיתופי הפעולה וקודי הקופון השווים ביותר במקום אחד. כנסו לצפייה.">
+<meta property="og:image" content="https://feedm.ee/ayelet-ben-simon/ayelet-profile.jpg">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="איילת בן סימon - הפיד הרשמי 💫">
+<meta name="twitter:description" content="כל ההמלצות, שיתופי הפעולה וקודי הקופון השווים ביותר במקום אחד.">
+<meta name="twitter:image" content="https://feedm.ee/ayelet-ben-simon/ayelet-profile.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  /* עיצוב פרימיום - פלטת צבעים שמנת וורוד עדין */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: #faf6f0; /* רקע שמנת נקי וחם */
+    color: #423635;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .feed-container {
+    width: 100%;
+    max-width: 450px;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    background-color: #faf6f0;
+    box-shadow: 0 0 40px rgba(66, 54, 53, 0.05);
+  }
+
+  .feed-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-section, .video-section, .contact-section {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    position: relative;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* --- מסך פתיחה (Hero) --- */
+  .hero-section {
+    background: radial-gradient(circle at top, #ffffff 0%, #f7f0e8 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: calc(40px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)) 20px;
+  }
+
+  .top-share-btn {
+    position: absolute;
+    top: calc(24px + env(safe-area-inset-top));
+    left: 24px;
+    z-index: 10;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(66, 54, 53, 0.05);
+    border: 1px solid rgba(66, 54, 53, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #423635;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .top-share-btn:active { transform: scale(0.92); }
+
+  .hero-content {
+    z-index: 2;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: auto;
+    direction: rtl;
+  }
+
+  .profile-avatar {
+    width: 95px;
+    height: 95px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #eacfcf;
+    padding: 3px;
+    background-color: #faf6f0;
+    margin: 0 auto 16px auto;
+    box-shadow: 0 8px 20px rgba(66, 54, 53, 0.06);
+  }
+
+  .business-name {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    color: #2b1f1e;
+  }
+
+  .business-tagline {
+    font-size: 13.5px;
+    color: #70605f;
+    margin-bottom: 20px;
+    font-weight: 400;
+    line-height: 1.45;
+  }
+
+  .linktree-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+  }
+
+  .tree-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    color: #423635;
+    background: #ffffff;
+    border: 1px solid rgba(66, 54, 53, 0.08);
+    box-shadow: 0 4px 12px rgba(66, 54, 53, 0.02);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tree-link .link-right-side {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tree-link i {
+    font-size: 17px;
+    width: 24px;
+    text-align: center;
+  }
+
+  .tree-link .link-arrow {
+    font-size: 11px;
+    opacity: 0.4;
+  }
+
+  .tree-link:active {
+    transform: scale(0.98);
+    background: #fdfcfb;
+  }
+
+  .tree-link.instagram i { color: #b85a5a; }
+  .tree-link.tiktok i { color: #2b1f1e; }
+
+  .tree-link.collaboration-link {
+    border: 1px solid #e1ccb9;
+    background: linear-gradient(135deg, #ffffff 0%, #faf5ee 100%);
+  }
+
+  .coupon-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: left;
+    gap: 2px;
+  }
+
+  .coupon-discount {
+    font-size: 12px;
+    font-weight: 800;
+    color: #a35656;
+    background: #fbeeeb;
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+
+  .coupon-code {
+    font-size: 10px;
+    font-weight: 600;
+    color: #70605f;
+    letter-spacing: 0.3px;
+    border: 1px dashed #c0b0a8;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: #ffffff;
+  }
+
+  .scroll-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: bounce 2s infinite;
+    color: #aa9e9d;
+    direction: rtl;
+  }
+
+  .scroll-indicator i { font-size: 18px; }
+  .scroll-indicator .scroll-text { font-size: 11px; margin-top: 4px; font-weight: 600; }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+    60% { transform: translateY(-2px); }
+  }
+
+  /* --- עיצוב מסכי הוידאו --- */
+  .video-container-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .video-section video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .play-overlay-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 12;
+    transition: all 0.25s ease;
+  }
+
+  .video-section.paused .play-overlay-btn {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .side-actions {
+    position: absolute;
+    bottom: calc(85px + env(safe-area-inset-bottom));
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 10;
+  }
+
+  .action-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .action-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    color: #f1f5f9;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .action-btn:active { transform: scale(0.9); }
+  .action-btn.mute-sidebar-btn { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.25); }
+
+  /* 🛠️ עיצוב חדש ללייק פעיל 🛠️ */
+  .action-btn.liked {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .action-btn i.heart-pop {
+    color: #ff3b5c;
+    animation: popLike 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popLike {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  .action-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+
+  /* 🛠️ תיקון יסודי למבנה אינסטגרם משמאל לימין 🛠️ */
+  .video-footer {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    padding: 60px 80px calc(25px + env(safe-area-inset-bottom)) 16px; 
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  /* שורת הפרופיל - הפכנו את הכיוון משמאל לימין */
+  .footer-profile-row {
+    display: flex;
+    flex-direction: row-reverse; /* גורם לתמונה להיות משמאל והטקסט מימין */
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .footer-mini-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #ffffff;
+  }
+
+  .video-footer h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+  }
+
+  /* יישור הטקסט של הסרטון שיופיע בדיוק מתחת */
+  .video-footer p {
+    font-size: 13px;
+    color: #ffffff;
+    line-height: 1.4;
+    max-width: 100%;
+    text-align: left;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    padding-left: 2px;
+  }
+
+  /* --- מסך יצירת קשר בהיר --- */
+  .contact-section {
+    background: radial-gradient(circle at bottom, #ffffff 0%, #f3ece3 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: calc(20px + env(safe-area-inset-top)) 30px calc(40px + env(safe-area-inset-bottom)) 30px;
+    text-align: center;
+    direction: rtl;
+  }
+
+  .contact-container {
+    width: 100%;
+    max-width: 340px;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .contact-section h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: #2b1f1e;
+  }
+
+  .contact-section p {
+    font-size: 14px;
+    color: #70605f;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .contact-form input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(66, 54, 53, 0.15);
+    background: rgba(255, 255, 255, 0.7);
+    color: #2b1f1e;
+    font-size: 15px;
+    text-align: right;
+    transition: all 0.2s;
+  }
+
+  .contact-form input:focus {
+    outline: none;
+    border-color: #cbb4a3;
+    background: #ffffff;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: #423635;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(66, 54, 53, 0.12);
+    transition: transform 0.2s;
+  }
+
+  .submit-btn:active { transform: scale(0.98); }
+
+  .social-footer-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+  }
+
+  .social-footer-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(66, 54, 53, 0.04);
+    border: 1px solid rgba(66, 54, 53, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #423635;
+    font-size: 18px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .social-footer-icon:active {
+    transform: scale(0.9);
+    background: rgba(66, 54, 53, 0.1);
+  }
+
+  .creator-credit {
+    position: absolute;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    font-size: 11px;
+    color: #aa9e9d;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .creator-credit a {
+    color: #70605f;
+    text-decoration: none;
+    border-bottom: 1px dotted #aa9e9d;
+  }
+</style>
+</head>
+<body>
+
+<div class="feed-container">
+
+  <section class="hero-section">
+    <button class="top-share-btn" onclick="sharePage()"><i class="fa-solid fa-share-nodes"></i></button>
+    
+    <div class="hero-content">
+      <img src="ayelet-profile.jpg" alt="איילת בן סימון" class="profile-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f3ece3\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'%23423635\'>✨</text></svg>'">
+      
+      <h1 class="business-name">איילת בן סימון</h1>
+      <p class="business-tagline">כל ההמלצות, הסטייל ושיתופי הפעולה הכי שווים שלי במקום אחד. אל תשכחו לנצל את ההנחות! 🤍</p>
+      
+      <div class="linktree-block">
+        <a href="https://www.instagram.com/ayelet_ben_simon?igsh=ODh6bmpiOGdrb2d2&utm_source=qr" target="_blank" class="tree-link instagram">
+          <span class="link-right-side"><i class="fa-brands fa-instagram"></i> אינסטגרם</span>
+          <span class="link-arrow"><i class="fa-solid fa-chevron-left"></i></span>
+        </a>
+        <a href="https://www.tiktok.com/@ayelet.ben.simon?_r=1&_t=ZS-97zvz6nCj2o" target="_blank" class="tree-link tiktok">
+          <span class="link-right-side"><i class="fa-brands fa-tiktok"></i> טיקטוק</span>
+          <span class="link-arrow"><i class="fa-solid fa-chevron-left"></i></span>
+        </a>
+        
+        <a href="https://www.shookit.com/?gad_source=1&gad_campaignid=10766946924" target="_blank" class="tree-link collaboration-link">
+          <span class="link-right-side"><i class="fa-solid fa-basket-shopping" style="color: #7ba87b;"></i> שוקיט | Shookit</span>
+          <div class="coupon-badge">
+            <span class="coupon-discount">10% הנחה</span>
+            <span class="coupon-code">קוד: Ayelet</span>
+          </div>
+        </a>
+
+        <a href="https://foodappeal-online.com/collections/sale?gad_campaignid=2046549078" target="_blank" class="tree-link collaboration-link">
+          <span class="link-right-side"><i class="fa-solid fa-kitchen-set" style="color: #c29375;"></i> פוד אפיל | Food Appeal</span>
+          <div class="coupon-badge">
+            <span class="coupon-discount">20% הנחה</span>
+            <span class="coupon-code">קוד: Ayelet</span>
+          </div>
+        </a>
+
+        <a href="https://www.kikocosmetics.co.il/?gad_source=1&gad_campaignid=19777221349" target="_blank" class="tree-link collaboration-link">
+          <span class="link-right-side"><i class="fa-solid fa-wand-magic-sparkles" style="color: #d1a1b0;"></i> קיקו מילאנו | Kiko</span>
+          <div class="coupon-badge">
+            <span class="coupon-discount">10% הנחה</span>
+            <span class="coupon-code">קוד: ayelet10</span>
+          </div>
+        </a>
+      </div>
+    </div>
+      
+    <div class="scroll-indicator">
+      <i class="fa-solid fa-chevron-down"></i>
+      <span class="scroll-text">גללו למטה לפיד הסרטונים שלי </span>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-container-wrapper" onclick="togglePlayPause(this)">
+      <video src="Video1.mp4" loop muted playsinline></video>
+      <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+    </div>
+    
+    <div class="side-actions">
+      <div class="action-group">
+        <button class="action-btn mute-sidebar-btn" onclick="toggleGlobalMute(event)"><i class="fa-solid fa-volume-xmark"></i></button>
+        <span class="action-label mute-label">Mute</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="toggleLike(this)"><i class="fa-solid fa-heart"></i></button>
+        <span class="action-label count">142</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="sharePage()"><i class="fa-solid fa-share"></i></button>
+        <span class="action-label"></span>
+      </div>
+    </div>
+    <div class="video-footer">
+      <div class="footer-profile-row">
+        <h3>ayelet_ben_simon@</h3>
+        <img src="ayelet-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f3ece3\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'%23423635\'>✨</text></svg>'">
+      </div>
+      <p>הקריספי צ'יקן שהטריף את הרשת</p>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-container-wrapper" onclick="togglePlayPause(this)">
+      <video src="Video2.mp4" loop muted playsinline></video>
+      <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+    </div>
+    
+    <div class="side-actions">
+      <div class="action-group">
+        <button class="action-btn mute-sidebar-btn" onclick="toggleGlobalMute(event)"><i class="fa-solid fa-volume-xmark"></i></button>
+        <span class="action-label mute-label">Mute</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="toggleLike(this)"><i class="fa-solid fa-heart"></i></button>
+        <span class="action-label count">95</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="sharePage()"><i class="fa-solid fa-share"></i></button>
+        <span class="action-label"></span>
+      </div>
+    </div>
+    <div class="video-footer">
+      <div class="footer-profile-row">
+        <h3>ayelet_ben_simon@</h3>
+        <img src="ayelet-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f3ece3\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'%23423635\'>✨</text></svg>'">
+      </div>
+      <p>שיתוף פעולה עם קיקו מילאנו</p>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-container-wrapper" onclick="togglePlayPause(this)">
+      <video src="Video3.mp4" loop muted playsinline></video>
+      <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+    </div>
+    
+    <div class="side-actions">
+      <div class="action-group">
+        <button class="action-btn mute-sidebar-btn" onclick="toggleGlobalMute(event)"><i class="fa-solid fa-volume-xmark"></i></button>
+        <span class="action-label mute-label">Mute</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="toggleLike(this)"><i class="fa-solid fa-heart"></i></button>
+        <span class="action-label count">312</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="sharePage()"><i class="fa-solid fa-share"></i></button>
+        <span class="action-label"></span>
+      </div>
+    </div>
+    <div class="video-footer">
+      <div class="footer-profile-row">
+        <h3>ayelet_ben_simon@</h3>
+        <img src="ayelet-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f3ece3\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'%23423635\'>✨</text></svg>'">
+      </div>
+      <p>עוגת השוקולד המפורסמת של שיה</p>
+    </div>
+  </section>
+
+  <section class="contact-section">
+    <div class="contact-container">
+      <h2>רוצה לשתף פעולה?</h2>
+      <p>מוזמנים להשאיר פרטי התקשרות ואחזור אליכם בהקדם לעבודה משותפת</p>
+      
+      <form class="contact-form" name="ayelet-bensimon-leads" method="POST" data-netlify="true">
+        <div class="input-group">
+          <input type="text" name="brand-name" placeholder="שם המותג / חברה" required>
+        </div>
+        
+        <div class="input-group">
+          <input type="tel" name="phone" placeholder="מספר טלפון לחזרה" required>
+        </div>
+        
+        <button type="submit" class="submit-btn">שליחת פרטים 🚀</button>
+      </form>
+
+      <div class="social-footer-row">
+        <a href="https://www.instagram.com/ayelet_ben_simon?igsh=ODh6bmpiOGdrb2d2&utm_source=qr" target="_blank" class="social-footer-icon"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.tiktok.com/@ayelet.ben.simon?_r=1&_t=ZS-97zvz6nCj2o" target="_blank" class="social-footer-icon"><i class="fa-brands fa-tiktok"></i></a>
+      </div>
+    </div>
+
+    <div class="creator-credit">
+      Powered by <a href="https://feedm.ee" target="_blank">FeedM.ee</a>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  let isGlobalMuted = true;
+
+  const videos = document.querySelectorAll('video');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const section = entry.target.closest('.video-section');
+      if (entry.isIntersecting) {
+        entry.target.muted = isGlobalMuted;
+        entry.target.play().catch(error => { console.log("Blocked auto"); });
+        if (section) section.classList.remove('paused');
+      } else {
+        entry.target.pause();
+        entry.target.currentTime = 0;
+        if (section) section.classList.remove('paused');
+      }
+    });
+  }, { threshold: 0.6 });
+
+  videos.forEach(video => {
+    observer.observe(video);
+  });
+
+  function togglePlayPause(wrapper) {
+    const video = wrapper.querySelector('video');
+    const section = wrapper.closest('.video-section');
+    
+    if (video.paused) {
+      video.play();
+      section.classList.remove('paused');
+    } else {
+      video.pause();
+      section.classList.add('paused');
+    }
+  }
+
+  function toggleGlobalMute(event) {
+    event.stopPropagation();
+    isGlobalMuted = !isGlobalMuted;
+    
+    videos.forEach(video => {
+      video.muted = isGlobalMuted;
+    });
+    
+    const muteButtons = document.querySelectorAll('.mute-sidebar-btn');
+    muteButtons.forEach(btn => {
+      const icon = btn.querySelector('i');
+      const label = btn.nextElementSibling;
+      
+      if (isGlobalMuted) {
+        icon.className = 'fa-solid fa-volume-xmark';
+        if (label) label.innerText = 'Mute';
+      } else {
+        icon.className = 'fa-solid fa-volume-high';
+        if (label) label.innerText = 'Sound';
+      }
+    });
+  }
+
+  /* 🛠️ תיקון כפתור לייק מתקדם ומתפקד 🛠️ */
+  function toggleLike(btn) {
+    const icon = btn.querySelector('i');
+    const countSpan = btn.nextElementSibling;
+    let currentCount = parseInt(countSpan.innerText) || 0;
+    
+    if (btn.classList.contains('liked')) {
+      // ביטול לייק
+      btn.classList.remove('liked');
+      icon.classList.remove('heart-pop');
+      countSpan.innerText = currentCount - 1;
+    } else {
+      // הוספת לייק
+      btn.classList.add('liked');
+      icon.classList.add('heart-pop');
+      countSpan.innerText = currentCount + 1;
+    }
+  }
+
+  function sharePage() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Ayelet Ben Simon Experience',
+        text: 'בואו לראות את ההמלצות והקופונים של איילת בן סימון',
+        url: window.location.href
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('הקישור הועתק ללוח בסטייל! 🚀');
+      });
+    }
+  }
+</script>
+</body>
+</html>

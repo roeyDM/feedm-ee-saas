@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Grill Ben | FeedM.ee</title>
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://feedm.ee/ben-shvartz/">
+<meta property="og:title" content="גריל בן - חווית בשרים פרימיום 🥩">
+<meta property="og:description" content="אירועים פרטיים, סדנאות בוטיק וחוויה קולינרית ברמה הגבוהה ביותר. כנסו לצפייה בפיד הפרויקטים שלי בווידאו וצרו קשר.">
+<meta property="og:image" content="https://feedm.ee/ben-shvartz/ben-profile.jpg">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="גריל בן - חווית בשרים פרימיום 🥩">
+<meta name="twitter:description" content="אירועים פרטיים, סדנאות בוטיק וחוויה קולינרית ברמה הגבוהה ביותר.">
+<meta name="twitter:image" content="https://feedm.ee/ben-shvartz/ben-profile.jpg">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  /* עיצוב מערכת פרימיום - פלטת צבעים בהשראת Grill Ben */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: #140d0d; /* צבע רקע כהה חם ועמוק */
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* מיכל הפיד הראשי - מדמה מסך מובייל פרימיום */
+  .feed-container {
+    width: 100%;
+    max-width: 450px;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    background-color: #0b0707;
+    box-shadow: 0 0 50px rgba(0,0,0,0.6);
+  }
+
+  .feed-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-section, .video-section, .contact-section {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    position: relative;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* --- מסך פתיחה (Hero) - מותאם לעברית וצבעים בהשראת הלוגו --- */
+  .hero-section {
+    background: radial-gradient(circle at top, #241414 0%, #110909 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: calc(40px + env(safe-area-inset-top)) 24px calc(20px + env(safe-area-inset-bottom)) 24px;
+  }
+
+  .top-share-btn {
+    position: absolute;
+    top: calc(24px + env(safe-area-inset-top));
+    left: 24px;
+    z-index: 10;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .top-share-btn:active { transform: scale(0.92); }
+
+  .hero-content {
+    z-index: 2;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: auto;
+    direction: rtl; /* התאמה לעברית */
+  }
+
+  .profile-avatar {
+    width: 95px;
+    height: 95px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #8a1a1a; /* מסגרת בורדו אש יוקרטית */
+    padding: 3px;
+    background-color: #140d0d;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 8px 20px rgba(138, 26, 26, 0.3);
+  }
+
+  .business-name {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    color: #ffffff;
+  }
+
+  .business-tagline {
+    font-size: 14px;
+    color: #cca6a6;
+    margin-bottom: 25px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .linktree-block {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .tree-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tree-link i {
+    font-size: 16px;
+    width: 25px;
+    text-align: center;
+  }
+
+  .tree-link .link-arrow {
+    font-size: 11px;
+    opacity: 0.4;
+  }
+
+  .tree-link:active {
+    transform: scale(0.97);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .tree-link.instagram i { color: #ff5252; }
+  .tree-link.tiktok i { color: #f1f5f9; }
+  .tree-link.facebook i { color: #1877f2; }
+  .tree-link.youtube i { color: #ef4444; }
+  .tree-link.whatsapp { background: rgba(34, 197, 94, 0.06); border-color: rgba(34, 197, 94, 0.15); }
+  .tree-link.whatsapp i { color: #22c55e; }
+
+  .scroll-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: bounce 2s infinite;
+    color: #8f7272;
+    direction: rtl;
+  }
+
+  .scroll-indicator i { font-size: 18px; }
+  .scroll-indicator .scroll-text { font-size: 11px; margin-top: 4px; font-weight: 600; }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+    60% { transform: translateY(-2px); }
+  }
+
+  /* --- עיצוב מסכי הוידאו --- */
+  .video-container-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .video-section video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* כפתור PLAY לבן עם רקע מטושטש ועדין */
+  .play-overlay-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #ffffff;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 12;
+    transition: all 0.25s ease;
+  }
+
+  .video-section.paused .play-overlay-btn {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* סרגל כפתורי צד עבר לצד ימין - סטייל אינסטגרם רילז */
+  .side-actions {
+    position: absolute;
+    bottom: calc(85px + env(safe-area-inset-bottom));
+    right: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 10;
+  }
+
+  .action-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .action-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    color: #f1f5f9;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .action-btn:active { transform: scale(0.9); }
+  .action-btn.whatsapp-btn { background: rgba(34, 197, 94, 0.7); border-color: rgba(34, 197, 94, 0.2); }
+  .action-btn.phone-btn { background: rgba(138, 26, 26, 0.7); border-color: rgba(138, 26, 26, 0.2); }
+  .action-btn.mute-sidebar-btn { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.25); }
+
+  .action-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+
+  @keyframes heartBeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
+  }
+  .heart-pop { animation: heartBeat 0.45s ease-in-out; color: #ff5252 !important; }
+
+  /* תחתית הוידאו */
+  .video-footer {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    padding: 60px 80px calc(25px + env(safe-area-inset-bottom)) 16px; 
+    background: linear-gradient(to top, rgba(20, 13, 13, 0.95) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .footer-profile-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .footer-mini-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid #8a1a1a;
+  }
+
+  .video-footer h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+  }
+
+  .video-footer p {
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.4;
+    max-width: 100%;
+  }
+
+  /* --- מסך יצירת קשר פרימיום - מותאם לעברית RTL --- */
+  .contact-section {
+    background: radial-gradient(circle at bottom, #241414 0%, #110909 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: calc(20px + env(safe-area-inset-top)) 30px calc(40px + env(safe-area-inset-bottom)) 30px;
+    text-align: center;
+    direction: rtl; /* התאמה מלאה לעברית */
+  }
+
+  .contact-container {
+    width: 100%;
+    max-width: 340px;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .contact-section h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+  }
+
+  .contact-section p {
+    font-size: 14px;
+    color: #cca6a6;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .contact-form input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-size: 15px;
+    text-align: right; /* יישור טקסט לימין בטופס */
+    transition: all 0.2s;
+  }
+
+  .contact-form input:focus {
+    outline: none;
+    border-color: #8a1a1a;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: #8a1a1a; /* צבע אדום-בורדו של המותג */
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(138, 26, 26, 0.3);
+    transition: transform 0.2s;
+  }
+
+  .submit-btn:active { transform: scale(0.98); }
+
+  .social-footer-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+  }
+
+  .social-footer-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #cbd5e1;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .social-footer-icon:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .creator-credit {
+    position: absolute;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    font-size: 11px;
+    color: #6e5555;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .creator-credit a {
+    color: #aa8888;
+    text-decoration: none;
+    border-bottom: 1px dotted #6e5555;
+  }
+</style>
+</head>
+<body>
+
+<div class="feed-container">
+
+  <section class="hero-section">
+    <button class="top-share-btn" onclick="sharePage()"><i class="fa-solid fa-share-nodes"></i></button>
+    
+    <div class="hero-content">
+      <img src="ben-profile.jpg" alt="בן שורץ - אירועי בשר" class="profile-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+      
+      <h1 class="business-name">בן שורץ - אירועי בשר</h1>
+      <p class="business-tagline">חווית בשרים פרימיום לאירועים פרטיים וסדנאות בוטיק</p>
+      
+      <div class="linktree-block">
+        <a href="https://www.instagram.com/benshvartz/" target="_blank" class="tree-link instagram">
+          <span><i class="fa-brands fa-instagram"></i> אינסטגרם</span>
+          <span class="link-arrow"><i class="fa-solid fa-chevron-left"></i></span>
+        </a>
+        <a href="https://www.tiktok.com/@benshvartz84" target="_blank" class="tree-link tiktok">
+          <span><i class="fa-brands fa-tiktok"></i> טיקטוק</span>
+          <span class="link-arrow"><i class="fa-solid fa-chevron-left"></i></span>
+        </a>
+        <a href="https://www.facebook.com/ben.shvartz" target="_blank" class="tree-link facebook">
+          <span><i class="fa-brands fa-facebook"></i> פייסבוק</span>
+          <span class="link-arrow"><i class="fa-solid fa-chevron-left"></i></span>
+        </a>
+        <a href="https://wa.me/972506842285" target="_blank" class="tree-link whatsapp">
+          <span><i class="fa-brands fa-whatsapp"></i> שלחו לי הודעה בוואטסאפ</span>
+          <span class="link-arrow"><i class="fa-solid fa-chevron-left"></i></span>
+        </a>
+      </div>
+    </div>
+      
+    <div class="scroll-indicator">
+      <i class="fa-solid fa-chevron-down"></i>
+      <span class="scroll-text">גללו למטה ותהיו חלק מהחוויה</span>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-container-wrapper" onclick="togglePlayPause(this)">
+      <video src="Video1.mp4" loop muted playsinline></video>
+      <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+    </div>
+    
+    <div class="side-actions">
+      <div class="action-group">
+        <button class="action-btn mute-sidebar-btn" onclick="toggleGlobalMute(event)"><i class="fa-solid fa-volume-xmark"></i></button>
+        <span class="action-label mute-label">Mute</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="toggleLike(this)"><i class="fa-solid fa-heart"></i></button>
+        <span class="action-label count">142</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="sharePage()"><i class="fa-solid fa-share"></i></button>
+        <span class="action-label"></span>
+      </div>
+      <div class="action-group">
+        <a href="https://wa.me/972506842285" target="_blank" class="action-btn whatsapp-btn"><i class="fa-brands fa-whatsapp"></i></a>
+        <span class="action-label">WhatsApp</span>
+      </div>
+      <div class="action-group">
+        <a href="tel:0506842285" class="action-btn phone-btn"><i class="fa-solid fa-phone"></i></a>
+        <span class="action-label">חיוג</span>
+      </div>
+    </div>
+    <div class="video-footer">
+      <div class="footer-profile-row">
+        <img src="ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+        <h3>@benshvartz</h3>
+      </div>
+      <p>חווית בשרים קולינרית ברמה הגבוהה ביותר</p>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-container-wrapper" onclick="togglePlayPause(this)">
+      <video src="Video2.mp4" loop muted playsinline></video>
+      <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+    </div>
+    
+    <div class="side-actions">
+      <div class="action-group">
+        <button class="action-btn mute-sidebar-btn" onclick="toggleGlobalMute(event)"><i class="fa-solid fa-volume-xmark"></i></button>
+        <span class="action-label mute-label">Mute</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="toggleLike(this)"><i class="fa-solid fa-heart"></i></button>
+        <span class="action-label count">95</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="sharePage()"><i class="fa-solid fa-share"></i></button>
+        <span class="action-label"></span>
+      </div>
+      <div class="action-group">
+        <a href="https://wa.me/972506842285" target="_blank" class="action-btn whatsapp-btn"><i class="fa-brands fa-whatsapp"></i></a>
+        <span class="action-label">WhatsApp</span>
+      </div>
+      <div class="action-group">
+        <a href="tel:0506842285" class="action-btn phone-btn"><i class="fa-solid fa-phone"></i></a>
+        <span class="action-label">חיוג</span>
+      </div>
+    </div>
+    <div class="video-footer">
+      <div class="footer-profile-row">
+        <img src="ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+        <h3>@benshvartz</h3>
+      </div>
+      <p>אירועים פרטיים - אירוע בר מצווה עם תפריט מיוחד</p>
+    </div>
+  </section>
+
+  <section class="video-section">
+    <div class="video-container-wrapper" onclick="togglePlayPause(this)">
+      <video src="Video3.mp4" loop muted playsinline></video>
+      <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
+    </div>
+    
+    <div class="side-actions">
+      <div class="action-group">
+        <button class="action-btn mute-sidebar-btn" onclick="toggleGlobalMute(event)"><i class="fa-solid fa-volume-xmark"></i></button>
+        <span class="action-label mute-label">Mute</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="toggleLike(this)"><i class="fa-solid fa-heart"></i></button>
+        <span class="action-label count">312</span>
+      </div>
+      <div class="action-group">
+        <button class="action-btn" onclick="sharePage()"><i class="fa-solid fa-share"></i></button>
+        <span class="action-label"></span>
+      </div>
+      <div class="action-group">
+        <a href="https://wa.me/972506842285" target="_blank" class="action-btn whatsapp-btn"><i class="fa-brands fa-whatsapp"></i></a>
+        <span class="action-label">WhatsApp</span>
+      </div>
+      <div class="action-group">
+        <a href="tel:0506842285" class="action-btn phone-btn"><i class="fa-solid fa-phone"></i></a>
+        <span class="action-label">חיוג</span>
+      </div>
+    </div>
+    <div class="video-footer">
+      <div class="footer-profile-row">
+        <img src="ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+        <h3>@benshvartz</h3>
+      </div>
+      <p>האווירה מטורפת והבשר לא נגמר</p>
+    </div>
+  </section>
+
+  <section class="contact-section">
+    <div class="contact-container">
+      <h2>מתכננים אירוע?</h2>
+      <p>השאירו פרטים כאן ונחזור אליכם בהקדם לבניית תפריט מושלם וייחודי עבורכם</p>
+      
+      <form class="contact-form" name="ben-shvartz-signup" method="POST" data-netlify="true">
+        <div class="input-group">
+          <input type="text" name="client-name" placeholder="שם מלא" required>
+        </div>
+        
+        <div class="input-group">
+          <input type="tel" name="phone" placeholder="מספר טלפון" required>
+        </div>
+        
+        <button type="submit" class="submit-btn">בואו נדבר בשר 🔥</button>
+      </form>
+
+      <div class="social-footer-row">
+        <a href="https://www.instagram.com/benshvartz/" target="_blank" class="social-footer-icon"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.tiktok.com/@benshvartz84" target="_blank" class="social-footer-icon"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://www.facebook.com/ben.shvartz" target="_blank" class="social-footer-icon"><i class="fa-brands fa-facebook"></i></a>
+        <a href="https://wa.me/972506842285" target="_blank" class="social-footer-icon"><i class="fa-brands fa-whatsapp"></i></a>
+      </div>
+    </div>
+
+    <div class="creator-credit">
+      Powered by <a href="https://feedm.ee" target="_blank">FeedM.ee</a>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  let isGlobalMuted = true;
+
+  const videos = document.querySelectorAll('video');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const section = entry.target.closest('.video-section');
+      if (entry.isIntersecting) {
+        entry.target.muted = isGlobalMuted;
+        entry.target.play().catch(error => { console.log("Blocked auto"); });
+        if (section) section.classList.remove('paused');
+      } else {
+        entry.target.pause();
+        entry.target.currentTime = 0;
+        if (section) section.classList.remove('paused');
+      }
+    });
+  }, { threshold: 0.6 });
+
+  videos.forEach(video => {
+    observer.observe(video);
+  });
+
+  function togglePlayPause(wrapper) {
+    const video = wrapper.querySelector('video');
+    const section = wrapper.closest('.video-section');
+    
+    if (video.paused) {
+      video.play();
+      section.classList.remove('paused');
+    } else {
+      video.pause();
+      section.classList.add('paused');
+    }
+  }
+
+  function toggleGlobalMute(event) {
+    event.stopPropagation();
+    isGlobalMuted = !isGlobalMuted;
+    
+    videos.forEach(video => {
+      video.muted = isGlobalMuted;
+    });
+    
+    const muteButtons = document.querySelectorAll('.mute-sidebar-btn');
+    muteButtons.forEach(btn => {
+      const icon = btn.querySelector('i');
+      const label = btn.nextElementSibling;
+      
+      if (isGlobalMuted) {
+        icon.className = 'fa-solid fa-volume-xmark';
+        if (label) label.innerText = 'Mute';
+      } else {
+        icon.className = 'fa-solid fa-volume-high';
+        if (label) label.innerText = 'Sound';
+      }
+    });
+  }
+
+  function toggleLike(btn) {
+    const icon = btn.querySelector('i');
+    const countSpan = btn.nextElementSibling;
+    let currentCount = parseInt(countSpan.innerText);
+    
+    if (icon.classList.contains('heart-pop')) {
+      icon.classList.remove('heart-pop');
+      countSpan.innerText = currentCount - 1;
+    } else {
+      icon.classList.add('heart-pop');
+      countSpan.innerText = currentCount + 1;
+    }
+  }
+
+  function sharePage() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Grill Ben Experience',
+        text: 'חווית הבשרים של גריל בן',
+        url: window.location.href
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('הקישור הועתק ללוח! 🚀');
+      });
+    }
+  }
+</script>
+</body>
+</html>
