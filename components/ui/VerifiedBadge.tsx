@@ -46,11 +46,11 @@ export function VerifiedBadge({
         title="Verified Feedm.ee Creator"
       >
         <img
-          src="/verified-badge.svg?v=3"
+          src="/verified-badge.svg?v=final_transparent_v1"
           onError={(e) => {
             const img = e.target as HTMLImageElement;
             if (!img.src.includes(".png")) {
-              img.src = "/verified-badge.png?v=3";
+              img.src = "/verified-badge.png?v=final_transparent_v1";
             }
           }}
           alt="Verified Badge"
