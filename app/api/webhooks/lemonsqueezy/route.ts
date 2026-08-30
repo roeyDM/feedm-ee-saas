@@ -41,7 +41,10 @@ export async function POST(req: NextRequest) {
       ? new Date(attributes.trial_ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
       : "7 days from today";
 
-    console.log(`[Lemon Squeezy Webhook Received]: Event=${eventName}, Email=${userEmail}, Status=${status}`);
+    // חילוץ user_id במידה והועבר מהפרונטאנד ב-Checkout
+    const userId = customData.user_id || customData.userId;
+
+    console.log(`[Lemon Squeezy Webhook Received]: Event=${eventName}, Email=${userEmail}, UserId=${userId}, Status=${status}`);
 
     const supabaseAdmin = getSupabaseAdmin();
 
@@ -51,22 +54,44 @@ export async function POST(req: NextRequest) {
     const isVerificationOrder = variantId === verificationVariant || variantId === "1323098" || variantId.includes("451a2d31");
 
     if (isVerificationOrder || eventName === "order_created") {
-      console.log(`[Verification Webhook Event]: Updating verification status for Email=${userEmail}`);
-      if (userEmail && supabaseAdmin) {
-        const { data, error } = await supabaseAdmin
-          .from("profiles")
-          .update({
-            verification_status: "pending", // מתאים לקוד הפרונטאנד שמצפה ל-pending
-            has_paid: true,                 // מדליק את דגל התשלום
-            payment_status: "paid",         // מעדכן את סטטוס התשלום ל-paid
-            updated_at: new Date().toISOString(),
-          })
-          .ilike("email", userEmail);      // התאמת אימייל ללא רגישות לאותיות קטנות/גדולות
+      console.log(`[Verification Webhook Event]: Updating verification status for UserId=${userId} / Email=${userEmail}`);
+      if (supabaseAdmin) {
+        const updatePayload = {
+          verification_status: "pending", // מתאים לקוד הפרונטאנד שמצפה ל-pending
+          has_paid: true,                 // מדליק את דגל התשלום
+          payment_status: "paid",         // מעדכן את סטטוס התשלום ל-paid
+          updated_at: new Date().toISOString(),
+        };
 
-        if (error) {
-          console.error("[Verification DB Error]:", error);
-        } else {
-          console.log(`[Verification Webhook DB Success]: Updated profile for '${userEmail}'`);
+        let updated = false;
+
+        // עדיפות 1: עדכון לפי userId אם קיים ב-customData
+        if (userId) {
+          const { error } = await supabaseAdmin
+            .from("profiles")
+            .update(updatePayload)
+            .eq("id", userId);
+
+          if (error) {
+            console.error("[Verification DB Error by UserId]:", error);
+          } else {
+            console.log(`[Verification Webhook DB Success]: Updated profile by userId '${userId}'`);
+            updated = true;
+          }
+        }
+
+        // עדיפות 2: אם אין userId או שהעדכון לא בוצע, נעדכן לפי האימייל
+        if (!updated && userEmail) {
+          const { error } = await supabaseAdmin
+            .from("profiles")
+            .update(updatePayload)
+            .ilike("email", userEmail);
+
+          if (error) {
+            console.error("[Verification DB Error by Email]:", error);
+          } else {
+            console.log(`[Verification Webhook DB Success]: Updated profile for email '${userEmail}'`);
+          }
         }
       }
     }
@@ -84,15 +109,26 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Update Supabase Profile if matched
-        if (userEmail && supabaseAdmin) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_status: "trialing",
-              plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
-              updated_at: new Date().toISOString(),
-            })
-            .ilike("email", userEmail);
+        if (supabaseAdmin) {
+          if (userId) {
+            await supabaseAdmin
+              .from("profiles")
+              .update({
+                subscription_status: "trialing",
+                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", userId);
+          } else if (userEmail) {
+            await supabaseAdmin
+              .from("profiles")
+              .update({
+                subscription_status: "trialing",
+                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
+                updated_at: new Date().toISOString(),
+              })
+              .ilike("email", userEmail);
+          }
         }
       } else if (status === "active") {
         // Direct conversion or non-trial active sub
@@ -105,15 +141,26 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        if (userEmail && supabaseAdmin) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_status: "active",
-              plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
-              updated_at: new Date().toISOString(),
-            })
-            .ilike("email", userEmail);
+        if (supabaseAdmin) {
+          if (userId) {
+            await supabaseAdmin
+              .from("profiles")
+              .update({
+                subscription_status: "active",
+                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", userId);
+          } else if (userEmail) {
+            await supabaseAdmin
+              .from("profiles")
+              .update({
+                subscription_status: "active",
+                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
+                updated_at: new Date().toISOString(),
+              })
+              .ilike("email", userEmail);
+          }
         }
       }
     } else if (eventName === "subscription_payment_success") {
@@ -127,25 +174,46 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      if (userEmail && supabaseAdmin) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            subscription_status: "active",
-            updated_at: new Date().toISOString(),
-          })
-          .ilike("email", userEmail);
+      if (supabaseAdmin) {
+        if (userId) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              subscription_status: "active",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", userId);
+        } else if (userEmail) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              subscription_status: "active",
+              updated_at: new Date().toISOString(),
+            })
+            .ilike("email", userEmail);
+        }
       }
     } else if (eventName === "subscription_cancelled" || eventName === "subscription_expired") {
-      if (userEmail && supabaseAdmin) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({
-            subscription_status: "cancelled",
-            plan_type: "free",
-            updated_at: new Date().toISOString(),
-          })
-          .ilike("email", userEmail);
+      if (supabaseAdmin) {
+        if (userId) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              subscription_status: "cancelled",
+              plan_type: "free",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", userId);
+        } else if (userEmail) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              subscription_status: "cancelled",
+              plan_type: "free",
+              updated_at: new Date().toISOString(),
+            })
+            .ilike("email", userEmail);
+        }
       }
     }
 
