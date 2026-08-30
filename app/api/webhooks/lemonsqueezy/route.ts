@@ -51,16 +51,23 @@ export async function POST(req: NextRequest) {
     const isVerificationOrder = variantId === verificationVariant || variantId === "1323098" || variantId.includes("451a2d31");
 
     if (isVerificationOrder || eventName === "order_created") {
-      console.log(`[Verification Webhook Event]: State transition UNVERIFIED -> PAID_PENDING_KYC for Email=${userEmail}`);
+      console.log(`[Verification Webhook Event]: Updating verification status for Email=${userEmail}`);
       if (userEmail && supabaseAdmin) {
-        await supabaseAdmin
+        const { data, error } = await supabaseAdmin
           .from("profiles")
           .update({
-            verification_status: "PAID_PENDING_KYC",
+            verification_status: "pending", // מתאים לקוד הפרונטאנד שמצפה ל-pending
+            has_paid: true,                 // מדליק את דגל התשלום
+            payment_status: "paid",         // מעדכן את סטטוס התשלום ל-paid
             updated_at: new Date().toISOString(),
           })
-          .eq("email", userEmail);
-        console.log(`[Verification Webhook DB Success]: Updated verification_status = PAID_PENDING_KYC for '${userEmail}'`);
+          .ilike("email", userEmail);      // התאמת אימייל ללא רגישות לאותיות קטנות/גדולות
+
+        if (error) {
+          console.error("[Verification DB Error]:", error);
+        } else {
+          console.log(`[Verification Webhook DB Success]: Updated profile for '${userEmail}'`);
+        }
       }
     }
 
@@ -85,7 +92,7 @@ export async function POST(req: NextRequest) {
               plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
               updated_at: new Date().toISOString(),
             })
-            .eq("email", userEmail);
+            .ilike("email", userEmail);
         }
       } else if (status === "active") {
         // Direct conversion or non-trial active sub
@@ -106,7 +113,7 @@ export async function POST(req: NextRequest) {
               plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
               updated_at: new Date().toISOString(),
             })
-            .eq("email", userEmail);
+            .ilike("email", userEmail);
         }
       }
     } else if (eventName === "subscription_payment_success") {
@@ -127,7 +134,7 @@ export async function POST(req: NextRequest) {
             subscription_status: "active",
             updated_at: new Date().toISOString(),
           })
-          .eq("email", userEmail);
+          .ilike("email", userEmail);
       }
     } else if (eventName === "subscription_cancelled" || eventName === "subscription_expired") {
       if (userEmail && supabaseAdmin) {
@@ -138,7 +145,7 @@ export async function POST(req: NextRequest) {
             plan_type: "free",
             updated_at: new Date().toISOString(),
           })
-          .eq("email", userEmail);
+          .ilike("email", userEmail);
       }
     }
 
