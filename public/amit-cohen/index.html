@@ -9,7 +9,7 @@
 <meta property="og:site_name" content="Amit Cohen - Social Media">
 <meta property="og:title" content="עמית כהן | ניהול סושיאל ויצירת תוכן 📸">
 <meta property="og:description" content="ניהול סושיאל ויצירת תוכן שעובד. כנסו לצפייה בעבודות, יצירת קשר וקישורים מהירים.">
-<meta property="og:image" content="amit-profile.jpg">
+<meta property="og:image" content="./amit-profile.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-  /* פלטת צבעים נגזרת בלעדית מהלוגו של עמית כהן (#9e604a, #2c2523, #f8f4f0) */
   * {
     box-sizing: border-box;
     margin: 0;
@@ -62,7 +61,6 @@
     scroll-snap-stop: always;
   }
 
-  /* --- מסך פתיחה (Hero) --- */
   .hero-section {
     background: radial-gradient(circle at top, #ffffff 0%, #f4ede6 100%) !important;
     display: flex;
@@ -230,7 +228,6 @@
     60% { transform: translateY(-2px); }
   }
 
-  /* --- מסך וידאו (Reels) --- */
   .video-container-wrapper {
     width: 100%;
     height: 100%;
@@ -274,7 +271,6 @@
     transform: translate(-50%, -50%) scale(1);
   }
 
-  /* כפתורי צד בסרטון בסדר: מיוט -> לייק -> שיתוף -> וואטסאפ -> חיוג */
   .side-actions {
     position: absolute;
     bottom: calc(140px + env(safe-area-inset-bottom));
@@ -314,7 +310,6 @@
   .action-btn:active { transform: scale(0.9); }
   .action-btn.mute-sidebar-btn { background: rgba(158, 96, 74, 0.65); border-color: rgba(255, 255, 255, 0.3); }
 
-  /* כפתור לייק צבוע ופעיל */
   .action-btn.liked {
     background: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.4);
@@ -391,7 +386,6 @@
     direction: rtl; 
   }
 
-  /* --- מסך יצירת קשר --- */
   .contact-section {
     background: radial-gradient(circle at bottom, #ffffff 0%, #f8f4f0 100%) !important;
     display: flex;
@@ -498,7 +492,7 @@
     <button class="top-share-btn" onclick="sharePage()"><i class="fa-solid fa-share-nodes"></i></button>
     
     <div class="hero-content">
-      <img src="amit-profile.jpg" alt="עמית כהן" class="profile-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
+      <img src="/amit-cohen/amit-profile.jpg" alt="עמית כהן" class="profile-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
       
       <h1 class="business-name">עמית כהן</h1>
       <p class="business-tagline">ניהול סושיאל ויצירת תוכן</p>
@@ -536,7 +530,7 @@
 
   <section class="video-section">
     <div class="video-container-wrapper" onclick="togglePlayPause(this)">
-      <video src="Video1.mp4" loop muted playsinline></video>
+      <video src="/amit-cohen/Video1.mp4" loop muted playsinline autoplay></video>
       <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
     </div>
     
@@ -566,7 +560,7 @@
     <div class="video-footer">
       <div class="footer-profile-row">
         <h3>_amitcohen_@</h3>
-        <img src="amit-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
+        <img src="/amit-cohen/amit-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
       </div>
       <p>יצירת תוכן מנצח למותגים 🔥</p>
     </div>
@@ -574,7 +568,7 @@
 
   <section class="video-section">
     <div class="video-container-wrapper" onclick="togglePlayPause(this)">
-      <video src="Video2.mp4" loop muted playsinline></video>
+      <video src="/amit-cohen/Video2.mp4" loop muted playsinline autoplay></video>
       <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
     </div>
     
@@ -604,7 +598,7 @@
     <div class="video-footer">
       <div class="footer-profile-row">
         <h3>_amitcohen_@</h3>
-        <img src="amit-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
+        <img src="/amit-cohen/amit-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
       </div>
       <p>ניהול סושיאל מקצה לקצה 🎬</p>
     </div>
@@ -612,7 +606,7 @@
 
   <section class="video-section">
     <div class="video-container-wrapper" onclick="togglePlayPause(this)">
-      <video src="Video3.mp4" loop muted playsinline></video>
+      <video src="/amit-cohen/Video3.mp4" loop muted playsinline autoplay></video>
       <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
     </div>
     
@@ -642,7 +636,7 @@
     <div class="video-footer">
       <div class="footer-profile-row">
         <h3>_amitcohen_@</h3>
-        <img src="amit-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
+        <img src="/amit-cohen/amit-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%23f8f4f0\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'40\' text-anchor=\'middle\' fill=\'%239e604a\'>📸</text></svg>'">
       </div>
       <p>אסטרטגיה וקריאייטיב דיגיטלי ✨</p>
     </div>
