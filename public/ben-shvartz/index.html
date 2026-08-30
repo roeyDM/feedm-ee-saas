@@ -22,7 +22,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-  /* עיצוב מערכת פרימיום - פלטת צבעים בהשראת Grill Ben */
   * {
     box-sizing: border-box;
     margin: 0;
@@ -32,7 +31,7 @@
   }
 
   body {
-    background-color: #140d0d; /* צבע רקע כהה חם ועמוק */
+    background-color: #140d0d;
     color: #f8fafc;
     display: flex;
     justify-content: center;
@@ -42,7 +41,6 @@
     overflow: hidden;
   }
 
-  /* מיכל הפיד הראשי - מדמה מסך מובייל פרימיום */
   .feed-container {
     width: 100%;
     max-width: 450px;
@@ -68,7 +66,6 @@
     scroll-snap-stop: always;
   }
 
-  /* --- מסך פתיחה (Hero) - מותאם לעברית וצבעים בהשראת הלוגו --- */
   .hero-section {
     background: radial-gradient(circle at top, #241414 0%, #110909 100%);
     display: flex;
@@ -106,7 +103,7 @@
     width: 100%;
     margin-top: auto;
     margin-bottom: auto;
-    direction: rtl; /* התאמה לעברית */
+    direction: rtl;
   }
 
   .profile-avatar {
@@ -114,7 +111,7 @@
     height: 95px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #8a1a1a; /* מסגרת בורדו אש יוקרטית */
+    border: 3px solid #8a1a1a;
     padding: 3px;
     background-color: #140d0d;
     margin: 0 auto 20px auto;
@@ -204,7 +201,6 @@
     60% { transform: translateY(-2px); }
   }
 
-  /* --- עיצוב מסכי הוידאו --- */
   .video-container-wrapper {
     width: 100%;
     height: 100%;
@@ -220,7 +216,6 @@
     object-fit: cover;
   }
 
-  /* כפתור PLAY לבן עם רקע מטושטש ועדין */
   .play-overlay-btn {
     position: absolute;
     top: 50%;
@@ -249,7 +244,6 @@
     transform: translate(-50%, -50%) scale(1);
   }
 
-  /* סרגל כפתורי צד עבר לצד ימין - סטייל אינסטגרם רילז */
   .side-actions {
     position: absolute;
     bottom: calc(85px + env(safe-area-inset-bottom));
@@ -306,7 +300,6 @@
   }
   .heart-pop { animation: heartBeat 0.45s ease-in-out; color: #ff5252 !important; }
 
-  /* תחתית הוידאו */
   .video-footer {
     position: absolute;
     bottom: 0; left: 0;
@@ -349,7 +342,6 @@
     max-width: 100%;
   }
 
-  /* --- מסך יצירת קשר פרימיום - מותאם לעברית RTL --- */
   .contact-section {
     background: radial-gradient(circle at bottom, #241414 0%, #110909 100%);
     display: flex;
@@ -358,7 +350,7 @@
     align-items: center;
     padding: calc(20px + env(safe-area-inset-top)) 30px calc(40px + env(safe-area-inset-bottom)) 30px;
     text-align: center;
-    direction: rtl; /* התאמה מלאה לעברית */
+    direction: rtl;
   }
 
   .contact-container {
@@ -405,7 +397,7 @@
     background: rgba(255, 255, 255, 0.06);
     color: white;
     font-size: 15px;
-    text-align: right; /* יישור טקסט לימין בטופס */
+    text-align: right;
     transition: all 0.2s;
   }
 
@@ -420,7 +412,7 @@
     padding: 14px;
     border-radius: 12px;
     border: none;
-    background: #8a1a1a; /* צבע אדום-בורדו של המותג */
+    background: #8a1a1a;
     color: white;
     font-size: 15px;
     font-weight: 600;
@@ -481,7 +473,7 @@
     <button class="top-share-btn" onclick="sharePage()"><i class="fa-solid fa-share-nodes"></i></button>
     
     <div class="hero-content">
-      <img src="ben-profile.jpg" alt="בן שורץ - אירועי בשר" class="profile-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+      <img src="/ben-shvartz/ben-profile.jpg" alt="בן שורץ - אירועי בשר" class="profile-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
       
       <h1 class="business-name">בן שורץ - אירועי בשר</h1>
       <p class="business-tagline">חווית בשרים פרימיום לאירועים פרטיים וסדנאות בוטיק</p>
@@ -514,7 +506,7 @@
 
   <section class="video-section">
     <div class="video-container-wrapper" onclick="togglePlayPause(this)">
-      <video src="Video1.mp4" loop muted playsinline></video>
+      <video src="/ben-shvartz/Video1.mp4" loop muted playsinline autoplay></video>
       <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
     </div>
     
@@ -542,7 +534,7 @@
     </div>
     <div class="video-footer">
       <div class="footer-profile-row">
-        <img src="ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+        <img src="/ben-shvartz/ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
         <h3>@benshvartz</h3>
       </div>
       <p>חווית בשרים קולינרית ברמה הגבוהה ביותר</p>
@@ -551,7 +543,7 @@
 
   <section class="video-section">
     <div class="video-container-wrapper" onclick="togglePlayPause(this)">
-      <video src="Video2.mp4" loop muted playsinline></video>
+      <video src="/ben-shvartz/Video2.mp4" loop muted playsinline autoplay></video>
       <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
     </div>
     
@@ -579,7 +571,7 @@
     </div>
     <div class="video-footer">
       <div class="footer-profile-row">
-        <img src="ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+        <img src="/ben-shvartz/ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
         <h3>@benshvartz</h3>
       </div>
       <p>אירועים פרטיים - אירוע בר מצווה עם תפריט מיוחד</p>
@@ -588,7 +580,7 @@
 
   <section class="video-section">
     <div class="video-container-wrapper" onclick="togglePlayPause(this)">
-      <video src="Video3.mp4" loop muted playsinline></video>
+      <video src="/ben-shvartz/Video3.mp4" loop muted playsinline autoplay></video>
       <div class="play-overlay-btn"><i class="fa-solid fa-play"></i></div>
     </div>
     
@@ -616,7 +608,7 @@
     </div>
     <div class="video-footer">
       <div class="footer-profile-row">
-        <img src="ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
+        <img src="/ben-shvartz/ben-profile.jpg" alt="👤" class="footer-mini-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\' fill=\'%238a1a1a\'><circle cx=\'50\' cy=\'50\' r=\'50\'/><text x=\'50%\' y=\'65%\' font-size=\'45\' text-anchor=\'middle\' fill=\'white\'>🥩</text></svg>'">
         <h3>@benshvartz</h3>
       </div>
       <p>האווירה מטורפת והבשר לא נגמר</p>
