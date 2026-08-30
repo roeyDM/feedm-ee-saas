@@ -705,7 +705,6 @@ function MobileReadinessSheet({
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels" | "verification">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
   const [analyticsTier, setAnalyticsTier] = useState<"free" | "personal" | "pro">("free");
@@ -763,6 +762,11 @@ function DashboardContent() {
     }
     setActiveTab(tab);
     setMobileDrawerOpen(false);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState(null, "", url.toString());
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -857,12 +861,26 @@ function DashboardContent() {
 
   const isTrialActive = planType !== "free" && (subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0));
 
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels" | "verification">("bio");
+
   // FTUE Onboarding Wizard State (Local Experiment)
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
   const [showPublishSuccessModal, setShowPublishSuccessModal] = useState<boolean>(false);
   const [showDraftWarningModal, setShowDraftWarningModal] = useState<boolean>(false);
   const [mobileReadinessSheetOpen, setMobileReadinessSheetOpen] = useState<boolean>(false);
+
+  const rawTab = searchParams.get("tab");
+  const isOnboardingActive = !onboardingCompleted;
+
+  // Synchronize URL query parameter `tab` to activeTab state with Guaranteed Onboarding Guard
+  useEffect(() => {
+    if (!isOnboardingActive && rawTab) {
+      if (["bio", "reels", "design", "settings", "leads", "analytics", "pixels", "verification"].includes(rawTab)) {
+        setActiveTab(rawTab as any);
+      }
+    }
+  }, [rawTab, isOnboardingActive]);
 
   const handleNavigateToItem = (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => {
     setShowDraftWarningModal(false);
