@@ -7,14 +7,17 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const userId = body.userId || 'test_user';
 
-    const apiKey = (process.env.DIDIT_API_KEY || process.env.DIDIT_CLIENT_SECRET || process.env.DIDIT_CLIENT_ID || '').trim();
+    // עדיפות מפורשת ל-DIDIT_API_KEY, ולאחר מכן ל-Client Secret
+    const apiKey = (process.env.DIDIT_API_KEY || process.env.DIDIT_CLIENT_SECRET || '').trim();
     const workflowId = (process.env.DIDIT_WORKFLOW_ID || '').trim().replace(/['"]/g, '');
 
-    console.log('[Didit Sandbox Init] Workflow ID:', workflowId);
+    console.log('[Didit Session Init] UserID:', userId);
+    console.log('[Didit Session Init] Workflow ID:', workflowId);
+    console.log('[Didit Session Init] API Key Present:', !!apiKey);
 
     if (!apiKey || !workflowId) {
       return NextResponse.json({ 
-        error: 'Missing Didit API Key or Workflow ID in .env.local.' 
+        error: `Missing config: API Key present=${!!apiKey}, Workflow ID present=${!!workflowId}` 
       }, { status: 500 });
     }
 
@@ -28,7 +31,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         workflow_id: workflowId,
         vendor_data: userId,
-        callback: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/marketing-tools/verification`
+        callback: `${process.env.NEXT_PUBLIC_APP_URL || 'https://feedm.ee'}/dashboard/marketing-tools/verification`
       })
     });
 
