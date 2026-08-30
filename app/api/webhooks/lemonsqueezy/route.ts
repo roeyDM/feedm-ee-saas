@@ -57,15 +57,15 @@ export async function POST(req: NextRequest) {
       console.log(`[Verification Webhook Event]: Updating verification status for UserId=${userId} / Email=${userEmail}`);
       if (supabaseAdmin) {
         const updatePayload = {
-          verification_status: "pending", // מתאים לקוד הפרונטאנד שמצפה ל-pending
-          has_paid: true,                 // מדליק את דגל התשלום
-          payment_status: "paid",         // מעדכן את סטטוס התשלום ל-paid
+          verification_status: "PAID_PENDING_KYC", // מעדכן בדיוק לערך שהפרונטאנד מחפש
+          has_paid: true,                           // מדליק את דגל התשלום
+          payment_status: "paid",                   // מעדכן את סטטוס התשלום
           updated_at: new Date().toISOString(),
         };
 
         let updated = false;
 
-        // עדיפות 1: עדכון לפי userId אם קיים ב-customData
+        // עדיפות 1: עדכון לפי userId אם מועבר ב-customData
         if (userId) {
           const { error } = await supabaseAdmin
             .from("profiles")
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // עדיפות 2: אם אין userId או שהעדכון לא בוצע, נעדכן לפי האימייל
+        // עדיפות 2: עדכון לפי אימייל
         if (!updated && userEmail) {
           const { error } = await supabaseAdmin
             .from("profiles")
