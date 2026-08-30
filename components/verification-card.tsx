@@ -49,18 +49,20 @@ export function VerificationCard({
       return;
     }
     const { data: { user } } = await supabase.auth.getUser();
-    const activeUserId = user?.id || "6aa990b0-7c2c-4493-9c3e-dd3012ed36c8";
+    const activeUserId = user?.id || "guest";
+
+    // Correct URL structure with mandatory /checkout/
     const storeSlug = process.env.NEXT_PUBLIC_LEMONSQUEEZY_STORE_SLUG || "pay.feedm.ee";
     const variantId = process.env.LEMONSQUEEZY_VARIANT_VERIFICATION_FEE || "1323098";
 
     let targetUrl = "";
     if (storeSlug.includes(".")) {
-      targetUrl = `https://${storeSlug}/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
+      targetUrl = `https://${storeSlug}/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
     } else {
       targetUrl = `https://${storeSlug}.lemonsqueezy.com/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
     }
 
-    console.log("Redirecting to Lemon Checkout:", targetUrl);
+    console.log("Redirecting to Correct Lemon Checkout URL:", targetUrl);
     window.location.href = targetUrl;
   };
 
