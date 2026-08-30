@@ -37,20 +37,22 @@ export function VerificationCard({
 
   const isProOrSuperAdmin = planType === "pro" || planType === "business" || isSuperAdmin;
 
-  // Listen for return callback parameters from Didit or Lemon Squeezy redirection
+  // Listen for return callback or automatically verify if user completed the Sandbox process
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    
-    // זיהוי חזרה מ-Didit Sandbox / Callback
-    const isDiditReturn = params.has("status") || params.has("verification") || params.has("session_id") || params.has("simulation");
-    
-    if (isDiditReturn) {
-      console.log("[Didit Callback Detected]: Updating profile to VERIFIED in Supabase...");
-      
-      supabase.auth.getUser().then(async ({ data: { user } }) => {
-        if (user?.id) {
-          // 1. עדכון מפורש ב-Supabase במידה וה-Webhook של Didit בלייב לא פעל
+
+    const syncVerificationStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const hasReturnSignal = params.has("status") || params.has("verification") || params.has("session_id") || params.has("simulation");
+
+        // אם המשתמש חזר מ-Didit או נמצא במצב תשלום ממתין – נעדכן אוטומטית ל-VERIFIED
+        if (hasReturnSignal || verificationStatus === "PAID_PENDING_KYC") {
+          console.log("[Verification Active Sync]: Updating profile status to VERIFIED...");
+
           await supabase
             .from("profiles")
             .update({
@@ -61,13 +63,16 @@ export function VerificationCard({
             })
             .eq("id", user.id);
 
-          // 2. עדכון המצב בממשק הדפדפן בלייב
           onStatusChange("VERIFIED");
           onBadgeToggle(true);
         }
-      });
-    }
-  }, []);
+      } catch (err) {
+        console.error("Error syncing verification status:", err);
+      }
+    };
+
+    syncVerificationStatus();
+  }, [verificationStatus]);
 
   const handleDevStateUpdate = async (newStatus: "UNVERIFIED" | "PAID_PENDING_KYC" | "VERIFIED", isActive: boolean) => {
     onStatusChange(newStatus);

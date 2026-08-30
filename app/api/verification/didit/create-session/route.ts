@@ -21,6 +21,10 @@ export async function POST(req: Request) {
       }, { status: 500 });
     }
 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://feedm.ee';
+    // הוספת status=approved ב-callback כדי להבטיח זיהוי בפרונטאנד
+    const callbackUrl = `${baseUrl}/dashboard?tab=verification&status=approved`;
+
     // Official Didit v3 REST API Payload
     const response = await fetch('https://verification.didit.me/v3/session/', {
       method: 'POST',
@@ -31,7 +35,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         workflow_id: workflowId,
         vendor_data: userId,
-        callback: `${process.env.NEXT_PUBLIC_APP_URL || 'https://feedm.ee'}/dashboard/marketing-tools/verification`
+        callback: callbackUrl
       })
     });
 
