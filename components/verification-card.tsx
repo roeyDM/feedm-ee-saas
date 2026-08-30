@@ -97,10 +97,14 @@ export function VerificationCard({
     }
     const { data: { user } } = await supabase.auth.getUser();
     const activeUserId = user?.id || "guest";
+    const userEmail = user?.email || "";
     const variantId = process.env.LEMONSQUEEZY_VARIANT_VERIFICATION_FEE || "451a2d31-b5ca-4b44-b84c-1122c42e2dd2";
 
-    // Official exact Lemon Squeezy UUID Checkout URL
-    const targetUrl = `https://pay.feedm.ee/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
+    // העברת ה-user_id והאימייל המחובר ישירות לטופס התשלום!
+    let targetUrl = `https://pay.feedm.ee/checkout/buy/${variantId}?checkout[custom][user_id]=${activeUserId}`;
+    if (userEmail) {
+      targetUrl += `&checkout[email]=${encodeURIComponent(userEmail)}`;
+    }
 
     console.log("Redirecting to Verified Lemon Checkout URL:", targetUrl);
     window.location.href = targetUrl;
@@ -141,8 +145,7 @@ export function VerificationCard({
     } catch (err: any) {
       const netErr = "Network error launching Didit: " + err.message;
       alert(netErr);
-      setErrorMsg(netErr);
-    } finally {
+      } finally {
       setIsLoading(false);
     }
   };
@@ -254,7 +257,7 @@ export function VerificationCard({
           </>
         )}
 
-        {/* STATE 2: PRO USER - UNVERIFIED ($14.99 Purchase CTA - Variant ID 1323098) */}
+        {/* STATE 2: PRO USER - UNVERIFIED ($14.99 Purchase CTA) */}
         {isProOrSuperAdmin && verificationStatus === "UNVERIFIED" && (
           <>
             <div>
