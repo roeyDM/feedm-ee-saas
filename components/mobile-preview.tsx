@@ -234,9 +234,9 @@ export function isDarkColor(colorStr?: string): boolean {
 }
 
 export { sanitizeLeadForm } from "@/lib/sanitizers";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
-
-interface MobilePreviewProps {
+export interface MobilePreviewProps {
   feedId?: string;
   profileName: string;
   username: string;
@@ -252,6 +252,8 @@ interface MobilePreviewProps {
   isDemoMode?: boolean;
   activeTab?: string;
   analyticsOverlayMode?: "bubbles" | "reels" | "heatmap" | null;
+  verificationStatus?: "UNVERIFIED" | "PAID_PENDING_KYC" | "VERIFIED" | "REJECTED";
+  isVerifiedBadgeActive?: boolean;
   onTestLeadSubmit?: (targetEmail: string, leadData: { name: string; phone: string; email: string }) => Promise<void> | void;
 }
 
@@ -340,6 +342,8 @@ export function MobilePreview({
   isDemoMode = false,
   activeTab,
   analyticsOverlayMode,
+  verificationStatus = "UNVERIFIED",
+  isVerifiedBadgeActive = false,
   onTestLeadSubmit,
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
@@ -856,12 +860,17 @@ export function MobilePreview({
           </div>
 
           {/* Name & Handle */}
-          <h1 
-            style={{ color: activeAppearance.headlineColor || "#09090b" }}
-            className="text-2xl font-black tracking-tight"
-          >
-            {profileName || "Creator Name"}
-          </h1>
+          <div className="flex items-center justify-center gap-1.5">
+            <h1 
+              style={{ color: activeAppearance.headlineColor || "#09090b" }}
+              className="text-2xl font-black tracking-tight"
+            >
+              {profileName || "Creator Name"}
+            </h1>
+            {(isVerifiedBadgeActive || verificationStatus === "VERIFIED") && (
+              <VerifiedBadge size="md" />
+            )}
+          </div>
           <p 
             style={{ color: activeAppearance.bioColor || "#27272a" }}
             className="text-xs font-bold opacity-80 tracking-wide mt-0.5"
@@ -1179,7 +1188,11 @@ export function MobilePreview({
                   <span className="text-xs font-black text-white drop-shadow-md tracking-tight">
                     @{username || "username"}
                   </span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  {(isVerifiedBadgeActive || verificationStatus === "VERIFIED") ? (
+                    <VerifiedBadge size="sm" className="w-3.5 h-3.5 min-w-[14px] min-h-[14px] shrink-0 inline-block align-middle ml-1" />
+                  ) : (
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  )}
                 </div>
               </div>
 

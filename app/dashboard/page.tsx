@@ -14,6 +14,8 @@ import { Logo } from "@/components/logo";
 import { LeadsManager } from "@/components/leads-manager";
 import { AnalyticsManager } from "@/components/analytics-manager";
 import { MarketingPixelsManager } from "@/components/marketing-pixels-manager";
+import { VerificationCard } from "@/components/verification-card";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import {
   MobilePreview,
   SocialLink,
@@ -31,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock, Building2 } from "lucide-react";
+import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock, Building2, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function StripeCheckoutStatus({
@@ -703,7 +705,7 @@ function MobileReadinessSheet({
 
 function DashboardContent() {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels">("bio");
+  const [activeTab, setActiveTab] = useState<"bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels" | "verification">("bio");
   // Plan Tier State (default 'free', can be upgraded)
   const [planType, setPlanType] = useState<PlanType>("free");
   const [analyticsTier, setAnalyticsTier] = useState<"free" | "personal" | "pro">("free");
@@ -746,7 +748,7 @@ function DashboardContent() {
     }
   };
 
-  const handleTabClick = (tab: "bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels") => {
+  const handleTabClick = (tab: "bio" | "reels" | "design" | "settings" | "leads" | "analytics" | "pixels" | "verification") => {
     if (tab === "reels" && maxReels === 0) {
       handleTriggerUpgrade("pro");
       return;
@@ -847,6 +849,12 @@ function DashboardContent() {
   const [showExtraFeedModal, setShowExtraFeedModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  
+  // Verification Badge State
+  const [verificationStatus, setVerificationStatus] = useState<"UNVERIFIED" | "PAID_PENDING_KYC" | "VERIFIED" | "REJECTED">("UNVERIFIED");
+  const [isVerifiedBadgeActive, setIsVerifiedBadgeActive] = useState<boolean>(false);
+  const [diditSessionId, setDiditSessionId] = useState<string | null>(null);
+
   const isTrialActive = planType !== "free" && (subscriptionStatus === "trialing" || (!!trialEndsAt && getRemainingTrialDays(trialEndsAt) > 0));
 
   // FTUE Onboarding Wizard State (Local Experiment)
@@ -1067,6 +1075,8 @@ function DashboardContent() {
       reels: reels || [],
       leadForm: leadForm || {},
       appearance: appearance || {},
+      verificationStatus: verificationStatus || "UNVERIFIED",
+      isVerifiedBadgeActive: !!isVerifiedBadgeActive,
     });
   };
 
@@ -1214,6 +1224,15 @@ function DashboardContent() {
           setLeadForm(finalLeadForm);
           setAppearance(finalAppearance);
           setCustomHexColor(finalCustomHexColor);
+
+          // Verification badge settings
+          const vStatus = checkedProfile.verification_status || "UNVERIFIED";
+          const vActive = checkedProfile.is_verified_badge_active ?? (vStatus === "VERIFIED");
+          const vSessionId = checkedProfile.didit_session_id || null;
+
+          setVerificationStatus(vStatus);
+          setIsVerifiedBadgeActive(vActive);
+          setDiditSessionId(vSessionId);
 
           // FTUE Onboarding Completed & Step check
           const isCompletedInDB = profile.onboarding_completed === true;
@@ -1382,6 +1401,9 @@ function DashboardContent() {
         custom_links: customLinks,
         reels: reels,
         lead_form: leadForm,
+        verification_status: verificationStatus,
+        is_verified_badge_active: isVerifiedBadgeActive,
+        didit_session_id: diditSessionId,
         updated_at: new Date().toISOString(),
       };
 
@@ -1503,6 +1525,8 @@ function DashboardContent() {
           planType={planType}
           subscriptionStatus={subscriptionStatus}
           trialEndsAt={trialEndsAt}
+          verificationStatus={verificationStatus}
+          isVerifiedBadgeActive={isVerifiedBadgeActive}
           onSave={handleSave}
           isSaving={isSaving}
           onUpgradeClick={() => handleTriggerUpgrade()}
@@ -1792,6 +1816,23 @@ function DashboardContent() {
                         {!hasMarketingPixels && (
                           <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                         )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleTabClick("verification")}
+                        className={cn(
+                          "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                          activeTab === "verification"
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-400" />
+                          <span>Verified Badge</span>
+                        </div>
+                        <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 rounded">NEW</span>
                       </button>
                     </div>
                   )}
@@ -2180,6 +2221,22 @@ function DashboardContent() {
                       <Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                     )}
                   </button>
+
+                  <button
+                    onClick={() => handleTabClick("verification")}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                      activeTab === "verification"
+                        ? "bg-zinc-950 text-white shadow-sm"
+                        : "text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-900"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" />
+                      <span>Verified Badge</span>
+                    </div>
+                    <span className="text-[9px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">NEW</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -2317,7 +2374,7 @@ function DashboardContent() {
 
           {/* Active Form Panel */}
           {activeTab !== "settings" ? (
-            <div className={cn("relative w-full space-y-6 transition-all duration-300 pb-32", activeTab === "leads" || activeTab === "analytics" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto")}>
+            <div className={cn("relative w-full space-y-6 transition-all duration-300 pb-32", activeTab === "leads" || activeTab === "analytics" || activeTab === "pixels" || activeTab === "verification" ? "max-w-none w-full flex-1" : "max-w-3xl mx-auto")}>
               {activeTab === "bio" && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
                   <ProfileEditor
@@ -2391,6 +2448,23 @@ function DashboardContent() {
                   <MarketingPixelsManager username={username} />
                 </div>
               )}
+
+              {activeTab === "verification" && (
+                <div className="animate-in fade-in zoom-in-95 duration-200 w-full max-w-none flex-1">
+                  <VerificationCard
+                    planType={planType}
+                    isSuperAdmin={isSuperAdmin}
+                    name={name}
+                    username={username}
+                    avatarUrl={avatarUrl}
+                    verificationStatus={verificationStatus}
+                    isVerifiedBadgeActive={isVerifiedBadgeActive}
+                    onStatusChange={setVerificationStatus}
+                    onBadgeToggle={setIsVerifiedBadgeActive}
+                    onUpgradeClick={() => handleTriggerUpgrade("pro")}
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-full flex-1 animate-in fade-in duration-200 pb-32">
@@ -2444,6 +2518,8 @@ function DashboardContent() {
               fontFamily={appearance?.fontFamily}
               isDemoMode={true}
               activeTab={activeTab}
+              verificationStatus={verificationStatus}
+              isVerifiedBadgeActive={isVerifiedBadgeActive}
               analyticsOverlayMode={
                 activeTab === "analytics"
                   ? analyticsTier === "free"

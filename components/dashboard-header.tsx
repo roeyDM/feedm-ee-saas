@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import { PlanType } from "@/lib/supabase";
 import { getRemainingTrialDays } from "@/lib/auth-guards";
 import { Logo } from "@/components/logo";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
 interface DashboardHeaderProps {
   username: string;
   planType?: PlanType;
   subscriptionStatus?: string | null;
   trialEndsAt?: string | null;
+  verificationStatus?: string;
+  isVerifiedBadgeActive?: boolean;
   onSave?: () => void;
   isSaving?: boolean;
   onUpgradeClick?: () => void;
@@ -23,6 +26,8 @@ export function DashboardHeader({
   planType = "free",
   subscriptionStatus,
   trialEndsAt,
+  verificationStatus = "UNVERIFIED",
+  isVerifiedBadgeActive = false,
   onSave,
   isSaving = false,
   onUpgradeClick,
@@ -102,6 +107,9 @@ export function DashboardHeader({
         <div className="flex items-center gap-3">
           <Link href={`/${username}`} target="_blank" className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition">
             <span>feedm.ee/{username}</span>
+            {(isVerifiedBadgeActive || verificationStatus === "VERIFIED") && (
+              <VerifiedBadge size="sm" />
+            )}
             <ExternalLink className="h-3.5 w-3.5" />
           </Link>
         </div>
