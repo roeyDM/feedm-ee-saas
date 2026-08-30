@@ -46,9 +46,12 @@ export function VerifiedBadge({
         title="Verified Feedm.ee Creator"
       >
         <img
-          src="/verified-badge.svg"
+          src="/verified-badge.svg?v=3"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = "/verified-badge.png";
+            const img = e.target as HTMLImageElement;
+            if (!img.src.includes(".png")) {
+              img.src = "/verified-badge.png?v=3";
+            }
           }}
           alt="Verified Badge"
           width={pxSizes[size]}
