@@ -178,6 +178,7 @@ export function PublicFeedClient({ handleKey, profile }: PublicFeedClientProps) 
         appearance={profile.appearance}
         fontFamily={profile.appearance?.fontFamily}
         isDemoMode={false}
+        isVerified={(profile as any).is_verified === true || (profile as any).isVerified === true}
         verificationStatus={(profile as any).verification_status || (profile as any).verificationStatus}
         isVerifiedBadgeActive={(profile as any).is_verified_badge_active ?? (profile as any).isVerifiedBadgeActive}
       />

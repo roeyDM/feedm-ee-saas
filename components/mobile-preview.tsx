@@ -254,6 +254,7 @@ export interface MobilePreviewProps {
   analyticsOverlayMode?: "bubbles" | "reels" | "heatmap" | null;
   verificationStatus?: "UNVERIFIED" | "PAID_PENDING_KYC" | "VERIFIED" | "REJECTED";
   isVerifiedBadgeActive?: boolean;
+  isVerified?: boolean;
   onTestLeadSubmit?: (targetEmail: string, leadData: { name: string; phone: string; email: string }) => Promise<void> | void;
 }
 
@@ -344,6 +345,7 @@ export function MobilePreview({
   analyticsOverlayMode,
   verificationStatus = "UNVERIFIED",
   isVerifiedBadgeActive = false,
+  isVerified = false,
   onTestLeadSubmit,
 }: MobilePreviewProps) {
   const cleanLeadForm = sanitizeLeadForm(leadForm);
@@ -867,7 +869,7 @@ export function MobilePreview({
             >
               {profileName || "Creator Name"}
             </h1>
-            {(isVerifiedBadgeActive || verificationStatus === "VERIFIED") && (
+            {(isVerified === true || verificationStatus === "VERIFIED" || isVerifiedBadgeActive === true) && (
               <VerifiedBadge size="md" />
             )}
           </div>
@@ -1188,7 +1190,7 @@ export function MobilePreview({
                   <span className="text-xs font-black text-white drop-shadow-md tracking-tight">
                     @{username || "username"}
                   </span>
-                  {(isVerifiedBadgeActive || verificationStatus === "VERIFIED") ? (
+                  {(isVerified === true || verificationStatus === "VERIFIED" || isVerifiedBadgeActive === true) ? (
                     <VerifiedBadge size="sm" className="w-3.5 h-3.5 min-w-[14px] min-h-[14px] shrink-0 inline-block align-middle ml-1" />
                   ) : (
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>

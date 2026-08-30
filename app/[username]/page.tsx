@@ -117,6 +117,9 @@ async function fetchPublicProfile(handleKey: string) {
     avatarUrl:
       profile.avatar_url ||
       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
+    is_verified:         profile.is_verified === true,
+    verification_status: profile.verification_status || (profile.is_verified ? "VERIFIED" : "UNVERIFIED"),
+    is_verified_badge_active: profile.is_verified_badge_active,
     theme_color:       cleanThemeColor,
     button_color:      cleanButtonColor,
     text_color:        cleanTextColor,
