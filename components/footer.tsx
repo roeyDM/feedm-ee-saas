@@ -54,6 +54,11 @@ export function Footer() {
             <h4 className="text-xs font-black text-zinc-950 uppercase tracking-widest">Resources</h4>
             <ul className="flex flex-col gap-2 text-xs font-semibold text-zinc-600">
               <li>
+                <Link href="/help" className="hover:text-emerald-600 transition-colors font-extrabold text-emerald-600">
+                  Help Center
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="hover:text-emerald-600 transition-colors">
                   About
                 </Link>

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ExternalLink, Zap, Sparkles, ArrowRight, Clock, Building2 } from "lucide-react";
+import { ExternalLink, Zap, Sparkles, ArrowRight, Clock, Building2, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PlanType } from "@/lib/supabase";
 import { getRemainingTrialDays } from "@/lib/auth-guards";
@@ -104,7 +104,11 @@ export function DashboardHeader({
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <Link href="/help" target="_blank" className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-emerald-400 transition-colors">
+            <HelpCircle className="h-3.5 w-3.5" />
+            <span>Help Center</span>
+          </Link>
           <Link href={`/${username}`} target="_blank" className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition">
             <span>feedm.ee/{username}</span>
             {(isVerifiedBadgeActive || verificationStatus === "VERIFIED") && (
