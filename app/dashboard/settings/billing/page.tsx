@@ -17,13 +17,13 @@ function BillingSettingsContent() {
         if (user) {
           const { data: profile } = await supabase
             .from("profiles")
-            .select("username, plan_type")
+            .select("username, plan")
             .eq("id", user.id)
             .maybeSingle();
 
           if (profile) {
             if (profile.username) setUsername(profile.username);
-            if (profile.plan_type) setPlanType(profile.plan_type as PlanType);
+            if (profile.plan) setPlanType(profile.plan.toLowerCase() as PlanType);
           }
         }
       } catch (err) {

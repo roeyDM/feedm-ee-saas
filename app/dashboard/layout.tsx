@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,13 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { refetchProfile, currentPlan } = useFeatureAccess();
+
+  useEffect(() => {
+    if (isAuthenticated === true) {
+      refetchProfile();
+    }
+  }, [pathname, isAuthenticated, refetchProfile]);
 
   useEffect(() => {
     let isMounted = true;

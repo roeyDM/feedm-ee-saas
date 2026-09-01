@@ -112,8 +112,9 @@ function ProgressBar({ percent }: { percent: number }) {
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
-export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType, leadForm, setLeadForm }: FeedItemEditorProps) {
-  const { getPlanLimit } = useFeatureAccess(planType);
+export function FeedItemEditor({ reels, setReels, planType = "free", setPlanType, leadForm, setLeadForm }: FeedItemEditorProps) {
+  const { currentPlan, getPlanLimit } = useFeatureAccess(planType);
+  const activePlan = currentPlan || (planType || "free").toLowerCase();
   const maxReels = getPlanLimit("reelsPerFeed");
 
   // Form state
@@ -315,7 +316,7 @@ export function FeedItemEditor({ reels, setReels, planType = "pro", setPlanType,
       )}
 
       {/* Free Plan Lock Warning Banner */}
-      {planType === "free" && (
+      {activePlan === "free" && (
         <>
           {/* Mobile Compact Single-Line Strip */}
           <div className="rounded-xl border border-amber-300/80 bg-amber-50 px-3 py-2 text-amber-950 flex items-center justify-between gap-2 shadow-2xs md:hidden">

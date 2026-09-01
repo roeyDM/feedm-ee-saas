@@ -13,67 +13,82 @@ import {
 } from "@/lib/plans-config";
 
 export function useFeatureAccess(initialPlanTier?: string | null) {
-  const [currentPlan, setCurrentPlan] = useState<PlanTier>(() =>
-    normalizePlanTier(initialPlanTier)
-  );
+  const [currentPlan, setCurrentPlan] = useState<PlanTier>(() => {
+    if (typeof window !== "undefined") {
+      const cached = sessionStorage.getItem("feedmee_cached_plan_tier");
+      if (cached) return normalizePlanTier(cached);
+    }
+    if (initialPlanTier) return normalizePlanTier(initialPlanTier);
+    return "free";
+  });
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  // Sync state whenever initialPlanTier prop updates in parent component
-  useEffect(() => {
-    if (initialPlanTier) {
-      const norm = normalizePlanTier(initialPlanTier);
-      setCurrentPlan(norm);
-    }
-  }, [initialPlanTier]);
+  const fetchLatestProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  // Fetch & synchronize database profile plan for authenticated user
-  useEffect(() => {
-    async function loadUserPlan() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+      let { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
 
-        const { data: profile } = await supabase
+      if (error) {
+        console.error("[DEBUG Profile Context Error]: Query failed:", error);
+      }
+
+      if (!data && user.email) {
+        const { data: dataByEmail, error: emailError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", user.id)
+          .eq("email", user.email)
           .maybeSingle();
-
-        if (profile) {
-          if (
-            profile.is_super_admin === true ||
-            profile.is_admin === true ||
-            profile.role === "super_admin" ||
-            profile.role === "admin"
-          ) {
-            setIsSuperAdmin(true);
-            setCurrentPlan("pro");
-            return;
-          }
-
-          const rawPlan =
-            profile.plan_type ||
-            profile.plan ||
-            profile.subscription_tier ||
-            "free";
-
-          const normTier = normalizePlanTier(rawPlan);
-
-          console.log("🔍 [useFeatureAccess] Profile plan resolution:", {
-            userId: user.id,
-            rawPlan,
-            normTier,
-            isTrial: profile.is_trial,
-          });
-
-          setCurrentPlan(normTier);
+        
+        if (dataByEmail) {
+          data = dataByEmail;
+          error = emailError;
         }
-      } catch (err) {
-        console.warn("[useFeatureAccess Warning]: Failed to fetch profile plan:", err);
       }
-    }
 
-    loadUserPlan();
+      if (data) {
+        const normalizedPlan = (data?.plan || "free").toString().toUpperCase().trim();
+
+        const rawPlan = normalizedPlan;
+        const liveStatus = String(data?.payment_status || "unpaid").toLowerCase().trim();
+
+        let normTier: PlanTier = "free";
+        if (rawPlan === "PERSONAL") normTier = "personal";
+        else if (rawPlan === "PRO") normTier = "pro";
+        else if (rawPlan === "BUSINESS") normTier = "business";
+        else normTier = "free";
+
+        console.log("[DEBUG Normalized Plan]", { rawPlan, paymentStatus: liveStatus });
+
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("feedmee_cached_plan_tier", normTier);
+        }
+
+        setCurrentPlan(normTier);
+      }
+    } catch (err) {
+      console.warn("[DEBUG Profile Context Warning]: Failed to refetch profile:", err);
+    }
+  };
+
+  // Aggressive forced live query on mount, initialPlanTier change, and auth state change
+  useEffect(() => {
+    fetchLatestProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        fetchLatestProfile();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [initialPlanTier]);
 
   const config: PlanConfig = isSuperAdmin
@@ -101,5 +116,6 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
     canAccess,
     getPlanLimit,
     isFeatureLocked,
+    refetchProfile: fetchLatestProfile,
   };
 }

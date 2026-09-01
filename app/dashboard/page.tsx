@@ -51,29 +51,37 @@ function StripeCheckoutStatus({
 
   useEffect(() => {
     const checkout = searchParams.get("checkout");
-    const plan = searchParams.get("plan");
+    const success = searchParams.get("success");
+    const planParam = searchParams.get("plan");
 
-    if (checkout === "success" && plan && username) {
-      // 1. Immediately unlock Pro locally
-      setPlanType(plan as PlanType);
-      
+    if ((checkout === "success" || success === "true") && username) {
+      const targetPlan = (planParam || "PRO").toUpperCase();
+      const normPlanType = targetPlan.toLowerCase() as PlanType;
+
+      // 1. Immediately unlock features locally
+      setPlanType(normPlanType);
+
       // 2. Alert the user
       setSaveStatus("success");
-      setStatusMsg(`Pro Features Unlocked! Welcome to the ${plan} plan.`);
+      setStatusMsg(`Subscription Unlocked! Welcome to the ${targetPlan} plan.`);
       setTimeout(() => setSaveStatus("idle"), 5000);
 
-      // 3. Update Supabase asynchronously
+      // 3. Update Supabase with explicit schema columns: `plan` and `payment_status`
       const updatePlan = async () => {
         try {
           await supabase
             .from("profiles")
-            .update({ plan_type: plan, updated_at: new Date().toISOString() })
+            .update({
+              plan: targetPlan,
+              payment_status: "active",
+              updated_at: new Date().toISOString(),
+            })
             .eq("username", username.toLowerCase());
         } catch (err) {
           console.error("Failed to sync plan status to Supabase", err);
         }
       };
-      
+
       updatePlan();
     }
   }, [searchParams, username, setPlanType, setSaveStatus, setStatusMsg]);
@@ -718,32 +726,32 @@ function DashboardContent() {
     marketing: true,
   });
 
-  const { getPlanLimit, canAccess } = useFeatureAccess(planType);
+  const { currentPlan, getPlanLimit, canAccess } = useFeatureAccess(planType);
+  console.log("[DEBUG UI LIVE PLAN]:", currentPlan);
   const maxReels = getPlanLimit("reelsPerFeed");
   const hasLeadsCrmExport = canAccess("hasLeadsCrmExport");
   const hasMarketingPixels = canAccess("hasMarketingPixels");
 
   const handleTriggerUpgrade = (forcedTargetPlan?: "personal" | "pro" | "business") => {
-    const currentTier = (planType || "free").toLowerCase();
-
-    if (forcedTargetPlan) {
-      if (forcedTargetPlan === "business") {
-        setShowBusinessContactModal(true);
-      } else {
-        setUpgradeTargetPlan(forcedTargetPlan);
-        setShowUpgradeModal(true);
-      }
-      return;
-    }
-
-    if (currentTier === "free") {
-      setUpgradeTargetPlan("personal");
-      setShowUpgradeModal(true);
-    } else if (currentTier === "personal") {
+    if (forcedTargetPlan === "pro") {
       setUpgradeTargetPlan("pro");
       setShowUpgradeModal(true);
-    } else if (currentTier === "pro") {
+    } else if (forcedTargetPlan === "personal") {
+      setUpgradeTargetPlan("personal");
+      setShowUpgradeModal(true);
+    } else if (forcedTargetPlan === "business") {
       setShowBusinessContactModal(true);
+    } else {
+      const currentTier = (planType || "free").toLowerCase();
+      if (currentTier === "free") {
+        setUpgradeTargetPlan("personal");
+        setShowUpgradeModal(true);
+      } else if (currentTier === "personal") {
+        setUpgradeTargetPlan("pro");
+        setShowUpgradeModal(true);
+      } else if (currentTier === "pro") {
+        setShowBusinessContactModal(true);
+      }
     }
   };
 
@@ -1128,55 +1136,57 @@ function DashboardContent() {
         const isTrialRequestedFromUrl = rawUrlPlan === "pro" || rawUrlPlan === "personal";
 
         if (isTrialRequestedFromUrl) {
-          const trialEndIso = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
           try {
             await supabase
               .from("profiles")
               .update({
-                plan: rawUrlPlan,
-                plan_type: rawUrlPlan,
-                is_trial: true,
-                trial_ends_at: trialEndIso,
+                plan: rawUrlPlan.toUpperCase(),
                 updated_at: new Date().toISOString(),
               })
-              .or(`id.eq.${user.id},username.eq.${userHandle.toLowerCase()}`);
+              .eq("id", user.id);
           } catch (_) {}
         }
 
         // Fetch profile row from Supabase for authenticated user
-        const { data: profile, error } = await supabase
+        let { data: profile, error } = await supabase
           .from("profiles")
           .select("*")
-          .or(`id.eq.${user.id},username.eq.${userHandle.toLowerCase()}`)
+          .eq("id", user.id)
           .maybeSingle();
 
+        if (!profile && user.email) {
+          const { data: profileByEmail, error: emailError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("email", user.email)
+            .maybeSingle();
+            
+          if (profileByEmail) {
+            profile = profileByEmail;
+            error = emailError;
+          }
+        }
+
         if (profile && !error) {
+
           const checkedProfile = await checkAndApplyTrialDowngrade(profile);
 
           if (checkedProfile.username) setUsername(checkedProfile.username);
 
-          const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
+const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
           const isWithin7Days = (Date.now() - createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000;
           const hasUsedTrial = checkedProfile.has_used_trial === true;
 
           // Trial is only valid if has_used_trial is not true AND is_trial !== false AND within 7 days
           const isTrialValid = !hasUsedTrial && checkedProfile.is_trial !== false && isWithin7Days;
 
-          const dbPlanRaw = String(checkedProfile.plan_type || checkedProfile.plan || "").toLowerCase();
-          const isPaidPro = dbPlanRaw.includes("pro") && checkedProfile.is_trial === false;
-          const isProPlan = checkedProfile.is_super_admin === true || isPaidPro || isTrialValid || isTrialRequestedFromUrl;
-          const isTrialExpired = !isProPlan && checkedProfile.is_super_admin !== true;
+          const dbPlanRaw = String(checkedProfile.plan || "").toUpperCase();
+          const dbPaymentStatus = String(checkedProfile.payment_status || "").toLowerCase();
+          const isPaidPlan = (dbPlanRaw === "PERSONAL" || dbPlanRaw === "PRO" || dbPlanRaw === "BUSINESS") && (dbPaymentStatus === "active" || dbPaymentStatus === "paid");
+          const isProPlan = checkedProfile.is_super_admin === true || isPaidPlan || isTrialValid || isTrialRequestedFromUrl;
+          const isTrialExpired = !isProPlan && checkedProfile.is_super_admin !== true && dbPlanRaw !== "FREE";
 
           if (isTrialExpired) {
-            // Permanently mark trial as used in DB so user never receives another automated trial
-            if (checkedProfile.is_trial !== false || checkedProfile.has_used_trial !== true) {
-              supabase
-                .from("profiles")
-                .update({ plan: "free", plan_type: "free", is_trial: false, has_used_trial: true })
-                .eq("id", checkedProfile.id)
-                .then(() => {}, () => {});
-            }
-
             const hasDismissed = typeof window !== "undefined" && sessionStorage.getItem("feedmee_trial_expired_dismissed") === "true";
             if (!hasDismissed) {
               setShowUpgradeModal(true);
@@ -1187,10 +1197,11 @@ function DashboardContent() {
           setTrialEndsAt(checkedProfile.trial_ends_at || null);
 
           // Compute normalized state values
-          const finalName = checkedProfile.name || userName;
+          const finalName = checkedProfile.name || "";
           const finalBio = checkedProfile.bio || "";
           const finalAvatarUrl = checkedProfile.avatar_url || "";
-          const finalPlanType = isProPlan ? "pro" : "free";
+          const dbPlanLower = (checkedProfile.plan || "free").toString().toLowerCase().trim();
+          const finalPlanType = (dbPlanLower === "personal" ? "personal" : dbPlanLower === "pro" ? "pro" : dbPlanLower === "business" ? "business" : "free") as PlanType;
 
           const finalSocialLinks = checkedProfile.social_links
             ? checkedProfile.social_links.map((l: any) => ({
@@ -1253,11 +1264,10 @@ function DashboardContent() {
           setDiditSessionId(vSessionId);
 
           // FTUE Onboarding Completed & Step check
-          const isCompletedInDB = profile.onboarding_completed === true;
-          const isCompletedInLocal = typeof window !== "undefined" && localStorage.getItem(`feedmee_onboarding_completed_${(profile.username || userHandle).toLowerCase()}`) === "true";
-          const hasExistingContent = (profile.custom_links && profile.custom_links.length > 0) || (profile.reels && profile.reels.length > 0);
+          const shouldShowWizard = !checkedProfile.onboarding_completed && !checkedProfile.username && !checkedProfile.name;
+          const isCompletedInLocal = typeof window !== "undefined" && localStorage.getItem(`feedmee_onboarding_completed_${(checkedProfile.username || userHandle).toLowerCase()}`) === "true";
 
-          if (isCompletedInDB || isCompletedInLocal || hasExistingContent) {
+          if (!shouldShowWizard || isCompletedInLocal) {
             setOnboardingCompleted(true);
           } else {
             setOnboardingCompleted(false);
@@ -1369,6 +1379,11 @@ function DashboardContent() {
     setStatusMsg("");
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("You must be logged in to save your profile.");
+      }
+
       const cleanThemeColor = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
       const cleanButtonColor = sanitizeHexColor(appearance?.cardBgColor, "#16A34A");
       const cleanTextColor = sanitizeHexColor(appearance?.headlineColor, "#09090B");
@@ -1382,34 +1397,28 @@ function DashboardContent() {
             bgGradientEnd: sanitizeHexColor(appearance.bgGradientEnd, "#E0F2FE"),
             headlineColor: cleanTextColor,
             bioColor: sanitizeHexColor(appearance.bioColor, "#27272A"),
-            cardBgColor: cleanButtonColor,
-            cardTextColor: cleanButtonTextColor,
-            cardBorderColor: sanitizeHexColor(appearance.cardBorderColor, "#E4E4E7"),
-            socialIconBgColor: sanitizeHexColor(appearance.socialIconBgColor, "#FFFFFF"),
-            socialFlatColor: sanitizeHexColor(appearance.socialFlatColor, "#18181B"),
-            avatarBorderColor: sanitizeHexColor(appearance.avatarBorderColor, "#FFFFFF"),
           }
         : {};
 
       let payload: any = {
+        id: user.id,
         username: username.toLowerCase().trim(),
         name,
         bio,
         avatar_url: avatarUrl,
+        appearance,
         custom_hex_color: cleanThemeColor,
         theme_color: cleanThemeColor,
         button_color: cleanButtonColor,
         text_color: cleanTextColor,
         button_text_color: cleanButtonTextColor,
-        background_color: cleanThemeColor,
-        background_gradient: appearance?.bgGradientStart && appearance?.bgGradientEnd ? `linear-gradient(${appearance?.bgGradientAngle ?? 135}deg, ${appearance.bgGradientStart}, ${appearance.bgGradientEnd})` : null,
         social_pill_color: sanitizeHexColor(appearance?.socialIconBgColor, cleanButtonColor),
         social_icon_mode: appearance?.socialLogoMode || "brand",
-        background_gradient_angle: appearance?.bgGradientAngle ?? 135,
-        background_image_url: appearance?.bgImageUrl || null,
+        avatar_border_color: sanitizeHexColor(appearance?.avatarBorderColor, cleanButtonColor),
         avatar_border_enabled: appearance?.avatarBorderEnabled !== false,
-        avatar_border_color: sanitizeHexColor(appearance?.avatarBorderColor, "#FFFFFF"),
         avatar_border_width: appearance?.avatarBorderWidth ?? 4,
+        background_image_url: appearance?.bgImageUrl || "",
+        background_gradient_angle: appearance?.bgGradientAngle ?? 135,
         font_family: appearance?.fontFamily || "Inter",
         bio_color: sanitizeHexColor(appearance?.bioColor, "#27272A"),
         button_shape: appearance?.buttonShape || "rounded",
@@ -1427,11 +1436,13 @@ function DashboardContent() {
 
       let { error } = await supabase
         .from("profiles")
-        .upsert(payload, { onConflict: "username" });
+        .update(payload)
+        .eq("id", user.id);
 
       if (error && (error.message?.includes("column") || error.details?.includes("column"))) {
         console.warn("One or more new design columns missing in profiles table, falling back to core payload...");
         const safePayload = {
+          id: user.id,
           username: username.toLowerCase().trim(),
           name,
           bio,
@@ -1447,7 +1458,7 @@ function DashboardContent() {
           lead_form: leadForm,
           updated_at: new Date().toISOString(),
         };
-        const fallbackRes = await supabase.from("profiles").upsert(safePayload, { onConflict: "username" });
+        const fallbackRes = await supabase.from("profiles").update(safePayload).eq("id", user.id);
         if (fallbackRes.error) {
           throw fallbackRes.error;
         }
@@ -1547,7 +1558,7 @@ function DashboardContent() {
           isVerifiedBadgeActive={isVerifiedBadgeActive}
           onSave={handleSave}
           isSaving={isSaving}
-          onUpgradeClick={() => handleTriggerUpgrade()}
+          onUpgradeClick={(targetPlan) => handleTriggerUpgrade(targetPlan)}
         />
       </div>
 
@@ -1669,7 +1680,7 @@ function DashboardContent() {
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="text-xs font-black text-white truncate">{name || "User"}</span>
                       <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase shrink-0">
-                        {planType}
+                        {currentPlan.toUpperCase()}
                       </span>
                     </div>
                     <span className="text-[11px] text-slate-400 truncate font-medium">@{username || "username"}</span>
@@ -1981,7 +1992,7 @@ function DashboardContent() {
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-xs font-black text-zinc-900 truncate">{name}</span>
                     <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 border border-zinc-200/80 uppercase shrink-0">
-                      {planType}
+                      {currentPlan.toUpperCase()}
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500 truncate font-medium">@{username}</span>

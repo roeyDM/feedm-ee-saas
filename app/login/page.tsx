@@ -57,6 +57,18 @@ export default function LoginPage() {
       return;
     }
 
+    if (authData?.user) {
+      try {
+        const u = authData.user;
+        const { data: existingProf } = await supabase.from("profiles").select("id, plan").eq("id", u.id).maybeSingle();
+        if (!existingProf && u.email) {
+          const { data: emailMatch } = await supabase.from("profiles").select("id, plan").ilike("email", u.email).maybeSingle();
+        }
+      } catch (syncErr) {
+        console.warn("[Login Profile Sync Warning]:", syncErr);
+      }
+    }
+
     // Check if account strictly has VERIFIED 2FA factor enabled
     try {
       const { data: mfaFactors } = await supabase.auth.mfa.listFactors();

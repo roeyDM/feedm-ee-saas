@@ -96,123 +96,96 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (eventName === "subscription_created") {
-      if (status === "on_trial") {
-        // 1. Send Trial Started Email
-        if (userEmail) {
-          await sendTrialStartedEmail({
-            email: userEmail,
-            name: userName,
-            planName,
-            trialEndsAt,
-          });
-        }
+    // Extract Lemon Squeezy Subscription & Customer IDs
+    const subId = String(payload.data?.id || attributes.subscription_id || "").trim();
+    const customerId = String(attributes.customer_id || payload.data?.attributes?.customer_id || "").trim();
 
-        // 2. Update Supabase Profile if matched
-        if (supabaseAdmin) {
-          if (userId) {
-            await supabaseAdmin
-              .from("profiles")
-              .update({
-                subscription_status: "trialing",
-                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", userId);
-          } else if (userEmail) {
-            await supabaseAdmin
-              .from("profiles")
-              .update({
-                subscription_status: "trialing",
-                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
-                updated_at: new Date().toISOString(),
-              })
-              .ilike("email", userEmail);
-          }
-        }
-      } else if (status === "active") {
-        // Direct conversion or non-trial active sub
-        if (userEmail) {
-          await sendSubscriptionActiveEmail({
-            email: userEmail,
-            name: userName,
-            planName,
-            receiptUrl,
-          });
-        }
+    // Helper to map variant_id / product_name to explicit plan name ('PERSONAL', 'PRO', 'BUSINESS')
+    const resolvePlanName = (vId: string, name: string): "PERSONAL" | "PRO" | "BUSINESS" => {
+      const v = String(vId || "").trim();
+      const n = String(name || "").toLowerCase().trim();
+      if (v === "2052878" || v === "2052896" || n.includes("personal") || n.includes("creator")) return "PERSONAL";
+      if (v === "1996082" || v === "1996084" || n.includes("business") || n.includes("agency")) return "BUSINESS";
+      if (v === "2049606" || v === "2049607" || v === "1996080" || v === "1996081" || n.includes("pro") || n.includes("growth")) return "PRO";
+      return "PRO";
+    };
 
-        if (supabaseAdmin) {
-          if (userId) {
-            await supabaseAdmin
-              .from("profiles")
-              .update({
-                subscription_status: "active",
-                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", userId);
-          } else if (userEmail) {
-            await supabaseAdmin
-              .from("profiles")
-              .update({
-                subscription_status: "active",
-                plan_type: planName.toLowerCase().includes("personal") ? "personal" : "pro",
-                updated_at: new Date().toISOString(),
-              })
-              .ilike("email", userEmail);
-          }
-        }
-      }
-    } else if (eventName === "subscription_payment_success") {
-      // Payment conversion after trial ends
-      if (userEmail) {
+    if (eventName === "subscription_created" || eventName === "subscription_updated") {
+      const mappedPlan = resolvePlanName(variantId, planName);
+      const isTrialMode = status === "on_trial";
+      const emailPlanTitle = mappedPlan === "PERSONAL" ? "Personal Creator Plan" : mappedPlan === "BUSINESS" ? "Business Agency Plan" : "Pro Growth Plan";
+
+      if (isTrialMode && userEmail) {
+        await sendTrialStartedEmail({
+          email: userEmail,
+          name: userName,
+          planName: emailPlanTitle,
+          trialEndsAt,
+        });
+      } else if (!isTrialMode && userEmail) {
         await sendSubscriptionActiveEmail({
           email: userEmail,
           name: userName,
-          planName,
+          planName: emailPlanTitle,
           receiptUrl,
         });
       }
 
       if (supabaseAdmin) {
+        const subPayload: Record<string, any> = {
+          plan: mappedPlan,
+          payment_status: "active",
+          updated_at: new Date().toISOString(),
+        };
+        if (subId) subPayload.lemon_squeezy_subscription_id = subId;
+        if (customerId) subPayload.lemon_squeezy_customer_id = customerId;
+
         if (userId) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_status: "active",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", userId);
+          await supabaseAdmin.from("profiles").update(subPayload).eq("id", userId);
         } else if (userEmail) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_status: "active",
-              updated_at: new Date().toISOString(),
-            })
-            .ilike("email", userEmail);
+          await supabaseAdmin.from("profiles").update(subPayload).ilike("email", userEmail);
+        }
+      }
+    } else if (eventName === "subscription_payment_success") {
+      const mappedPlan = resolvePlanName(variantId, planName);
+      const emailPlanTitle = mappedPlan === "PERSONAL" ? "Personal Creator Plan" : mappedPlan === "BUSINESS" ? "Business Agency Plan" : "Pro Growth Plan";
+
+      if (userEmail) {
+        await sendSubscriptionActiveEmail({
+          email: userEmail,
+          name: userName,
+          planName: emailPlanTitle,
+          receiptUrl,
+        });
+      }
+
+      if (supabaseAdmin) {
+        const subPayload: Record<string, any> = {
+          plan: mappedPlan,
+          payment_status: "active",
+          updated_at: new Date().toISOString(),
+        };
+        if (subId) subPayload.lemon_squeezy_subscription_id = subId;
+        if (customerId) subPayload.lemon_squeezy_customer_id = customerId;
+
+        if (userId) {
+          await supabaseAdmin.from("profiles").update(subPayload).eq("id", userId);
+        } else if (userEmail) {
+          await supabaseAdmin.from("profiles").update(subPayload).ilike("email", userEmail);
         }
       }
     } else if (eventName === "subscription_cancelled" || eventName === "subscription_expired") {
       if (supabaseAdmin) {
+        const cancelPayload = {
+          plan: "FREE",
+          payment_status: eventName === "subscription_expired" ? "unpaid" : "cancelled",
+          updated_at: new Date().toISOString(),
+        };
+
         if (userId) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_status: "cancelled",
-              plan_type: "free",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", userId);
+          await supabaseAdmin.from("profiles").update(cancelPayload).eq("id", userId);
         } else if (userEmail) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({
-              subscription_status: "cancelled",
-              plan_type: "free",
-              updated_at: new Date().toISOString(),
-            })
-            .ilike("email", userEmail);
+          await supabaseAdmin.from("profiles").update(cancelPayload).ilike("email", userEmail);
         }
       }
     }

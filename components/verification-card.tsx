@@ -6,6 +6,7 @@ import { ShieldCheck, Lock, CheckCircle2, ArrowRight, Sparkles, AlertCircle, Ref
 import { Button } from "@/components/ui/button";
 import { buildLemonSqueezyCheckoutUrl } from "@/lib/plans-config";
 import { supabase } from "@/lib/supabase";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 
 interface VerificationCardProps {
   planType: "free" | "personal" | "pro" | "business";
@@ -32,10 +33,11 @@ export function VerificationCard({
   onBadgeToggle,
   onUpgradeClick,
 }: VerificationCardProps) {
+  const { currentPlan } = useFeatureAccess(planType);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const isProOrSuperAdmin = planType === "pro" || planType === "business" || isSuperAdmin;
+  const isProOrSuperAdmin = currentPlan === "pro" || currentPlan === "business" || isSuperAdmin;
 
   // Listen for return callback parameters from Didit or Lemon Squeezy redirection
   React.useEffect(() => {

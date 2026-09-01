@@ -18,42 +18,51 @@ import { UpgradeModal } from "@/components/upgrade-modal";
 import { PlanType, supabase } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays, isUserSuperAdmin } from "@/lib/auth-guards";
 
+import { useFeatureAccess } from "@/hooks/use-feature-access";
+
 interface BillingEditorProps {
   planType: PlanType;
   setPlanType: (plan: PlanType) => void;
   username: string;
 }
 
-export function BillingEditor({ planType, setPlanType, username }: BillingEditorProps) {
+export function BillingEditor({ planType: initialPlanType, setPlanType, username }: BillingEditorProps) {
+  const { currentPlan } = useFeatureAccess(initialPlanType);
+  const activePlan = currentPlan || (initialPlanType || "free").toLowerCase();
+
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>("active");
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
+  const [customerPortalUrl, setCustomerPortalUrl] = useState<string | null>(null);
 
   // Fetch real profile billing & trial details from Supabase
   useEffect(() => {
     async function loadBillingProfile() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user && !username) return;
+        if (!user) return;
 
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
-          .or(`username.eq.${username.toLowerCase()}${user ? `,id.eq.${user.id}` : ""}`)
+          .eq("id", user.id)
           .maybeSingle();
 
         if (profile) {
+          if (profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url) {
+            setCustomerPortalUrl(profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url);
+          }
           const checked = await checkAndApplyTrialDowngrade(profile);
           if (checked.is_super_admin === true) {
             setIsSuperAdmin(true);
             setPlanType("pro");
             setSubscriptionStatus("active");
           } else {
-            if (checked.plan_type) setPlanType(checked.plan_type as PlanType);
-            setSubscriptionStatus(checked.subscription_status || "active");
+            if (checked.plan) setPlanType(checked.plan.toLowerCase() as PlanType);
+            setSubscriptionStatus(checked.payment_status || checked.subscription_status || "active");
             setTrialEndsAt(checked.trial_ends_at || null);
           }
         }
@@ -70,7 +79,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
     setNoticeMsg(null);
     try {
       // Direct users to Lemon Squeezy Customer Portal for receipts and payment updates
-      const portalUrl = "https://my.lemonsqueezy.com/my-orders";
+      const portalUrl = customerPortalUrl || "https://app.lemonsqueezy.com/my-orders";
       window.open(portalUrl, "_blank", "noopener,noreferrer");
     } catch (err: any) {
       console.error("Portal error:", err);
@@ -83,13 +92,13 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
   const formattedPlanName =
     isSuperAdmin
       ? "Super Admin Access (Unrestricted Pro)"
-      : planType === "pro"
+      : activePlan === "pro"
       ? "Pro Growth Plan"
-      : planType === "personal"
+      : activePlan === "personal"
       ? "Personal Creator Plan"
-      : planType === "business"
+      : activePlan === "business"
       ? "Business Agency Plan"
-      : "Free Starter Plan";
+      : "Starter Free Plan";
 
   const remainingDays = getRemainingTrialDays(trialEndsAt);
 
@@ -127,12 +136,12 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
           <div className="flex items-center gap-4">
             <div
               className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                planType !== "free" || isSuperAdmin
+                activePlan !== "free" || isSuperAdmin
                   ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
                   : "bg-zinc-100 text-zinc-600 border border-zinc-200"
               }`}
             >
-              {planType !== "free" || isSuperAdmin ? (
+              {activePlan !== "free" || isSuperAdmin ? (
                 <Zap className="h-6 w-6 fill-current" />
               ) : (
                 <ShieldCheck className="h-6 w-6" />
@@ -159,9 +168,9 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
               <span className="text-xs font-semibold text-zinc-500 mt-0.5">
                 {isSuperAdmin
                   ? "Bypass mode active • Unrestricted full access to all features"
-                  : planType === "pro"
+                  : activePlan === "pro"
                   ? "Growth toolkit • Unlimited leads & full analytics suite"
-                  : planType === "personal"
+                  : activePlan === "personal"
                   ? "Personal creator toolkit • 3 Video reels & custom domain"
                   : "Basic Features & Limited Slots"}
               </span>
@@ -169,7 +178,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
           </div>
 
           <div className="flex items-center gap-2">
-            {planType === "free" && !isSuperAdmin ? (
+            {activePlan === "free" && !isSuperAdmin ? (
               <Button
                 onClick={() => setShowUpgradeModal(true)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs flex items-center gap-2 cursor-pointer"
@@ -210,7 +219,7 @@ export function BillingEditor({ planType, setPlanType, username }: BillingEditor
               <span>
                 {subscriptionStatus === "trialing" && trialEndsAt
                   ? `${remainingDays} ${remainingDays === 1 ? "day" : "days"} remaining`
-                  : planType !== "free" || isSuperAdmin
+                  : activePlan !== "free" || isSuperAdmin
                   ? "Active Subscription"
                   : "N/A"}
               </span>

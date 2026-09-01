@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       : null;
 
-    // 1. Robust UPSERT into public.profiles (on conflict: update)
+    // 1. Robust UPSERT into public.profiles (on conflict: id)
     const { error: profileErr } = await adminClient
       .from("profiles")
       .upsert(
@@ -58,12 +58,8 @@ export async function POST(req: NextRequest) {
           name: formattedName,
           bio: "",
           avatar_url: `https://api.dicebear.com/7.x/shapes/svg?seed=${cleanHandle || userId}`,
-          plan_type: isTrialAllowed ? planType : "free",
-          plan: isTrialAllowed ? planType : "free",
-          is_trial: isTrialAllowed,
-          trial_ends_at: trialEndsAtIso,
-          has_used_trial: hasUsedTrialBefore || isFreePlan,
-          subscription_status: isFreePlan ? "active" : isTrialAllowed ? "trialing" : "active",
+          plan: isTrialAllowed ? planType.toUpperCase() : "FREE",
+          payment_status: "active",
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id" }

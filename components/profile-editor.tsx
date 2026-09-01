@@ -399,7 +399,7 @@ export function ProfileEditor({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Alex Rivers"
+                placeholder="Your Name"
                 className="bg-zinc-50 border-zinc-200 text-base md:text-xs text-zinc-900 h-9"
               />
             </div>

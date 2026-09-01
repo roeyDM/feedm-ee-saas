@@ -10,7 +10,39 @@ interface PageProps {
   params: Promise<{ username: string }>;
 }
 
+const RESERVED_ASSETS = new Set([
+  "favicon.ico",
+  "robots.txt",
+  "sitemap.xml",
+  "site.webmanifest",
+  "_next",
+  "api",
+  "help",
+  "login",
+  "register",
+  "signup",
+  "dashboard",
+  "auth",
+  "verified-badge.svg",
+  "verified-badge.png",
+  "apple-touch-icon.png",
+  "icon.png",
+]);
+
 async function fetchPublicProfile(handleKey: string) {
+  if (
+    !handleKey ||
+    RESERVED_ASSETS.has(handleKey) ||
+    handleKey.endsWith(".ico") ||
+    handleKey.endsWith(".png") ||
+    handleKey.endsWith(".svg") ||
+    handleKey.endsWith(".jpg") ||
+    handleKey.endsWith(".json") ||
+    handleKey.endsWith(".txt")
+  ) {
+    return null;
+  }
+
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
     "https://slyjhprwovcwxfcnxjpn.supabase.co";
