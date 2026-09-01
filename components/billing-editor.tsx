@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UpgradeModal } from "@/components/upgrade-modal";
+import { ChangePlanModal } from "@/components/change-plan-modal";
 import { PlanType, supabase } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays, isUserSuperAdmin } from "@/lib/auth-guards";
 
@@ -32,9 +33,16 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
 
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showChangePlanModal, setShowChangePlanModal] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>("active");
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [cardBrand, setCardBrand] = useState<string | null>(null);
+  const [cardLastFour, setCardLastFour] = useState<string | null>(null);
+  const [billingInterval, setBillingInterval] = useState<string | null>("monthly");
+  const [nextBillingAt, setNextBillingAt] = useState<string | null>(null);
+  const [subscriptionStartAt, setSubscriptionStartAt] = useState<string | null>(null);
+  const [profileUpdatedAt, setProfileUpdatedAt] = useState<string | null>(null);
   const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
   const [customerPortalUrl, setCustomerPortalUrl] = useState<string | null>(null);
 
@@ -55,6 +63,13 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
           if (profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url) {
             setCustomerPortalUrl(profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url);
           }
+          if (profile.card_brand) setCardBrand(profile.card_brand);
+          if (profile.card_last_four) setCardLastFour(profile.card_last_four);
+          if (profile.billing_interval) setBillingInterval(profile.billing_interval);
+          if (profile.next_billing_at) setNextBillingAt(profile.next_billing_at);
+          if (profile.subscription_start_at) setSubscriptionStartAt(profile.subscription_start_at);
+          if (profile.updated_at) setProfileUpdatedAt(profile.updated_at);
+
           const checked = await checkAndApplyTrialDowngrade(profile);
           if (checked.is_super_admin === true) {
             setIsSuperAdmin(true);
@@ -74,12 +89,22 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
   }, [username]);
 
   // Lemon Squeezy Customer Portal Redirect Handler
-  const handleOpenLemonPortal = () => {
+  const handleOpenLemonPortal = async () => {
     setLoadingPortal(true);
     setNoticeMsg(null);
     try {
-      // Direct users to Lemon Squeezy Customer Portal for receipts and payment updates
-      const portalUrl = customerPortalUrl || "https://app.lemonsqueezy.com/my-orders";
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const res = await fetch("/api/billing/portal", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {})
+        }
+      });
+      
+      const data = await res.json();
+      const portalUrl = data.url || customerPortalUrl || "https://app.lemonsqueezy.com/my-orders";
       window.open(portalUrl, "_blank", "noopener,noreferrer");
     } catch (err: any) {
       console.error("Portal error:", err);
@@ -89,18 +114,68 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
     }
   };
 
+  const isYearly = billingInterval === "yearly" || billingInterval === "annual";
+  const intervalLabel = isYearly ? "Yearly" : "Monthly";
+
   const formattedPlanName =
     isSuperAdmin
       ? "Super Admin Access (Unrestricted Pro)"
       : activePlan === "pro"
-      ? "Pro Growth Plan"
+      ? `Pro Growth Plan (${intervalLabel})`
       : activePlan === "personal"
-      ? "Personal Creator Plan"
+      ? `Personal Creator Plan (${intervalLabel})`
       : activePlan === "business"
-      ? "Business Agency Plan"
+      ? `Business Agency Plan (${intervalLabel})`
       : "Starter Free Plan";
 
+  const activePlanPrice = isSuperAdmin
+    ? "$0 / month (Admin)"
+    : activePlan === "pro"
+    ? isYearly ? "$12 / mo ($144/yr)" : "$15 / month"
+    : activePlan === "personal"
+    ? isYearly ? "$6 / mo ($72/yr)" : "$8 / month"
+    : activePlan === "business"
+    ? isYearly ? "$29 / mo ($348/yr)" : "$35 / month"
+    : "$0 / month";
+
   const remainingDays = getRemainingTrialDays(trialEndsAt);
+
+  const getNextRenewalDate = () => {
+    if (subscriptionStatus === "trialing" && trialEndsAt) {
+      return `Trial ends in ${remainingDays} ${remainingDays === 1 ? "day" : "days"}`;
+    }
+    if (nextBillingAt) {
+      return `Renews on ${new Date(nextBillingAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    }
+    if (trialEndsAt) {
+      return `Renews on ${new Date(trialEndsAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    }
+    if (activePlan !== "free" || isSuperAdmin) {
+      const baseDate = subscriptionStartAt
+        ? new Date(subscriptionStartAt)
+        : profileUpdatedAt
+        ? new Date(profileUpdatedAt)
+        : new Date();
+      
+      const renewDate = new Date(baseDate.getTime());
+      if (isYearly) {
+        renewDate.setFullYear(renewDate.getFullYear() + 1);
+      } else {
+        renewDate.setMonth(renewDate.getMonth() + 1);
+      }
+      
+      while (renewDate.getTime() < Date.now()) {
+        if (isYearly) {
+          renewDate.setFullYear(renewDate.getFullYear() + 1);
+        } else {
+          renewDate.setMonth(renewDate.getMonth() + 1);
+        }
+      }
+      
+      return `Renews on ${renewDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    }
+    return "Free Forever";
+  };
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto font-sans">
@@ -149,13 +224,13 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
             </div>
 
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-lg font-black text-zinc-900">{formattedPlanName}</span>
                 <span
                   className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
                     isSuperAdmin
                       ? "bg-purple-100 text-purple-800 border-purple-200"
-                      : subscriptionStatus === "active"
+                      : subscriptionStatus === "active" || subscriptionStatus === "paid"
                       ? "bg-emerald-100 text-emerald-800 border-emerald-200"
                       : subscriptionStatus === "trialing"
                       ? "bg-amber-100 text-amber-800 border-amber-200"
@@ -164,8 +239,11 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
                 >
                   {isSuperAdmin ? "Super Admin" : subscriptionStatus}
                 </span>
+                <span className="text-xs font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200/80">
+                  {activePlanPrice}
+                </span>
               </div>
-              <span className="text-xs font-semibold text-zinc-500 mt-0.5">
+              <span className="text-xs font-semibold text-zinc-500 mt-1">
                 {isSuperAdmin
                   ? "Bypass mode active • Unrestricted full access to all features"
                   : activePlan === "pro"
@@ -177,25 +255,34 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             {activePlan === "free" && !isSuperAdmin ? (
               <Button
                 onClick={() => setShowUpgradeModal(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs flex items-center gap-2 cursor-pointer"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
               >
                 <Zap className="h-4 w-4 text-amber-300 fill-amber-300" />
                 <span>Upgrade Plan</span>
               </Button>
             ) : (
-              <Button
-                onClick={handleOpenLemonPortal}
-                disabled={loadingPortal}
-                variant="outline"
-                className="border-zinc-300 hover:bg-zinc-50 text-zinc-800 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 cursor-pointer"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                <span>{loadingPortal ? "Opening Portal..." : "Manage Subscription"}</span>
-              </Button>
+              <>
+                <Button
+                  onClick={() => setShowChangePlanModal(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+                >
+                  <Sparkles className="h-4 w-4 text-emerald-200" />
+                  <span>Change Plan</span>
+                </Button>
+                <Button
+                  onClick={handleOpenLemonPortal}
+                  disabled={loadingPortal}
+                  variant="outline"
+                  className="border-zinc-300 hover:bg-zinc-50 text-zinc-800 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto h-9"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>{loadingPortal ? "Opening Portal..." : "Manage Subscription"}</span>
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -203,10 +290,16 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
         {/* Subscription Info & Renewals */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-zinc-50/80 rounded-2xl p-4 border border-zinc-200/60">
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider font-mono">Security</span>
+            <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider font-mono">Payment Method</span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-800">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-              <span>256-Bit SSL Encryption</span>
+              <CreditCard className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">
+                {cardBrand && cardLastFour
+                  ? `${cardBrand.toUpperCase()} ending in ${cardLastFour}`
+                  : activePlan !== "free" || isSuperAdmin
+                  ? "Card on File via Lemon Squeezy"
+                  : "No Card Required (Free)"}
+              </span>
             </div>
           </div>
 
@@ -215,22 +308,24 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
               {subscriptionStatus === "trialing" ? "Trial Days Left" : "Renewal / Expiration"}
             </span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-800">
-              <RefreshCw className="h-3.5 w-3.5 text-emerald-600" />
-              <span>
-                {subscriptionStatus === "trialing" && trialEndsAt
-                  ? `${remainingDays} ${remainingDays === 1 ? "day" : "days"} remaining`
-                  : activePlan !== "free" || isSuperAdmin
-                  ? "Active Subscription"
-                  : "N/A"}
-              </span>
+              <RefreshCw className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <span>{getNextRenewalDate()}</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-1">
             <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Payment Status</span>
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Account in Good Standing</span>
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <span>
+                {isSuperAdmin
+                  ? "Super Admin Entitlement"
+                  : subscriptionStatus === "active" || subscriptionStatus === "paid"
+                  ? "Active Subscription"
+                  : subscriptionStatus === "trialing"
+                  ? "Active Free Trial"
+                  : "Account in Good Standing"}
+              </span>
             </div>
           </div>
         </div>
@@ -289,6 +384,14 @@ export function BillingEditor({ planType: initialPlanType, setPlanType, username
         <UpgradeModal
           open={showUpgradeModal}
           onOpenChange={(open) => setShowUpgradeModal(open)}
+        />
+      )}
+      
+      {/* Change Plan Modal Component */}
+      {showChangePlanModal && (
+        <ChangePlanModal
+          open={showChangePlanModal}
+          onOpenChange={(open) => setShowChangePlanModal(open)}
         />
       )}
     </div>
