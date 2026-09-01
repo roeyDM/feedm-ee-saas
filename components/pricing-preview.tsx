@@ -143,7 +143,7 @@ export function PricingPreview() {
               <div className="space-y-3 text-xs text-zinc-700 border-t border-zinc-100 pt-6">
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>1 FeedM.ee Link-in-Bio page</span>
+                  <span>1 Feedme Link-in-Bio page</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -159,7 +159,7 @@ export function PricingPreview() {
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>FeedM.ee branding on page</span>
+                  <span>Feedme branding on page</span>
                 </div>
               </div>
             </div>
@@ -328,7 +328,7 @@ export function PricingPreview() {
                 <p className="font-extrabold text-zinc-400 text-[10px] uppercase tracking-wider mb-2">Everything in Pro, plus:</p>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Up to 5 Full FeedM.ee pages under 1 account</span>
+                  <span>Up to 5 Full Feedme pages under 1 account</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -576,7 +576,7 @@ export function PricingPreview() {
                     <td className="p-4 text-center font-bold text-zinc-900">Full Custom CSS</td>
                   </tr>
                   <tr>
-                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">White-Label (Remove FeedM.ee Badge)</td>
+                    <td className="p-4 sm:p-5 text-sm sm:text-base font-semibold text-zinc-950">White-Label (Remove Feedme Badge)</td>
                     <td className="p-4 text-center"><X className="h-4 w-4 text-zinc-300 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>
                     <td className="p-4 text-center bg-emerald-50/50 border-x border-emerald-200/80"><Check className="h-4 w-4 text-emerald-600 stroke-[3] mx-auto" /></td>

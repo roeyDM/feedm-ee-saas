@@ -75,7 +75,7 @@ export default function ExamplesPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base font-medium text-zinc-600 sm:text-lg leading-relaxed">
-            Discover how creators, e-commerce stores, and service businesses use FeedM's 5-page video snap reels to showcase products and capture qualified leads.
+            Discover how creators, e-commerce stores, and service businesses use Feedme&apos;s 5-page video snap reels to showcase products and capture qualified leads.
           </p>
         </section>
 

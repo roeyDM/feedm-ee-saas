@@ -18,7 +18,7 @@ interface FaqAccordionProps {
 
 export function FaqAccordion({
   title = "Frequently Asked Questions",
-  subtitle = "Have questions? Everything you need to know about FeedM.ee.",
+  subtitle = "Have questions? Everything you need to know about Feedme.",
   badge = "FAQ",
   items,
   id,
@@ -81,14 +81,14 @@ export function FaqAccordion({
 
 export const HOMEPAGE_FAQS: FaqItem[] = [
   {
-    question: "What is FeedM.ee?",
+    question: "What is Feedme?",
     answer:
-      "FeedM.ee transforms your standard bio link into an interactive vertical video reel experience (TikTok/Reels-style) that engages visitors and converts clicks into customers.",
+      "Feedme transforms your standard bio link into an interactive vertical video reel experience (TikTok/Reels-style) that engages visitors and converts clicks into customers.",
   },
   {
     question: "How does the vertical video reel preview work?",
     answer:
-      "You add video reel URLs or cloud links, and FeedM.ee automatically formats them into a mobile-first, vertical video feed player with auto-looping and sound controls.",
+      "You add video reel URLs or cloud links, and Feedme automatically formats them into a mobile-first, vertical video feed player with auto-looping and sound controls.",
   },
   {
     question: "Can I collect leads and contact details directly from my video feed?",
@@ -103,12 +103,12 @@ export const HOMEPAGE_FAQS: FaqItem[] = [
   {
     question: "Do I need coding or technical skills to build my feed?",
     answer:
-      "Not at all. FeedM.ee is 100% no-code. You can configure your profile, social links, video reels, and promo popups in seconds using our intuitive creator studio.",
+      "Not at all. Feedme is 100% no-code. You can configure your profile, social links, video reels, and promo popups in seconds using our intuitive creator studio.",
   },
   {
-    question: "Will FeedM.ee work on all mobile devices and social networks?",
+    question: "Will Feedme work on all mobile devices and social networks?",
     answer:
-      "Yes! FeedM.ee is fully optimized for iOS and Android web browsers and embeds seamlessly into bio link slots on Instagram, TikTok, YouTube, X (Twitter), and LinkedIn.",
+      "Yes! Feedme is fully optimized for iOS and Android web browsers and embeds seamlessly into bio link slots on Instagram, TikTok, YouTube, X (Twitter), and LinkedIn.",
   },
   {
     question: "Is there a free plan available?",

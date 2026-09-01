@@ -101,7 +101,7 @@ export function Footer() {
 
         {/* Bottom Copyright Bar */}
         <div className="pt-6 border-t border-zinc-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-zinc-400">
-          <span>&copy; {new Date().getFullYear()} FeedM.ee SaaS. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Feedme. All rights reserved.</span>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-zinc-600 transition-colors">Privacy</Link>
             <span>&bull;</span>

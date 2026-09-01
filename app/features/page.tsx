@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Features & 5-Page Snap Reels | FeedM.ee",
+  title: "Features & 5-Page Snap Reels | Feedme",
   description:
-    "Explore FeedM's interactive 5-page vertical video bio reels, direct WhatsApp lead capture, and CRM analytics.",
+    "Explore Feedme's interactive 5-page vertical video bio reels, direct WhatsApp lead capture, and CRM analytics.",
 };
 
 const ALEX_RIVERS_DEMO_REELS = [
@@ -104,7 +104,7 @@ export default function FeaturesPage() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base font-medium text-zinc-600 sm:text-lg md:text-xl leading-relaxed">
-            Move beyond static text link lists. FeedM combines Linktree-style bio links, vertical full-screen video reels, and an integrated lead capture form into a seamless 5-page snap experience.
+            Move beyond static text link lists. Feedme combines Linktree-style bio links, vertical full-screen video reels, and an integrated lead capture form into a seamless 5-page snap experience.
           </p>
         </section>
 
@@ -217,7 +217,7 @@ export default function FeaturesPage() {
         <section className="relative mx-auto max-w-5xl px-6 py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-zinc-950 sm:text-4xl">
-              Why Creators Switch to FeedM
+              Why Creators Switch to Feedme
             </h2>
             <p className="text-sm font-semibold text-zinc-600 mt-2">
               See how 5-Page Snap Reels compare to traditional static link tools.
@@ -229,7 +229,7 @@ export default function FeaturesPage() {
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50/80">
                   <th className="py-4 px-6 text-xs font-extrabold text-zinc-500 uppercase tracking-wider">Capability / Feature</th>
-                  <th className="py-4 px-6 text-xs font-black text-[#00BC7D] uppercase tracking-wider bg-emerald-50/60">FeedM.ee (Snap Reels)</th>
+                  <th className="py-4 px-6 text-xs font-black text-[#00BC7D] uppercase tracking-wider bg-emerald-50/60">Feedme (Snap Reels)</th>
                   <th className="py-4 px-6 text-xs font-extrabold text-zinc-500 uppercase tracking-wider">Traditional Tools (e.g. Linktree)</th>
                 </tr>
               </thead>

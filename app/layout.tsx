@@ -9,7 +9,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "FeedM.ee",
+  title: "Feedme",
   description: "The 5-Page Vertical Snap Bio Reel Platform",
   icons: {
     icon: [

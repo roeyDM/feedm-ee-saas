@@ -7,8 +7,8 @@ import { Film, Zap, Target, BarChart3, ArrowRight, ShieldCheck, Sparkles } from 
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "About FeedM.ee | Reimagining Bio Links for Video Creators",
-  description: "FeedM.ee turns static link-in-bio pages into dynamic, high-converting video feeds and lead generation engines.",
+  title: "About Feedme | Reimagining Bio Links for Video Creators",
+  description: "Feedme turns static link-in-bio pages into dynamic, high-converting video feeds and lead generation engines.",
 };
 
 export default function AboutPage() {
@@ -29,7 +29,7 @@ export default function AboutPage() {
           </h1>
 
           <p className="text-base sm:text-lg text-zinc-600 font-medium max-w-2xl mx-auto leading-relaxed mb-8">
-            FeedM.ee turns static link-in-bio pages into dynamic, high-converting video feeds and lead generation engines. Built for creators who refuse to let their best Reels disappear in the feed.
+            Feedme turns static link-in-bio pages into dynamic, high-converting video feeds and lead generation engines. Built for creators who refuse to let their best Reels disappear in the feed.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -52,13 +52,13 @@ export default function AboutPage() {
           <div className="bg-white rounded-3xl p-8 md:p-12 border border-zinc-200/80 shadow-xl shadow-black/5 space-y-8">
             <div className="max-w-3xl space-y-4">
               <h2 className="text-2xl md:text-3xl font-black text-zinc-950 tracking-tight">
-                Why We Built FeedM.ee
+                Why We Built Feedme
               </h2>
               <p className="text-sm md:text-base font-medium text-zinc-600 leading-relaxed">
                 In 2026, text-only link-in-bio lists are obsolete. Creators spend hours producing high-quality vertical videos on Instagram Reels, TikTok, and YouTube Shorts, only for algorithm feeds to push them out of sight within 24 hours.
               </p>
               <p className="text-sm md:text-base font-medium text-zinc-600 leading-relaxed">
-                FeedM.ee gives creators an interactive, vertical video feed homepage. Visitors experience full-screen reel playback, embedded lead forms, and instant promo deals — directly from a single handle URL.
+                Feedme gives creators an interactive, vertical video feed homepage. Visitors experience full-screen reel playback, embedded lead forms, and instant promo deals — directly from a single handle URL.
               </p>
             </div>
 

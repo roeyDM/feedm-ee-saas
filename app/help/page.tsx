@@ -60,14 +60,14 @@ export default function HelpCenterPage() {
           
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-200 text-emerald-800 text-[11px] sm:text-xs font-black uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Feedm.ee Knowledge Base</span>
+            <span>Feedme Knowledge Base</span>
           </div>
 
           <h1 className="text-2xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
             How can we help you today?
           </h1>
           <p className="text-xs sm:text-base font-medium text-slate-600 max-w-xl mx-auto">
-            Search our comprehensive guides, tutorials, and feature documentations for everything Feedm.ee.
+            Search our comprehensive guides, tutorials, and feature documentations for everything Feedme.
           </p>
 
           {/* Instant Search Bar Container with Strict High Z-Index & Elevation */}

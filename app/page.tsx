@@ -237,7 +237,7 @@ export default function Home() {
       <FaqAccordion
         badge="Frequently Asked Questions"
         title="Got Questions? We Have Answers."
-        subtitle="Learn how FeedM.ee transforms your link-in-bio into an interactive vertical video experience."
+        subtitle="Learn how Feedme transforms your link-in-bio into an interactive vertical video experience."
         items={HOMEPAGE_FAQS}
       />
 

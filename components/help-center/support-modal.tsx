@@ -59,7 +59,7 @@ export function SupportModal({ isOpen, onClose, defaultSubject = "" }: SupportMo
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80">
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>Contact Feedm.ee Support</span>
+                <span>Contact Feedme Support</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 How can we assist you?

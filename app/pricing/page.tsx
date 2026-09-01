@@ -4,7 +4,7 @@ import { PricingPreview } from "@/components/pricing-preview";
 import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "Pricing & Subscription Plans | FeedM.ee SaaS",
+  title: "Pricing & Subscription Plans | Feedme",
   description: "Simple, transparent pricing for content creators, influencers, and visual brands.",
 };
 
