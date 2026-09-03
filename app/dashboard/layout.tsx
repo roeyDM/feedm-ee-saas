@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import { ProfileProvider } from "@/context/profile-context";
-import { GTMScript } from "@/components/analytics/gtm-script";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 export default function DashboardLayout({
   children,
@@ -105,7 +105,9 @@ export default function DashboardLayout({
 
   return (
     <ProfileProvider>
-      <GTMScript gtmId={process.env.NEXT_PUBLIC_GTM_APP_ID} />
+      {process.env.NEXT_PUBLIC_GTM_APP_ID && (
+        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_APP_ID} />
+      )}
       {children}
     </ProfileProvider>
   );

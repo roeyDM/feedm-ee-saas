@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
-import { GTMScript } from "@/components/analytics/gtm-script";
+import { GoogleTagManager } from "@next/third-parties/google";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -49,7 +49,9 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="h-full font-sans">
-        <GTMScript gtmId={process.env.NEXT_PUBLIC_GTM_MARKETING_ID} />
+        {process.env.NEXT_PUBLIC_GTM_MARKETING_ID && (
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_MARKETING_ID} />
+        )}
         {children}
       </body>
     </html>
