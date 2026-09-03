@@ -137,3 +137,12 @@
 [data-theme-font] * {
   font-family: var(--selected-profile-font, inherit) !important;
 }
+
+/* Prevent iOS Safari auto-zoom on form control focus */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

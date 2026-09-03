@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Check, Shield, Building2, Mail, Send, X, Sparkles, ArrowDown, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -8,6 +9,9 @@ import { FaqAccordion, PRICING_FAQS } from "@/components/faq-accordion";
 import { getLemonSqueezyVariantId } from "@/lib/plans-config";
 
 export function PricingPreview() {
+  const searchParams = useSearchParams();
+  const handleParam = searchParams?.get("handle") || searchParams?.get("username") || "";
+
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
@@ -17,19 +21,69 @@ export function PricingPreview() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  // Mobile Carousel Navigation & Pro-Centered Default State
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const proCardRef = useRef<HTMLDivElement>(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(2); // 0 = Free, 1 = Personal, 2 = Pro, 3 = Business
+
+  useEffect(() => {
+    // Pro-Centered Snap positioning on mobile load
+    if (typeof window !== "undefined") {
+      const timer = setTimeout(() => {
+        if (proCardRef.current && window.innerWidth < 768) {
+          proCardRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "center",
+          });
+          setActiveCardIndex(2);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCarouselScroll = () => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    const scrollLeft = container.scrollLeft;
+    const cardWidth = container.offsetWidth * 0.85;
+    if (cardWidth > 0) {
+      const index = Math.round(scrollLeft / cardWidth);
+      setActiveCardIndex(Math.max(0, Math.min(3, index)));
+    }
+  };
+
+  const scrollToCard = (index: number) => {
+    if (!carouselRef.current) return;
+    const cards = carouselRef.current.children;
+    if (cards[index]) {
+      (cards[index] as HTMLElement).scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+      setActiveCardIndex(index);
+    }
+  };
+
   const handleCheckout = (planType: "free" | "personal" | "pro" | "business") => {
     if (planType === "business") {
       setContactModalOpen(true);
       return;
     }
 
-    if (planType === "free") {
-      window.location.href = "/register?plan=free";
-      return;
+    const queryParams = new URLSearchParams();
+    queryParams.set("plan", planType);
+    if (handleParam) {
+      queryParams.set("handle", handleParam);
+    }
+    if (planType !== "free") {
+      queryParams.set("trial", "true");
+      queryParams.set("billing", billingCycle);
     }
 
-    // Direct registration navigation for public pricing visitors
-    window.location.href = `/register?plan=${planType}&trial=true&billing=${billingCycle}`;
+    window.location.href = `/signup?${queryParams.toString()}`;
   };
 
   const handleContactSubmit = (e: React.FormEvent) => {
@@ -45,13 +99,13 @@ export function PricingPreview() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50/50 via-emerald-50/30 to-sky-50/40 text-zinc-900 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50/50 via-emerald-50/30 to-sky-50/40 text-zinc-900 font-sans selection:bg-emerald-500 selection:text-white relative overflow-x-hidden md:overflow-visible">
       {/* Background Pastel Orbs (Exact copy from live pricing page) */}
       <div className="pointer-events-none absolute top-[-10%] left-[-5%] w-[45%] aspect-square rounded-full bg-[#bad1cb]/40 blur-[130px]" />
       <div className="pointer-events-none absolute top-[20%] right-[-5%] w-[40%] aspect-square rounded-full bg-[#fde68a]/35 blur-[130px]" />
       <div className="pointer-events-none absolute bottom-[-5%] left-[20%] w-[45%] aspect-square rounded-full bg-[#e0f2fe]/50 blur-[130px]" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 relative z-10 overflow-visible">
         {/* Hero Header (Exact typography copy from live pricing page) */}
         <section className="relative mx-auto max-w-4xl px-6 pb-12 text-center">
           <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 border border-zinc-200/80 shadow-sm px-4 py-1.5 text-xs font-bold text-zinc-800 backdrop-blur-md">
@@ -106,10 +160,14 @@ export function PricingPreview() {
           </div>
         </section>
 
-        {/* 4-Tier Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10 items-stretch">
+        {/* 4-Tier Cards Grid & Mobile Snap Carousel */}
+        <div 
+          ref={carouselRef}
+          onScroll={handleCarouselScroll}
+          className="flex overflow-x-auto snap-x snap-mandatory gap-4 py-4 px-[7.5vw] scrollbar-none scroll-smooth md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:px-0 md:pt-8 md:pb-6 md:overflow-visible relative z-10 items-stretch"
+        >
           {/* TIER 1: FREE */}
-          <div className="flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
+          <div className="snap-center shrink-0 w-[85vw] max-w-[340px] md:w-auto md:max-w-none md:shrink flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
             <div>
               <div className="mb-4">
                 <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Starter</span>
@@ -166,7 +224,7 @@ export function PricingPreview() {
           </div>
 
           {/* TIER 2: PERSONAL */}
-          <div className="flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
+          <div className="snap-center shrink-0 w-[85vw] max-w-[340px] md:w-auto md:max-w-none md:shrink flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
             <div>
               <div className="mb-4">
                 <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider">Creator</span>
@@ -225,7 +283,10 @@ export function PricingPreview() {
           </div>
 
           {/* TIER 3: PRO (HIGHLIGHTED / MOST POPULAR) */}
-          <div className="relative flex flex-col justify-between bg-white border-2 border-emerald-500 rounded-3xl p-6 shadow-2xl shadow-emerald-600/15 backdrop-blur-md transform lg:-translate-y-2 h-full">
+          <div 
+            ref={proCardRef}
+            className="snap-center shrink-0 w-[85vw] max-w-[340px] md:w-auto md:max-w-none md:shrink relative z-20 flex flex-col justify-between bg-white border-2 border-emerald-500 rounded-3xl p-6 shadow-2xl shadow-emerald-600/15 backdrop-blur-md transform lg:-translate-y-2 h-full"
+          >
             {/* Top Badge */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white font-black text-[10px] px-3.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
               MOST POPULAR
@@ -289,7 +350,7 @@ export function PricingPreview() {
           </div>
 
           {/* TIER 4: BUSINESS */}
-          <div className="flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
+          <div className="snap-center shrink-0 w-[85vw] max-w-[340px] md:w-auto md:max-w-none md:shrink flex flex-col justify-between bg-white/90 border border-zinc-200/80 rounded-3xl p-6 shadow-lg shadow-zinc-900/5 backdrop-blur-md hover:border-zinc-300 transition-all duration-300 h-full">
             <div>
               <div className="mb-4">
                 <span className="text-xs font-extrabold text-zinc-400 uppercase tracking-wider">Enterprise</span>
@@ -345,6 +406,23 @@ export function PricingPreview() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Mobile Carousel Pagination Indicator Dots (< md) */}
+        <div className="flex md:hidden items-center justify-center gap-2 mt-2 mb-6">
+          {["Free", "Personal", "Pro", "Business"].map((label, idx) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => scrollToCard(idx)}
+              aria-label={`View ${label} plan`}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                activeCardIndex === idx
+                  ? "w-7 bg-emerald-600 shadow-xs"
+                  : "w-2 bg-zinc-300 hover:bg-zinc-400"
+              }`}
+            />
+          ))}
         </div>
 
         {/* Quick Action Button: Smooth scroll to full feature comparison table */}

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { Navbar } from "@/components/navbar";
 import { PricingPreview } from "@/components/pricing-preview";
 import { Footer } from "@/components/footer";
@@ -13,7 +14,9 @@ export default function PricingPage() {
     <div className="min-h-screen bg-gradient-to-b from-amber-50/50 via-emerald-50/30 to-sky-50/40 text-zinc-900 font-sans selection:bg-emerald-500 selection:text-white">
       <Navbar />
       <main>
-        <PricingPreview />
+        <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center">Loading pricing...</div>}>
+          <PricingPreview />
+        </Suspense>
       </main>
       <Footer />
     </div>

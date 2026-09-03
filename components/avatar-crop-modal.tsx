@@ -132,7 +132,7 @@ export function AvatarCropModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-md bg-white border-zinc-200 p-0 overflow-hidden rounded-3xl shadow-2xl">
+      <DialogContent className="z-[9999] max-w-md bg-white border-zinc-200 p-0 overflow-hidden rounded-3xl shadow-2xl">
         <DialogHeader className="p-5 pb-3 border-b border-zinc-100">
           <DialogTitle className="text-base font-extrabold text-zinc-900 flex items-center gap-2">
             ✨ Crop Your Avatar
@@ -158,7 +158,7 @@ export function AvatarCropModal({
         </div>
 
         {/* Controls Bar */}
-        <div className="p-5 space-y-4 bg-zinc-50/80 border-t border-zinc-100">
+        <div className="p-5 pb-8 sm:pb-5 space-y-4 bg-zinc-50/80 border-t border-zinc-100">
           {/* Zoom Slider */}
           <div className="flex items-center gap-3">
             <button

@@ -52,9 +52,9 @@ export default function Home() {
         alert(validation.reason);
         return;
       }
-      router.push(`/signup?handle=${encodeURIComponent(clean)}`);
+      router.push(`/pricing?handle=${encodeURIComponent(clean)}`);
     } else {
-      router.push("/signup");
+      router.push("/pricing");
     }
   };
 

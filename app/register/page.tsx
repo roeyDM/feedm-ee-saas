@@ -17,7 +17,7 @@ function RegisterForm() {
   const billing = searchParams.get("billing") || "monthly";
 
   const [name, setName] = useState("");
-  const [handle, setHandle] = useState("");
+  const [handle, setHandle] = useState(() => sanitizeHandleInput(searchParams.get("handle") || searchParams.get("username") || ""));
   const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -28,6 +28,10 @@ function RegisterForm() {
   const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
 
   React.useEffect(() => {
+    const handleParam = searchParams.get("handle") || searchParams.get("username");
+    if (handleParam) {
+      setHandle(sanitizeHandleInput(handleParam));
+    }
     const emailParam = searchParams.get("email");
     if (emailParam) {
       setEmail(emailParam);

@@ -977,6 +977,7 @@ function DashboardContent() {
 
   const clearWizardDraftFromStorage = () => {
     if (typeof window !== "undefined") {
+      localStorage.removeItem("feedmee_onboarding_draft");
       if (currentUserId) localStorage.removeItem(`feedmee_wizard_draft_${currentUserId}`);
       if (username) localStorage.removeItem(`feedmee_wizard_draft_${username.toLowerCase().trim()}`);
     }
@@ -1181,7 +1182,10 @@ function DashboardContent() {
         // Check for saved local draft (retains state across app switching / mobile refresh)
         let draftData: any = null;
         if (typeof window !== "undefined") {
-          const rawDraft = localStorage.getItem(`feedmee_wizard_draft_${user.id}`) || (userHandle ? localStorage.getItem(`feedmee_wizard_draft_${userHandle}`) : null);
+          const rawDraft =
+            localStorage.getItem("feedmee_onboarding_draft") ||
+            localStorage.getItem(`feedmee_wizard_draft_${user.id}`) ||
+            (userHandle ? localStorage.getItem(`feedmee_wizard_draft_${userHandle}`) : null);
           if (rawDraft) {
             try { draftData = JSON.parse(rawDraft); } catch (e) {}
           }
@@ -1397,27 +1401,55 @@ function DashboardContent() {
     loadAuthUserSession();
   }, [searchParams]);
 
-  // Local Draft Backup on Every Input Change during Onboarding
+  // Local Draft Backup on Every Input Change & App-Switch / Tab Suspension during Onboarding
   useEffect(() => {
-    if (currentUserId && !onboardingCompleted && isInitialLoadDone) {
-      try {
-        const draftPayload = {
-          name,
-          bio,
-          avatarUrl,
-          customLinks,
-          socialLinks,
-          reels,
-          appearance,
-          customHexColor,
-          wizardStep,
-          timestamp: Date.now(),
-        };
-        localStorage.setItem(`feedmee_wizard_draft_${currentUserId}`, JSON.stringify(draftPayload));
-        if (username) {
-          localStorage.setItem(`feedmee_wizard_draft_${username.toLowerCase().trim()}`, JSON.stringify(draftPayload));
+    if (!onboardingCompleted && isInitialLoadDone) {
+      const saveDraft = () => {
+        try {
+          const draftPayload = {
+            name,
+            bio,
+            username,
+            avatarUrl,
+            customLinks,
+            socialLinks,
+            reels,
+            appearance,
+            customHexColor,
+            wizardStep,
+            timestamp: Date.now(),
+          };
+          const serialized = JSON.stringify(draftPayload);
+          localStorage.setItem("feedmee_onboarding_draft", serialized);
+          if (currentUserId) {
+            localStorage.setItem(`feedmee_wizard_draft_${currentUserId}`, serialized);
+          }
+          if (username) {
+            localStorage.setItem(`feedmee_wizard_draft_${username.toLowerCase().trim()}`, serialized);
+          }
+        } catch (e) {}
+      };
+
+      saveDraft();
+
+      // Ensure app-switching on mobile (pagehide / visibilitychange) triggers immediate write
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "hidden") {
+          saveDraft();
         }
-      } catch (e) {}
+      };
+
+      const handlePageHide = () => {
+        saveDraft();
+      };
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      window.addEventListener("pagehide", handlePageHide);
+
+      return () => {
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        window.removeEventListener("pagehide", handlePageHide);
+      };
     }
   }, [currentUserId, username, onboardingCompleted, isInitialLoadDone, name, bio, avatarUrl, customLinks, socialLinks, reels, appearance, customHexColor, wizardStep]);
 
@@ -2476,28 +2508,46 @@ function DashboardContent() {
           {/* Plan Status Banner (Free Tier vs. Pro Trial) */}
           {activeTab !== "settings" && (
             planType === "free" ? (
-              <div className="rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-emerald-500/10 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-zinc-950 shadow-md">
-                    <Lock className="h-5 w-5" />
+              <>
+                {/* Mobile Compact Single-Line Badge (< md) */}
+                <div className="rounded-xl border border-amber-300/80 bg-amber-50/90 py-1.5 px-3 text-amber-950 flex items-center justify-between gap-2 shadow-2xs md:hidden">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="text-xs font-bold truncate">FREE: Basic Bio Link Active</span>
                   </div>
-                  <div>
-                    <h2 className="text-xs font-black text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
-                      FREE PLAN MODE <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Basic Bio Link Active</span>
-                    </h2>
-                    <p className="text-xs font-semibold text-zinc-600 mt-0.5">
-                      You're using the basic bio link. Unlock video reels, lead capture &amp; analytics.
-                    </p>
-                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => handleTriggerUpgrade()}
+                    className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-[10px] h-7 px-2.5 rounded-lg shrink-0 cursor-pointer shadow-2xs"
+                  >
+                    <span>Upgrade →</span>
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  onClick={() => handleTriggerUpgrade()}
-                  className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer shadow-sm"
-                >
-                  <span>Explore Plans →</span>
-                </Button>
-              </div>
+
+                {/* Desktop Full Banner (>= md) */}
+                <div className="rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-emerald-500/10 p-4 shadow-sm hidden md:flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-zinc-950 shadow-md">
+                      <Lock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-xs font-black text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                        FREE PLAN MODE <span className="text-[10px] normal-case font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Basic Bio Link Active</span>
+                      </h2>
+                      <p className="text-xs font-semibold text-zinc-600 mt-0.5">
+                        You're using the basic bio link. Unlock video reels, lead capture &amp; analytics.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => handleTriggerUpgrade()}
+                    className="bg-amber-500 hover:bg-amber-600 text-zinc-950 font-black text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer shadow-sm"
+                  >
+                    <span>Explore Plans →</span>
+                  </Button>
+                </div>
+              </>
             ) : null
           )}
 
@@ -2949,7 +2999,7 @@ function DashboardContent() {
       {onboardingCompleted && isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
         <>
           {/* Mobile Compact Single-Line Strip */}
-          <div className="fixed bottom-16 left-4 right-4 z-[90] bg-slate-900/95 border border-slate-700 p-2.5 rounded-full flex items-center justify-between shadow-2xl backdrop-blur-md block md:hidden animate-in slide-in-from-bottom-4 duration-200">
+          <div className="fixed bottom-16 left-4 right-4 z-30 bg-slate-900/95 border border-slate-700 p-2.5 rounded-full flex items-center justify-between shadow-2xl backdrop-blur-md block md:hidden animate-in slide-in-from-bottom-4 duration-200">
             <div className="flex items-center gap-1.5 pl-1.5 min-w-0">
               <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse shrink-0" />
               <span className="text-xs font-extrabold text-white truncate">Unsaved changes</span>
@@ -2975,7 +3025,7 @@ function DashboardContent() {
 
           {/* Desktop Floating Toast Bar (Shown when wizard is completed and user has unsaved changes) */}
           {onboardingCompleted && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 duration-300 hidden md:block">
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-in slide-in-from-bottom-5 duration-300 hidden md:block">
               <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
                 <span>You have unsaved profile changes. Don't forget to save!</span>
                 <div className="flex items-center gap-2">
