@@ -4,6 +4,7 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase, sanitizeHandleInput } from "@/lib/supabase";
+import { pushToDataLayer } from "@/lib/gtm";
 import { LogoIconOnly } from "@/components/logo";
 import { Film, Mail, Lock, User, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, XCircle, Eye, EyeOff } from "lucide-react";
 
@@ -26,6 +27,14 @@ function RegisterForm() {
 
   // Handle Availability State ('idle' | 'checking' | 'available' | 'taken')
   const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+
+  React.useEffect(() => {
+    pushToDataLayer({
+      event: "signup_start",
+      selected_plan: plan,
+      handle: searchParams.get("handle") || searchParams.get("username") || "",
+    });
+  }, []);
 
   React.useEffect(() => {
     const handleParam = searchParams.get("handle") || searchParams.get("username");
@@ -140,6 +149,13 @@ function RegisterForm() {
           console.warn("[Register UPSERT API Warning]:", err);
         }
       }
+
+      // Trigger signup_complete DataLayer conversion event
+      pushToDataLayer({
+        event: "signup_complete",
+        plan_type: plan,
+        handle: cleanHandle,
+      });
 
       router.push(`/dashboard?welcome=true&plan=${plan}`);
     } catch (err: any) {

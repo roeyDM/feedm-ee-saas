@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase, checkUsernameAvailability, sanitizeHandleInput } from "@/lib/supabase";
+import { pushToDataLayer } from "@/lib/gtm";
 import {
   Film,
   Mail,
@@ -39,6 +40,14 @@ function SignupFormContent() {
   type HandleStatusState = "idle" | "checking" | "available" | "taken";
   const [handleStatus, setHandleStatus] = useState<HandleStatusState>("idle");
   const [handleReason, setHandleReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    pushToDataLayer({
+      event: "signup_start",
+      selected_plan: isFreePlan ? "free" : planParam,
+      handle: handleParam,
+    });
+  }, []);
 
   useEffect(() => {
     if (handleParam) {
@@ -138,6 +147,13 @@ function SignupFormContent() {
         console.warn("[Signup UPSERT API Warning]:", err);
       }
     }
+
+    // Trigger signup_complete DataLayer conversion event
+    pushToDataLayer({
+      event: "signup_complete",
+      plan_type: isFreePlan ? "free" : planParam,
+      handle: cleanUsername,
+    });
 
     // Redirect user to dashboard with plan parameter
     if (data.session) {

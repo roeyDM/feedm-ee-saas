@@ -36,6 +36,7 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useProfileContext } from "@/context/profile-context";
 import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock, Building2, ShieldCheck, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { pushToDataLayer } from "@/lib/gtm";
 
 function StripeCheckoutStatus({
   username,
@@ -58,6 +59,17 @@ function StripeCheckoutStatus({
     if ((checkout === "success" || success === "true") && username) {
       const targetPlan = (planParam || "PRO").toUpperCase();
       const normPlanType = targetPlan.toLowerCase() as PlanType;
+      const orderId = searchParams.get("session_id") || searchParams.get("order_id") || `tx_${Date.now()}`;
+      const orderTotal = normPlanType === "business" ? 29 : normPlanType === "personal" ? 6 : 12;
+
+      // Trigger purchase_success DataLayer conversion event
+      pushToDataLayer({
+        event: "purchase_success",
+        transaction_id: orderId,
+        value: orderTotal,
+        currency: "USD",
+        plan_name: normPlanType,
+      });
 
       // 1. Immediately unlock features locally
       setPlanType(normPlanType);

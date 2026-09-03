@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { FaqAccordion, PRICING_FAQS } from "@/components/faq-accordion";
 import { getLemonSqueezyVariantId } from "@/lib/plans-config";
+import { pushToDataLayer } from "@/lib/gtm";
 
 export function PricingPreview() {
   const searchParams = useSearchParams();
@@ -67,7 +68,21 @@ export function PricingPreview() {
     }
   };
 
+  const handleToggleBilling = (cycle: "monthly" | "yearly") => {
+    setBillingCycle(cycle);
+    pushToDataLayer({
+      event: "pricing_toggle_change",
+      billing_cycle: cycle === "yearly" ? "annual" : "monthly",
+    });
+  };
+
   const handleCheckout = (planType: "free" | "personal" | "pro" | "business") => {
+    pushToDataLayer({
+      event: "pricing_plan_click",
+      plan_name: planType,
+      billing_cycle: billingCycle === "yearly" ? "annual" : "monthly",
+    });
+
     if (planType === "business") {
       setContactModalOpen(true);
       return;
@@ -134,7 +149,7 @@ export function PricingPreview() {
           <div className="mt-10 inline-flex items-center gap-3 rounded-2xl bg-white/80 p-1.5 border border-zinc-200/80 shadow-md backdrop-blur-md">
             <button
               type="button"
-              onClick={() => setBillingCycle("monthly")}
+              onClick={() => handleToggleBilling("monthly")}
               className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 billingCycle === "monthly"
                   ? "bg-zinc-950 text-white shadow-sm"
@@ -145,7 +160,7 @@ export function PricingPreview() {
             </button>
             <button
               type="button"
-              onClick={() => setBillingCycle("yearly")}
+              onClick={() => handleToggleBilling("yearly")}
               className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 billingCycle === "yearly"
                   ? "bg-emerald-600 text-white shadow-sm"

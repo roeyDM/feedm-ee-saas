@@ -19,6 +19,7 @@ import { Footer } from "@/components/footer";
 import { FaqAccordion, HOMEPAGE_FAQS } from "@/components/faq-accordion";
 
 import { validateHandle, checkUsernameAvailability, sanitizeHandleInput } from "@/lib/supabase";
+import { pushToDataLayer } from "@/lib/gtm";
 
 export default function Home() {
   const [handle, setHandle] = useState("");
@@ -52,8 +53,10 @@ export default function Home() {
         alert(validation.reason);
         return;
       }
+      pushToDataLayer({ event: "claim_handle_submit", handle: clean });
       router.push(`/pricing?handle=${encodeURIComponent(clean)}`);
     } else {
+      pushToDataLayer({ event: "claim_handle_submit", handle: "" });
       router.push("/pricing");
     }
   };
