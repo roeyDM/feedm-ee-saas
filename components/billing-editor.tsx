@@ -20,6 +20,7 @@ import { PlanType, supabase } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays, isUserSuperAdmin } from "@/lib/auth-guards";
 
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { useProfileContext } from "@/context/profile-context";
 
 interface BillingEditorProps {
   planType: PlanType;
@@ -29,64 +30,91 @@ interface BillingEditorProps {
 
 export function BillingEditor({ planType: initialPlanType, setPlanType, username }: BillingEditorProps) {
   const { currentPlan } = useFeatureAccess(initialPlanType);
+  const profileContext = useProfileContext();
+  const cachedProfile = profileContext?.profile;
   const activePlan = currentPlan || (initialPlanType || "free").toLowerCase();
 
   const [loadingPortal, setLoadingPortal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string>("active");
-  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [cardBrand, setCardBrand] = useState<string | null>(null);
-  const [cardLastFour, setCardLastFour] = useState<string | null>(null);
-  const [billingInterval, setBillingInterval] = useState<string | null>("monthly");
-  const [nextBillingAt, setNextBillingAt] = useState<string | null>(null);
-  const [subscriptionStartAt, setSubscriptionStartAt] = useState<string | null>(null);
-  const [profileUpdatedAt, setProfileUpdatedAt] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>(() => cachedProfile?.payment_status || "active");
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(() => cachedProfile?.trial_ends_at || null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(() => Boolean(profileContext?.isSuperAdmin || cachedProfile?.is_super_admin));
+  const [cardBrand, setCardBrand] = useState<string | null>(() => cachedProfile?.card_brand || null);
+  const [cardLastFour, setCardLastFour] = useState<string | null>(() => cachedProfile?.card_last_four || null);
+  const [billingInterval, setBillingInterval] = useState<string | null>(() => cachedProfile?.billing_interval || "monthly");
+  const [nextBillingAt, setNextBillingAt] = useState<string | null>(() => cachedProfile?.next_billing_at || null);
+  const [subscriptionStartAt, setSubscriptionStartAt] = useState<string | null>(() => cachedProfile?.subscription_start_at || null);
+  const [profileUpdatedAt, setProfileUpdatedAt] = useState<string | null>(() => cachedProfile?.updated_at || null);
   const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
-  const [customerPortalUrl, setCustomerPortalUrl] = useState<string | null>(null);
+  const [customerPortalUrl, setCustomerPortalUrl] = useState<string | null>(() => cachedProfile?.customer_portal_url || cachedProfile?.lemon_squeezy_customer_portal_url || null);
 
-  // Fetch real profile billing & trial details from Supabase
+  // Sync state from profile context cache instantly
   useEffect(() => {
-    async function loadBillingProfile() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profile) {
-          if (profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url) {
-            setCustomerPortalUrl(profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url);
-          }
-          if (profile.card_brand) setCardBrand(profile.card_brand);
-          if (profile.card_last_four) setCardLastFour(profile.card_last_four);
-          if (profile.billing_interval) setBillingInterval(profile.billing_interval);
-          if (profile.next_billing_at) setNextBillingAt(profile.next_billing_at);
-          if (profile.subscription_start_at) setSubscriptionStartAt(profile.subscription_start_at);
-          if (profile.updated_at) setProfileUpdatedAt(profile.updated_at);
-
-          const checked = await checkAndApplyTrialDowngrade(profile);
-          if (checked.is_super_admin === true) {
-            setIsSuperAdmin(true);
-            setPlanType("pro");
-            setSubscriptionStatus("active");
-          } else {
-            if (checked.plan) setPlanType(checked.plan.toLowerCase() as PlanType);
-            setSubscriptionStatus(checked.payment_status || checked.subscription_status || "active");
-            setTrialEndsAt(checked.trial_ends_at || null);
-          }
-        }
-      } catch (err) {
-        console.warn("[Billing Profile Fetch Note]:", err);
+    if (cachedProfile) {
+      if (cachedProfile.customer_portal_url || cachedProfile.lemon_squeezy_customer_portal_url) {
+        setCustomerPortalUrl(cachedProfile.customer_portal_url || cachedProfile.lemon_squeezy_customer_portal_url);
+      }
+      if (cachedProfile.card_brand) setCardBrand(cachedProfile.card_brand);
+      if (cachedProfile.card_last_four) setCardLastFour(cachedProfile.card_last_four);
+      if (cachedProfile.billing_interval) setBillingInterval(cachedProfile.billing_interval);
+      if (cachedProfile.next_billing_at) setNextBillingAt(cachedProfile.next_billing_at);
+      if (cachedProfile.subscription_start_at) setSubscriptionStartAt(cachedProfile.subscription_start_at);
+      if (cachedProfile.updated_at) setProfileUpdatedAt(cachedProfile.updated_at);
+      if (cachedProfile.trial_ends_at) setTrialEndsAt(cachedProfile.trial_ends_at);
+      if (cachedProfile.payment_status) setSubscriptionStatus(cachedProfile.payment_status);
+      if (cachedProfile.is_super_admin === true || profileContext?.isSuperAdmin) {
+        setIsSuperAdmin(true);
       }
     }
-    loadBillingProfile();
-  }, [username]);
+  }, [cachedProfile, profileContext?.isSuperAdmin]);
+
+  // If cached profile is not yet in memory, fetch in background
+  useEffect(() => {
+    if (!cachedProfile) {
+      async function loadBillingProfile() {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (profile) {
+            if (profileContext) {
+              profileContext.updateProfileCache(profile);
+            }
+            if (profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url) {
+              setCustomerPortalUrl(profile.customer_portal_url || profile.lemon_squeezy_customer_portal_url);
+            }
+            if (profile.card_brand) setCardBrand(profile.card_brand);
+            if (profile.card_last_four) setCardLastFour(profile.card_last_four);
+            if (profile.billing_interval) setBillingInterval(profile.billing_interval);
+            if (profile.next_billing_at) setNextBillingAt(profile.next_billing_at);
+            if (profile.subscription_start_at) setSubscriptionStartAt(profile.subscription_start_at);
+            if (profile.updated_at) setProfileUpdatedAt(profile.updated_at);
+
+            const checked = await checkAndApplyTrialDowngrade(profile);
+            if (checked.is_super_admin === true) {
+              setIsSuperAdmin(true);
+              setPlanType("pro");
+              setSubscriptionStatus("active");
+            } else {
+              if (checked.plan) setPlanType(checked.plan.toLowerCase() as PlanType);
+              setSubscriptionStatus(checked.payment_status || checked.subscription_status || "active");
+              setTrialEndsAt(checked.trial_ends_at || null);
+            }
+          }
+        } catch (err) {
+          console.warn("[Billing Profile Fetch Note]:", err);
+        }
+      }
+      loadBillingProfile();
+    }
+  }, [username, cachedProfile, profileContext, setPlanType]);
 
   // Lemon Squeezy Customer Portal Redirect Handler
   const handleOpenLemonPortal = async () => {

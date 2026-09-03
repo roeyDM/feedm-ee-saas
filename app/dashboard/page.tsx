@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { supabase, PlanType } from "@/lib/supabase";
 import { checkAndApplyTrialDowngrade, getRemainingTrialDays } from "@/lib/auth-guards";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { useProfileContext } from "@/context/profile-context";
 import { User, Film, Palette, Sparkles, Smartphone, Save, CheckCircle2, AlertCircle, Lock, Zap, ArrowRight, ArrowLeft, Check, Share2, Eye, ChevronDown, ChevronRight, BarChart2, DollarSign, Settings, Layers, ExternalLink, Copy, RotateCcw, Undo2, Redo2, X, Loader2, Plus, Inbox, Target, Menu, LogOut, BarChart3, Link2, Sliders, LayoutTemplate, MousePointerClick, Pencil, Video, LayoutDashboard, Users, Clock, Building2, ShieldCheck, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -726,6 +727,7 @@ function DashboardContent() {
     marketing: true,
   });
 
+  const profileContext = useProfileContext();
   const { currentPlan, getPlanLimit, canAccess } = useFeatureAccess(planType);
   console.log("[DEBUG UI LIVE PLAN]:", currentPlan);
   const maxReels = getPlanLimit("reelsPerFeed");
@@ -860,6 +862,7 @@ function DashboardContent() {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showExtraFeedModal, setShowExtraFeedModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
   const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
   
   // Verification Badge State
@@ -972,6 +975,13 @@ function DashboardContent() {
     };
   };
 
+  const clearWizardDraftFromStorage = () => {
+    if (typeof window !== "undefined") {
+      if (currentUserId) localStorage.removeItem(`feedmee_wizard_draft_${currentUserId}`);
+      if (username) localStorage.removeItem(`feedmee_wizard_draft_${username.toLowerCase().trim()}`);
+    }
+  };
+
   const handleWizardStepChange = async (step: 1 | 2 | 3) => {
     setWizardStep(step);
     if (step === 1) {
@@ -986,26 +996,68 @@ function DashboardContent() {
     if (typeof window !== "undefined" && targetUsername) {
       localStorage.setItem(`feedmee_onboarding_step_${targetUsername}`, String(step));
     }
+
+    // Progressive Database Sync on Step Advancement
     try {
-      if (targetUsername) {
-        await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        const cleanThemeColor = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
+        const cleanButtonColor = sanitizeHexColor(appearance?.cardBgColor, "#16A34A");
+        const cleanTextColor = sanitizeHexColor(appearance?.headlineColor, "#09090B");
+        const cleanButtonTextColor = sanitizeHexColor(appearance?.cardTextColor, "#09090B");
+
+        const progressivePayload: any = {
+          id: user.id,
+          username: targetUsername || (user.email ? user.email.split("@")[0].toLowerCase() : "creator"),
+          email: user.email || userEmail,
+          name: name || user.user_metadata?.display_name || user.user_metadata?.full_name || "",
+          bio: bio || "",
+          avatar_url: avatarUrl || "",
+          custom_hex_color: cleanThemeColor,
+          theme_color: cleanThemeColor,
+          button_color: cleanButtonColor,
+          text_color: cleanTextColor,
+          button_text_color: cleanButtonTextColor,
+          social_links: socialLinks,
+          custom_links: customLinks,
+          reels: reels,
+          appearance: appearance,
+          onboarding_step: step,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
           .from("profiles")
-          .update({ onboarding_step: step, updated_at: new Date().toISOString() })
-          .or(`username.eq.${targetUsername}`);
+          .upsert(progressivePayload, { onConflict: "id" });
+
+        if (error) {
+          console.warn("[Onboarding Progressive Sync Note]:", error.message);
+        } else {
+          if (profileContext) {
+            profileContext.updateProfileCache(progressivePayload);
+          }
+        }
       }
     } catch (err) {
-      console.warn("Failed to persist onboarding_step to Supabase profiles:", err);
+      console.warn("Failed to persist onboarding progressive data to Supabase profiles:", err);
     }
   };
 
   const markOnboardingCompletedInDB = async () => {
     setOnboardingCompleted(true);
+    clearWizardDraftFromStorage();
     const targetUsername = username.toLowerCase().trim();
     if (typeof window !== "undefined" && targetUsername) {
       localStorage.setItem(`feedmee_onboarding_completed_${targetUsername}`, "true");
     }
     try {
-      if (targetUsername) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+          .eq("id", user.id);
+      } else if (targetUsername) {
         await supabase
           .from("profiles")
           .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
@@ -1079,6 +1131,7 @@ function DashboardContent() {
   const handleFinishAndPublish = async () => {
     await handleSave();
     await markOnboardingCompletedInDB();
+    clearWizardDraftFromStorage();
 
     const readiness = evaluateReadiness();
     if (readiness.is100Percent) {
@@ -1118,11 +1171,21 @@ function DashboardContent() {
           return;
         }
 
+        setCurrentUserId(user.id);
         if (user.email) setUserEmail(user.email);
         const userHandle = (user.user_metadata?.username || user.user_metadata?.handle || user.email?.split("@")[0] || "").toLowerCase();
         const userName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || (userHandle ? userHandle.charAt(0).toUpperCase() + userHandle.slice(1) : "Creator");
 
         if (userHandle) setUsername(userHandle);
+
+        // Check for saved local draft (retains state across app switching / mobile refresh)
+        let draftData: any = null;
+        if (typeof window !== "undefined") {
+          const rawDraft = localStorage.getItem(`feedmee_wizard_draft_${user.id}`) || (userHandle ? localStorage.getItem(`feedmee_wizard_draft_${userHandle}`) : null);
+          if (rawDraft) {
+            try { draftData = JSON.parse(rawDraft); } catch (e) {}
+          }
+        }
 
         // Check for ?checkout=success parameter
         if (searchParams.get("checkout") === "success") {
@@ -1173,7 +1236,7 @@ function DashboardContent() {
 
           if (checkedProfile.username) setUsername(checkedProfile.username);
 
-const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
+          const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
           const isWithin7Days = (Date.now() - createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000;
           const hasUsedTrial = checkedProfile.has_used_trial === true;
 
@@ -1196,44 +1259,53 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
           setSubscriptionStatus(checkedProfile.subscription_status || "active");
           setTrialEndsAt(checkedProfile.trial_ends_at || null);
 
-          // Compute normalized state values
-          const finalName = checkedProfile.name || "";
-          const finalBio = checkedProfile.bio || "";
-          const finalAvatarUrl = checkedProfile.avatar_url || "";
+          // Compute normalized state values (retaining local draft if user had in-progress onboarding edits)
+          const isWizardDraftActive = draftData && !checkedProfile.onboarding_completed;
+          const finalName = isWizardDraftActive && draftData.name ? draftData.name : (checkedProfile.name || userName);
+          const finalBio = isWizardDraftActive && draftData.bio !== undefined ? draftData.bio : (checkedProfile.bio || "");
+          const finalAvatarUrl = isWizardDraftActive && draftData.avatarUrl ? draftData.avatarUrl : (checkedProfile.avatar_url || "");
           const dbPlanLower = (checkedProfile.plan || "free").toString().toLowerCase().trim();
           const finalPlanType = (dbPlanLower === "personal" ? "personal" : dbPlanLower === "pro" ? "pro" : dbPlanLower === "business" ? "business" : "free") as PlanType;
 
-          const finalSocialLinks = checkedProfile.social_links
-            ? checkedProfile.social_links.map((l: any) => ({
-                ...l,
-                id: l.id || crypto.randomUUID(),
-                isActive: l.isActive !== false,
-              }))
-            : [];
+          const finalSocialLinks = isWizardDraftActive && Array.isArray(draftData.socialLinks) && draftData.socialLinks.length > 0
+            ? draftData.socialLinks
+            : (checkedProfile.social_links
+                ? checkedProfile.social_links.map((l: any) => ({
+                    ...l,
+                    id: l.id || crypto.randomUUID(),
+                    isActive: l.isActive !== false,
+                  }))
+                : []);
 
-          const finalCustomLinks = checkedProfile.custom_links || [];
+          const finalCustomLinks = isWizardDraftActive && Array.isArray(draftData.customLinks) && draftData.customLinks.length > 0
+            ? draftData.customLinks
+            : (checkedProfile.custom_links || []);
 
-          const finalReels = checkedProfile.reels
-            ? checkedProfile.reels
-                .map((r: any) => ({
-                  ...r,
-                  videoUrl: r.videoUrl || r.url || "",
-                  promoUrl: r.promoUrl || r.promo_url || r.targetUrl || r.target_url || "",
-                  promoTitle: r.promoTitle || r.promo_title || "",
-                  promoCode: r.promoCode || r.promo_code || "",
-                  promoCta: r.promoCta || r.promo_cta || "Get Deal 🚀",
-                  promoEnabled: !!(r.promoEnabled || r.promo_enabled),
-                  promoDelaySeconds: typeof r.promoDelaySeconds === "number" ? r.promoDelaySeconds : (typeof r.promo_delay_seconds === "number" ? r.promo_delay_seconds : 3),
-                }))
-                .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"))
-            : [];
+          const finalReels = isWizardDraftActive && Array.isArray(draftData.reels) && draftData.reels.length > 0
+            ? draftData.reels
+            : (checkedProfile.reels
+                ? checkedProfile.reels
+                    .map((r: any) => ({
+                      ...r,
+                      videoUrl: r.videoUrl || r.url || "",
+                      promoUrl: r.promoUrl || r.promo_url || r.targetUrl || r.target_url || "",
+                      promoTitle: r.promoTitle || r.promo_title || "",
+                      promoCode: r.promoCode || r.promo_code || "",
+                      promoCta: r.promoCta || r.promo_cta || "Get Deal 🚀",
+                      promoEnabled: !!(r.promoEnabled || r.promo_enabled),
+                      promoDelaySeconds: typeof r.promoDelaySeconds === "number" ? r.promoDelaySeconds : (typeof r.promo_delay_seconds === "number" ? r.promo_delay_seconds : 3),
+                    }))
+                    .filter((r: any) => r.videoUrl && !r.videoUrl.includes("mixkit.co"))
+                : []);
 
           let finalLeadForm = checkedProfile.lead_form ? sanitizeLeadForm(checkedProfile.lead_form) : leadForm;
           if ((!finalLeadForm.target || !finalLeadForm.target.trim()) && user?.email) {
             finalLeadForm = { ...finalLeadForm, target: user.email };
           }
 
-          let loadedAppearance = checkedProfile.appearance;
+          let loadedAppearance = isWizardDraftActive && draftData.appearance && Object.keys(draftData.appearance).length > 0
+            ? draftData.appearance
+            : checkedProfile.appearance;
           if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
             const localApp = localStorage.getItem(`feedmee_appearance_${(checkedProfile.username || userHandle).toLowerCase()}`);
             if (localApp) {
@@ -1241,7 +1313,9 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
             }
           }
           const finalAppearance = (loadedAppearance && Object.keys(loadedAppearance).length > 0) ? loadedAppearance : appearance;
-          const finalCustomHexColor = finalAppearance?.bgColor || checkedProfile.custom_hex_color || "#bad1cb";
+          const finalCustomHexColor = isWizardDraftActive && draftData.customHexColor
+            ? draftData.customHexColor
+            : (finalAppearance?.bgColor || checkedProfile.custom_hex_color || "#bad1cb");
 
           setName(finalName);
           setBio(finalBio);
@@ -1273,12 +1347,17 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
             setOnboardingCompleted(false);
             const savedStepDB = Number(profile.onboarding_step);
             const savedStepLocal = typeof window !== "undefined" ? Number(localStorage.getItem(`feedmee_onboarding_step_${(profile.username || userHandle).toLowerCase()}`)) : NaN;
-            const restoredStep = (savedStepDB >= 1 && savedStepDB <= 3) ? savedStepDB : ((savedStepLocal >= 1 && savedStepLocal <= 3) ? savedStepLocal : 1);
+            const draftStep = draftData?.wizardStep ? Number(draftData.wizardStep) : NaN;
+            const restoredStep = (draftStep >= 1 && draftStep <= 3) ? draftStep : ((savedStepDB >= 1 && savedStepDB <= 3) ? savedStepDB : ((savedStepLocal >= 1 && savedStepLocal <= 3) ? savedStepLocal : 1));
             
             setWizardStep(restoredStep as 1 | 2 | 3);
             if (restoredStep === 1) setActiveTab("bio");
             else if (restoredStep === 2) setActiveTab("reels");
             else if (restoredStep === 3) setActiveTab("design");
+          }
+
+          if (profileContext) {
+            profileContext.updateProfileCache(checkedProfile);
           }
 
           // Write exact normalized initial snapshot matching state definitions
@@ -1294,6 +1373,17 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
             leadForm: finalLeadForm,
             appearance: finalAppearance,
           }));
+        } else if (draftData) {
+          if (draftData.name) setName(draftData.name);
+          if (draftData.bio) setBio(draftData.bio);
+          if (draftData.avatarUrl) setAvatarUrl(draftData.avatarUrl);
+          if (draftData.customLinks) setCustomLinks(draftData.customLinks);
+          if (draftData.socialLinks) setSocialLinks(draftData.socialLinks);
+          if (draftData.reels) setReels(draftData.reels);
+          if (draftData.appearance) setAppearance(draftData.appearance);
+          if (draftData.customHexColor) setCustomHexColor(draftData.customHexColor);
+          if (draftData.wizardStep) setWizardStep(draftData.wizardStep);
+          setSavedSnapshot(getCurrentStateJSON());
         } else {
           setSavedSnapshot(getCurrentStateJSON());
         }
@@ -1306,6 +1396,30 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
     }
     loadAuthUserSession();
   }, [searchParams]);
+
+  // Local Draft Backup on Every Input Change during Onboarding
+  useEffect(() => {
+    if (currentUserId && !onboardingCompleted && isInitialLoadDone) {
+      try {
+        const draftPayload = {
+          name,
+          bio,
+          avatarUrl,
+          customLinks,
+          socialLinks,
+          reels,
+          appearance,
+          customHexColor,
+          wizardStep,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem(`feedmee_wizard_draft_${currentUserId}`, JSON.stringify(draftPayload));
+        if (username) {
+          localStorage.setItem(`feedmee_wizard_draft_${username.toLowerCase().trim()}`, JSON.stringify(draftPayload));
+        }
+      } catch (e) {}
+    }
+  }, [currentUserId, username, onboardingCompleted, isInitialLoadDone, name, bio, avatarUrl, customLinks, socialLinks, reels, appearance, customHexColor, wizardStep]);
 
   // Sync snapshot right after hydration completes to guarantee isDirty is strictly false on page load & refresh
   useEffect(() => {
@@ -1330,19 +1444,46 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
   }, [isDirty]);
 
   const handleDiscardChanges = () => {
-    if (!savedSnapshot) return;
     try {
-      const parsed = JSON.parse(savedSnapshot);
-      if (parsed.name !== undefined) setName(parsed.name);
-      if (parsed.bio !== undefined) setBio(parsed.bio);
-      if (parsed.avatarUrl !== undefined) setAvatarUrl(parsed.avatarUrl);
-      if (parsed.customHexColor !== undefined) setCustomHexColor(parsed.customHexColor);
-      if (parsed.planType !== undefined) setPlanType(parsed.planType);
-      if (parsed.socialLinks !== undefined) setSocialLinks(parsed.socialLinks);
-      if (parsed.customLinks !== undefined) setCustomLinks(parsed.customLinks);
-      if (parsed.reels !== undefined) setReels(parsed.reels);
-      if (parsed.leadForm !== undefined) setLeadForm(parsed.leadForm);
-      if (parsed.appearance !== undefined) setAppearance(parsed.appearance);
+      let dataToRestore: any = null;
+      if (savedSnapshot) {
+        dataToRestore = JSON.parse(savedSnapshot);
+      } else if (profileContext?.profile) {
+        dataToRestore = profileContext.profile;
+      }
+
+      if (dataToRestore) {
+        if (dataToRestore.name !== undefined) setName(dataToRestore.name || "");
+        if (dataToRestore.bio !== undefined) setBio(dataToRestore.bio || "");
+        if (dataToRestore.avatarUrl !== undefined || dataToRestore.avatar_url !== undefined) {
+          setAvatarUrl(dataToRestore.avatarUrl || dataToRestore.avatar_url || "");
+        }
+        if (dataToRestore.customHexColor !== undefined || dataToRestore.custom_hex_color !== undefined) {
+          setCustomHexColor(dataToRestore.customHexColor || dataToRestore.custom_hex_color || "#bad1cb");
+        }
+        if (dataToRestore.planType !== undefined || dataToRestore.plan !== undefined) {
+          setPlanType((dataToRestore.planType || dataToRestore.plan || "free").toLowerCase());
+        }
+        if (dataToRestore.socialLinks !== undefined || dataToRestore.social_links !== undefined) {
+          setSocialLinks(dataToRestore.socialLinks || dataToRestore.social_links || []);
+        }
+        if (dataToRestore.customLinks !== undefined || dataToRestore.custom_links !== undefined) {
+          setCustomLinks(dataToRestore.customLinks || dataToRestore.custom_links || []);
+        }
+        if (dataToRestore.reels !== undefined) setReels(dataToRestore.reels || []);
+        if (dataToRestore.leadForm !== undefined || dataToRestore.lead_form !== undefined) {
+          setLeadForm(dataToRestore.leadForm || dataToRestore.lead_form || {});
+        }
+        if (dataToRestore.appearance !== undefined) setAppearance(dataToRestore.appearance || {});
+        if (dataToRestore.verificationStatus !== undefined || dataToRestore.verification_status !== undefined) {
+          setVerificationStatus(dataToRestore.verificationStatus || dataToRestore.verification_status || "UNVERIFIED");
+        }
+        if (dataToRestore.isVerifiedBadgeActive !== undefined || dataToRestore.is_verified_badge_active !== undefined) {
+          setIsVerifiedBadgeActive(!!(dataToRestore.isVerifiedBadgeActive ?? dataToRestore.is_verified_badge_active));
+        }
+
+        setSaveStatus("idle");
+      }
     } catch (err) {
       console.error("Failed to discard changes", err);
     }
@@ -1471,6 +1612,10 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
         localStorage.setItem(`feedmee_appearance_${username.toLowerCase().trim()}`, JSON.stringify(appearance));
       }
 
+      if (profileContext) {
+        profileContext.updateProfileCache(payload);
+      }
+
       setSaveStatus("success");
       setStatusMsg("Profile saved successfully!");
       setSavedSnapshot(getCurrentStateJSON());
@@ -1530,7 +1675,7 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
   }
 
   return (
-    <div className="h-screen max-h-screen w-screen overflow-hidden flex flex-col bg-zinc-50/80 font-sans text-zinc-900 relative">
+    <div className="h-screen max-h-screen w-full max-w-full overflow-hidden overflow-x-hidden flex flex-col bg-zinc-50/80 font-sans text-zinc-900 relative">
       {/* Floating Error Toast Notification Overlay (Auto-dismisses after 4s) */}
       {showErrorToast && saveStatus === "error" && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 duration-300">
@@ -2291,7 +2436,7 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
         </aside>
 
         {/* CENTER WORKSPACE */}
-        <div className={cn("min-w-0 flex flex-col w-full flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
+        <div className={cn("min-w-0 flex flex-col w-full max-w-full overflow-x-hidden flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
           {/* FTUE Onboarding Wizard Progress Banner (Local Experiment) */}
           {!onboardingCompleted && (
             <OnboardingWizardHeader
@@ -2367,7 +2512,7 @@ const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="hidden md:flex items-center gap-2 shrink-0">
                 {activeTab === "design" && designActions.reset && (
                   <>
                     <Button

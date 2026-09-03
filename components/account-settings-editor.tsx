@@ -18,6 +18,7 @@ import {
   Upload,
   X,
   ChevronRight,
+  ChevronDown,
   Download,
   Trash2,
   Mail,
@@ -93,6 +94,8 @@ export function AccountSettingsEditor({
   leadForm = null,
 }: AccountSettingsEditorProps) {
   const [activeSubTab, setActiveSubTab] = useState<SettingsSubTab>("profile");
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isDangerExpandedOnMobile, setIsDangerExpandedOnMobile] = useState(false);
 
   // Account-level Profile State (Strictly decoupled from public Feed Builder)
   const [accountAvatarUrl, setAccountAvatarUrl] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop");
@@ -465,8 +468,67 @@ export function AccountSettingsEditor({
 
   return (
     <div className="w-full flex flex-col lg:flex-row items-start min-h-[calc(100vh-3.5rem)] animate-in fade-in duration-300">
-      {/* COLUMN 2: VERTICAL SUB-NAV MENU (Tightly attached to Column 1 Primary Left Sidebar) */}
-      <aside className="w-full lg:w-60 shrink-0 bg-white border-r border-zinc-200 py-3 px-2 lg:px-2.5 space-y-1 lg:sticky lg:top-0 lg:min-h-[calc(100vh-3.5rem)]">
+      {/* MOBILE SETTINGS ACCORDION/DROPDOWN SELECTOR (Visible on mobile only) */}
+      <div className="w-full block lg:hidden bg-white border-b border-zinc-200 p-3">
+        <button
+          type="button"
+          onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-zinc-100/90 border border-zinc-200 text-zinc-900 font-bold text-xs cursor-pointer shadow-2xs"
+        >
+          <div className="flex items-center gap-2.5">
+            {React.createElement(navItems.find((n) => n.id === activeSubTab)?.icon || User, {
+              className: cn("h-4 w-4", navItems.find((n) => n.id === activeSubTab)?.isDanger ? "text-rose-500" : "text-emerald-600"),
+            })}
+            <span>{navItems.find((n) => n.id === activeSubTab)?.label || "Settings"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-zinc-500 font-medium">Switch Tab</span>
+            <ChevronDown className={cn("h-4 w-4 text-zinc-400 transition-transform duration-200", isMobileNavOpen && "rotate-180")} />
+          </div>
+        </button>
+
+        {isMobileNavOpen && (
+          <div className="mt-2 flex flex-col gap-1 p-1.5 bg-zinc-50 border border-zinc-200 rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeSubTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveSubTab(item.id);
+                    setIsMobileNavOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer",
+                    isActive
+                      ? item.isDanger
+                        ? "bg-rose-500 text-white shadow-xs"
+                        : "bg-zinc-950 text-white shadow-xs"
+                      : item.isDanger
+                      ? "text-rose-600 hover:bg-rose-50"
+                      : "text-zinc-700 hover:bg-zinc-200/70"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={cn("h-4 w-4", isActive ? "text-white" : item.isDanger ? "text-rose-500" : "text-zinc-500")} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className={cn("text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase", isActive ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-800")}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* COLUMN 2: VERTICAL SUB-NAV MENU (Desktop only) */}
+      <aside className="hidden lg:block w-60 shrink-0 bg-white border-r border-zinc-200 py-3 px-2 lg:px-2.5 space-y-1 lg:sticky lg:top-0 lg:min-h-[calc(100vh-3.5rem)]">
         <div className="px-2.5 py-1.5 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
           Account Settings
         </div>
@@ -1180,19 +1242,34 @@ export function AccountSettingsEditor({
                 </CardContent>
               </Card>
 
-              {/* DANGER ZONE CARD */}
-              <Card className="bg-rose-50/30 border-rose-200/80 shadow-sm animate-in fade-in duration-200">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold text-rose-700 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-rose-600" /> Danger Zone
-                  </CardTitle>
-                  <CardDescription className="text-xs text-rose-600/80">
-                    Export account data or permanently delete your account and associated feeds.
-                  </CardDescription>
+              {/* DANGER ZONE CARD (Collapsible on mobile, open on desktop) */}
+              <Card className="bg-rose-50/30 border-rose-200/80 shadow-sm animate-in fade-in duration-200 overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                  <div className="space-y-1">
+                    <CardTitle className="text-base font-bold text-rose-700 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-rose-600" /> Danger Zone
+                    </CardTitle>
+                    <CardDescription className="text-xs text-rose-600/80">
+                      Export account data or permanently delete your account and associated feeds.
+                    </CardDescription>
+                  </div>
+                  <div className="block lg:hidden">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDangerExpandedOnMobile(!isDangerExpandedOnMobile)}
+                      className="text-xs font-bold border-rose-300 text-rose-700 bg-white hover:bg-rose-50 h-8 px-3 rounded-xl gap-1 cursor-pointer"
+                    >
+                      <span>{isDangerExpandedOnMobile ? "Hide" : "Show Actions"}</span>
+                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isDangerExpandedOnMobile && "rotate-180")} />
+                    </Button>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+
+                <div className={cn("space-y-4 px-6 pb-6", isDangerExpandedOnMobile ? "block" : "hidden lg:block")}>
                   {/* Export Data */}
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-rose-200/80 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-rose-200/80 shadow-sm">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-zinc-900">Export All Account Data</span>
                       <span className="text-[11px] text-zinc-500 font-medium">
@@ -1203,14 +1280,14 @@ export function AccountSettingsEditor({
                       variant="outline"
                       size="sm"
                       onClick={handleExportCSV}
-                      className="text-xs font-bold rounded-xl border-zinc-300 gap-1.5 hover:bg-zinc-50 cursor-pointer shrink-0"
+                      className="text-xs font-bold rounded-xl border-zinc-300 gap-1.5 hover:bg-zinc-50 cursor-pointer shrink-0 w-full sm:w-auto"
                     >
                       <Download className="h-4 w-4 text-zinc-600" /> Export CSV
                     </Button>
                   </div>
 
                   {/* Delete Account */}
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-100/40 border border-rose-300/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-rose-100/40 border border-rose-300/80">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-rose-900">Delete Account &amp; All Data</span>
                       <span className="text-[11px] text-rose-700/90 font-medium">
@@ -1221,12 +1298,12 @@ export function AccountSettingsEditor({
                       variant="destructive"
                       size="sm"
                       onClick={() => setShowDeleteModal(true)}
-                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl gap-1.5 cursor-pointer shrink-0"
+                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl gap-1.5 cursor-pointer shrink-0 w-full sm:w-auto"
                     >
                       <Trash2 className="h-4 w-4" /> Delete Account
                     </Button>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </div>
           )}

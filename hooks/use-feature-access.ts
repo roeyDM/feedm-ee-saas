@@ -11,8 +11,27 @@ import {
   getPlanConfig,
   normalizePlanTier,
 } from "@/lib/plans-config";
+import { useProfileContext } from "@/context/profile-context";
 
 export function useFeatureAccess(initialPlanTier?: string | null) {
+  const profileContext = useProfileContext();
+
+  // If inside ProfileProvider, return the context's fast cached values
+  if (profileContext) {
+    return {
+      currentPlan: profileContext.currentPlan,
+      config: profileContext.config,
+      isSuperAdmin: profileContext.isSuperAdmin,
+      canAccess: profileContext.canAccess,
+      getPlanLimit: profileContext.getPlanLimit,
+      isFeatureLocked: profileContext.isFeatureLocked,
+      refetchProfile: profileContext.refetchProfile,
+      profile: profileContext.profile,
+      updateProfileCache: profileContext.updateProfileCache,
+    };
+  }
+
+  // Fallback standalone implementation if called outside of ProfileProvider
   const [currentPlan, setCurrentPlan] = useState<PlanTier>(() => {
     if (typeof window !== "undefined") {
       const cached = sessionStorage.getItem("feedmee_cached_plan_tier");
@@ -23,10 +42,10 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
   });
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  const fetchLatestProfile = async () => {
+  const fetchLatestProfile = async (force = false) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) return null;
 
       let { data, error } = await supabase
         .from("profiles")
@@ -34,12 +53,8 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("[DEBUG Profile Context Error]: Query failed:", error);
-      }
-
       if (!data && user.email) {
-        const { data: dataByEmail, error: emailError } = await supabase
+        const { data: dataByEmail } = await supabase
           .from("profiles")
           .select("*")
           .eq("email", user.email)
@@ -47,48 +62,36 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
         
         if (dataByEmail) {
           data = dataByEmail;
-          error = emailError;
         }
       }
 
       if (data) {
-        const normalizedPlan = (data?.plan || "free").toString().toUpperCase().trim();
-
-        const rawPlan = normalizedPlan;
-        const liveStatus = String(data?.payment_status || "unpaid").toLowerCase().trim();
-
+        const rawPlan = (data?.plan || "free").toString().toUpperCase().trim();
         let normTier: PlanTier = "free";
         if (rawPlan === "PERSONAL") normTier = "personal";
         else if (rawPlan === "PRO") normTier = "pro";
         else if (rawPlan === "BUSINESS") normTier = "business";
         else normTier = "free";
 
-        console.log("[DEBUG Normalized Plan]", { rawPlan, paymentStatus: liveStatus });
+        const isSuper = data.is_super_admin === true || rawPlan === "SUPER_ADMIN";
 
         if (typeof window !== "undefined") {
           sessionStorage.setItem("feedmee_cached_plan_tier", normTier);
         }
 
         setCurrentPlan(normTier);
+        setIsSuperAdmin(isSuper);
+        return data;
       }
+      return null;
     } catch (err) {
-      console.warn("[DEBUG Profile Context Warning]: Failed to refetch profile:", err);
+      console.warn("[useFeatureAccess] Standalone fetch note:", err);
+      return null;
     }
   };
 
-  // Aggressive forced live query on mount, initialPlanTier change, and auth state change
   useEffect(() => {
     fetchLatestProfile();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-        fetchLatestProfile();
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [initialPlanTier]);
 
   const config: PlanConfig = isSuperAdmin

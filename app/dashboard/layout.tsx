@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
-import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { ProfileProvider } from "@/context/profile-context";
 
 export default function DashboardLayout({
   children,
@@ -14,13 +14,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { refetchProfile, currentPlan } = useFeatureAccess();
-
-  useEffect(() => {
-    if (isAuthenticated === true) {
-      refetchProfile();
-    }
-  }, [pathname, isAuthenticated, refetchProfile]);
 
   useEffect(() => {
     let isMounted = true;
@@ -33,7 +26,10 @@ export default function DashboardLayout({
           if (user && !error) {
             // Check 2FA Assurance Level & Email OTP verification timestamp
             const email2FAVerifiedAt = user.user_metadata?.email_2fa_verified_at;
-            const isEmail2FAVerified = Boolean(email2FAVerifiedAt && (new Date().getTime() - new Date(email2FAVerifiedAt).getTime() < 24 * 60 * 60 * 1000));
+            const isEmail2FAVerified = Boolean(
+              email2FAVerifiedAt &&
+                new Date().getTime() - new Date(email2FAVerifiedAt).getTime() < 24 * 60 * 60 * 1000
+            );
 
             const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
             if (!isEmail2FAVerified && aalData?.currentLevel === "aal1" && aalData?.nextLevel === "aal2") {
@@ -106,5 +102,5 @@ export default function DashboardLayout({
     );
   }
 
-  return <>{children}</>;
+  return <ProfileProvider>{children}</ProfileProvider>;
 }
