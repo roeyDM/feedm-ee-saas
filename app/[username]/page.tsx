@@ -3,7 +3,7 @@
  * Fetches profile data server-side for zero flash, perfect SSR, and strict Supabase theme sync.
  */
 import { createClient } from "@supabase/supabase-js";
-import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
+import { sanitizeLeadForm, sanitizeHexColor, buildAppearanceFromProfile } from "@/lib/sanitizers";
 import { PublicFeedClient } from "./client";
 
 interface PageProps {
@@ -63,72 +63,17 @@ async function fetchPublicProfile(handleKey: string) {
 
   if (!profile || error) return null;
 
-  console.log("Fetched meta_pixel_id for handle", handleKey, ":", profile?.meta_pixel_id || profile?.appearance?.meta_pixel_id);
+  const isFreeUser = (profile.plan || profile.plan_type || "free") === "free";
 
-  const isFreeUser = (profile.plan_type || "free") === "free";
+  // Build appearance settings with database columns mapped directly
+  const sanitizedAppearance = buildAppearanceFromProfile(profile, {
+    hideBranding: isFreeUser ? false : !!profile?.appearance?.hideBranding,
+  });
 
-  // Appearance: read strictly from DB record
-  const loadedAppearance =
-    profile.appearance && Object.keys(profile.appearance).length > 0
-      ? profile.appearance
-      : null;
-
-  // Safe color destructuring with explicit default fallbacks for ALL profile color columns.
-  // Priority order: new dedicated columns → appearance JSONB → hardcoded sensible default
-  const buttonColor      = profile?.button_color      || loadedAppearance?.cardBgColor   || "#16a34a";
-  const buttonTextColor  = profile?.button_text_color || loadedAppearance?.cardTextColor || "#ffffff";
-  const themeColor       = profile?.theme_color       || loadedAppearance?.bgColor       || profile?.custom_hex_color || "#0f172a";
-  const textColor        = profile?.text_color        || loadedAppearance?.headlineColor || "#ffffff";
-
-  const cleanThemeColor      = sanitizeHexColor(themeColor,      "#0f172a");
-  const cleanButtonColor     = sanitizeHexColor(buttonColor,     "#16a34a");
-  const cleanTextColor       = sanitizeHexColor(textColor,       "#ffffff");
-  const cleanButtonTextColor = sanitizeHexColor(buttonTextColor, "#ffffff");
-
-  // Priority order for design fields: dedicated DB columns → appearance JSONB → default fallbacks
-  const rawBioColor = profile?.bio_color || loadedAppearance?.bioColor;
-  const cleanBioColor = rawBioColor
-    ? sanitizeHexColor(rawBioColor, cleanTextColor)
-    : cleanTextColor;
-
-  const socialPillColor = profile?.social_pill_color || loadedAppearance?.socialIconBgColor || buttonColor;
-  const cleanSocialIconBg = sanitizeHexColor(socialPillColor, cleanButtonColor);
-
-  const rawSocialFlatColor = profile?.social_flat_color || loadedAppearance?.socialFlatColor;
-  const cleanSocialFlatColor = rawSocialFlatColor
-    ? sanitizeHexColor(rawSocialFlatColor, cleanButtonTextColor)
-    : cleanButtonTextColor;
-
-  const socialIconMode = profile?.social_icon_mode || loadedAppearance?.socialLogoMode || "brand";
-
-  const rawAvatarBorderColor = profile?.avatar_border_color || loadedAppearance?.avatarBorderColor || profile?.button_color;
-  const cleanAvatarBorderColor = sanitizeHexColor(rawAvatarBorderColor, cleanButtonColor);
-
-  const rawButtonBorderColor = profile?.button_border_color || loadedAppearance?.cardBorderColor;
-  const cleanButtonBorderColor = sanitizeHexColor(rawButtonBorderColor, "#E4E4E7");
-
-  const sanitizedAppearance = {
-    bgType:           loadedAppearance?.bgType           || (profile?.background_image_url ? "image" : "solid"),
-    bgColor:          cleanThemeColor,
-    bgGradientStart:  sanitizeHexColor(loadedAppearance?.bgGradientStart, "#FBCFE8"),
-    bgGradientEnd:    sanitizeHexColor(loadedAppearance?.bgGradientEnd,   "#E0F2FE"),
-    bgGradientAngle:  profile?.background_gradient_angle ?? loadedAppearance?.bgGradientAngle ?? 135,
-    bgImageUrl:       profile?.background_image_url || loadedAppearance?.bgImageUrl || "",
-    headlineColor:    cleanTextColor,
-    bioColor:         cleanBioColor,
-    cardBgColor:      cleanButtonColor,
-    cardTextColor:    cleanButtonTextColor,
-    cardBorderColor:  cleanButtonBorderColor,
-    socialLogoMode:   (socialIconMode as "brand" | "flat"),
-    socialIconBgColor: cleanSocialIconBg,
-    socialFlatColor:   cleanSocialFlatColor,
-    avatarBorderColor: cleanAvatarBorderColor,
-    avatarBorderEnabled: profile?.avatar_border_enabled !== undefined ? profile.avatar_border_enabled !== false : (loadedAppearance?.avatarBorderEnabled !== false),
-    avatarBorderWidth: profile?.avatar_border_width ?? loadedAppearance?.avatarBorderWidth ?? 4,
-    buttonShape:      profile?.button_shape || loadedAppearance?.buttonShape || "rounded",
-    fontFamily:       profile?.font_family || loadedAppearance?.fontFamily || "Inter",
-    hideBranding:     isFreeUser ? false : !!loadedAppearance?.hideBranding,
-  };
+  const cleanThemeColor = sanitizedAppearance.bgColor;
+  const cleanButtonColor = sanitizedAppearance.cardBgColor || "#16A34A";
+  const cleanTextColor = sanitizedAppearance.headlineColor || "#FFFFFF";
+  const cleanButtonTextColor = sanitizedAppearance.cardTextColor || "#FFFFFF";
 
   // Reels: parse and filter valid entries
   const loadedReels = (Array.isArray(profile.reels) ? profile.reels : [])

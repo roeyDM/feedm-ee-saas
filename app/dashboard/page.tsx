@@ -25,7 +25,7 @@ import {
   AppearanceSettings,
   DEFAULT_APPEARANCE,
 } from "@/components/mobile-preview";
-import { sanitizeLeadForm, sanitizeHexColor } from "@/lib/sanitizers";
+import { sanitizeLeadForm, sanitizeHexColor, buildAppearanceFromProfile } from "@/lib/sanitizers";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { ExtraFeedModal } from "@/components/extra-feed-modal";
 import { BusinessContactModal } from "@/components/business-contact-modal";
@@ -364,23 +364,32 @@ function PublishSuccessModal({
         <div>
           <h3 className="text-xl font-black text-zinc-950 tracking-tight">Your Page is Live</h3>
           <p className="text-xs font-semibold text-zinc-500 mt-1">
-            Congratulations! Your creator bio page is 100% complete and published.
+            {readiness.is100Percent
+              ? "Congratulations! Your creator bio page is 100% complete and published."
+              : "Congratulations! Your creator feed is live and published."}
           </p>
         </div>
 
-        {/* 100% Readiness Badge */}
+        {/* Readiness Badge */}
         <div className="p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/80 text-emerald-900 text-left text-xs space-y-1.5">
           <div className="flex items-center justify-between font-extrabold">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>Page Readiness ({readiness.score}/{readiness.totalCriteria} Completed)</span>
             </span>
-            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full border bg-emerald-100 border-emerald-300 text-emerald-800">
-              100% Ready
+            <span className={cn(
+              "text-[10px] uppercase font-black px-2 py-0.5 rounded-full border",
+              readiness.is100Percent
+                ? "bg-emerald-100 border-emerald-300 text-emerald-800"
+                : "bg-amber-100 border-amber-300 text-amber-800"
+            )}>
+              {readiness.percent}% Ready
             </span>
           </div>
           <p className="text-[11px] font-medium text-emerald-800/90 pl-5">
-            All profile criteria met for your active plan.
+            {readiness.is100Percent
+              ? "All profile criteria met for your active plan."
+              : "Your feed is published! You can continue optimizing your bio and links anytime."}
           </p>
         </div>
 
@@ -741,7 +750,6 @@ function DashboardContent() {
 
   const profileContext = useProfileContext();
   const { currentPlan, getPlanLimit, canAccess } = useFeatureAccess(planType);
-  console.log("[DEBUG UI LIVE PLAN]:", currentPlan);
   const maxReels = getPlanLimit("reelsPerFeed");
   const hasLeadsCrmExport = canAccess("hasLeadsCrmExport");
   const hasMarketingPixels = canAccess("hasMarketingPixels");
@@ -868,6 +876,8 @@ function DashboardContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [statusMsg, setStatusMsg] = useState("");
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
@@ -908,11 +918,28 @@ function DashboardContent() {
   const handleNavigateToItem = (tab: "bio" | "reels" | "design" | "leads", targetId?: string) => {
     setShowDraftWarningModal(false);
     setMobileReadinessSheetOpen(false);
-    setActiveTab(tab);
+
+    if (tab === "bio") {
+      setWizardStep(1);
+      setActiveTab("bio");
+    } else if (tab === "reels") {
+      setWizardStep(2);
+      setActiveTab("reels");
+    } else if (tab === "design") {
+      setWizardStep(3);
+      setActiveTab("design");
+    } else {
+      setActiveTab(tab);
+    }
 
     if (targetId) {
       setTimeout(() => {
-        const el = document.getElementById(targetId) || document.querySelector(`[name="${targetId}"]`);
+        const resolvedId = (targetId === "custom-links-container" || targetId === "links-section")
+          ? "custom-links-section"
+          : targetId;
+        const el = document.getElementById(resolvedId) ||
+                   document.getElementById(targetId) ||
+                   document.querySelector(`[name="${targetId}"]`);
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
           const targetInput = (el.tagName === "INPUT" || el.tagName === "TEXTAREA")
@@ -949,7 +976,7 @@ function DashboardContent() {
     const items: ReadinessItem[] = [
       { id: "avatar", label: "Profile Picture", isMet: hasAvatar, tab: "bio", targetId: "avatar-upload-container" },
       { id: "bio", label: "Bio Description", isMet: hasBio, tab: "bio", targetId: "bio" },
-      { id: "links", label: "Active Links", isMet: hasLinks, tab: "bio", targetId: "custom-links-container" },
+      { id: "links", label: "Active Links", isMet: hasLinks, tab: "bio", targetId: "custom-links-section" },
     ];
 
     // IF plan !== 'free' (Pro/Personal), include Video Reels
@@ -995,6 +1022,114 @@ function DashboardContent() {
     }
   };
 
+  // Centralized robust DB sync handler with explicit error logging
+  const performSaveToDB = async (customPayloadOverrides: any = {}) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || currentUserId;
+
+      if (!userId) {
+        console.error("SUPABASE_SAVE_ERROR: No authenticated user session found during save");
+        setAutoSaveStatus("error");
+        return false;
+      }
+
+      setAutoSaveStatus("saving");
+
+      const app = appearance || DEFAULT_APPEARANCE;
+      const cleanThemeColor = sanitizeHexColor(app.bgColor || customHexColor, "#BAD1CB");
+      const cleanButtonColor = sanitizeHexColor(app.cardBgColor, "#16A34A");
+      const cleanButtonTextColor = sanitizeHexColor(app.cardTextColor, "#FFFFFF");
+      const cleanTextColor = sanitizeHexColor(app.headlineColor, "#FFFFFF");
+      const cleanBioColor = sanitizeHexColor(app.bioColor || app.headlineColor, cleanTextColor);
+      const cleanButtonBorderColor = sanitizeHexColor(app.cardBorderColor, cleanButtonColor);
+      const cleanAvatarBorderColor = sanitizeHexColor(app.avatarBorderColor, cleanButtonColor);
+      const cleanSocialPillColor = sanitizeHexColor(app.socialIconBgColor, cleanButtonColor);
+      const cleanSocialFlatColor = sanitizeHexColor(app.socialFlatColor, cleanButtonTextColor);
+
+      const bgGrad = app.bgType === "gradient"
+        ? `linear-gradient(${app.bgGradientAngle || 135}deg, ${app.bgGradientStart || cleanThemeColor}, ${app.bgGradientEnd || cleanThemeColor})`
+        : `linear-gradient(${app.bgGradientAngle || 135}deg, ${cleanThemeColor}, ${cleanThemeColor})`;
+
+      const targetUsername = (username || user?.user_metadata?.username || user?.email?.split("@")[0] || "creator").toLowerCase().trim();
+
+      // Dedicated database columns strictly matching profiles schema
+      const payload: any = {
+        id: userId,
+        username: targetUsername,
+        name: name || "",
+        bio: bio || "",
+        avatar_url: avatarUrl || "",
+
+        // Theme, Colors, Background & Typography columns:
+        theme_color: cleanThemeColor,
+        custom_hex_color: cleanThemeColor,
+        background_color: cleanThemeColor,
+        background_gradient: bgGrad,
+        background_gradient_angle: String(app.bgGradientAngle ?? 135),
+        background_image_url: app.bgType === "image" ? (app.bgImageUrl || null) : null,
+        button_color: cleanButtonColor,
+        button_text_color: cleanButtonTextColor,
+        button_border_color: cleanButtonBorderColor,
+        button_shape: app.buttonShape || "rounded",
+        text_color: cleanTextColor,
+        bio_color: cleanBioColor,
+        avatar_border_enabled: app.avatarBorderEnabled !== false,
+        avatar_border_color: cleanAvatarBorderColor,
+        avatar_border_width: String(app.avatarBorderWidth ?? 4),
+        font_family: app.fontFamily || "Inter",
+        social_pill_color: cleanSocialPillColor,
+        social_icon_mode: app.socialLogoMode || "brand",
+        social_flat_color: cleanSocialFlatColor,
+
+        social_links: socialLinks || [],
+        custom_links: customLinks || [],
+        reels: reels || [],
+        lead_form: leadForm || {},
+        updated_at: new Date().toISOString(),
+        ...customPayloadOverrides,
+      };
+
+      // Ensure non-existent columns are strictly removed
+      delete payload.plan_type;
+      delete payload.appearance;
+      delete payload.verification_status;
+      delete payload.is_verified_badge_active;
+      delete payload.didit_session_id;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(payload, { onConflict: "id" });
+
+      if (error) {
+        console.error("SUPABASE_SAVE_ERROR:", error.message || error.details || JSON.stringify(error));
+        setAutoSaveStatus("error");
+        return false;
+      }
+
+      console.log("[Supabase Save] Successfully saved profile to DB for user:", userId);
+      setAutoSaveStatus("saved");
+      setSavedSnapshot(getCurrentStateJSON());
+
+      if (profileContext) {
+        profileContext.updateProfileCache({
+          ...payload,
+          appearance,
+        });
+      }
+
+      setTimeout(() => {
+        setAutoSaveStatus((prev) => (prev === "saved" ? "idle" : prev));
+      }, 2500);
+
+      return true;
+    } catch (err: any) {
+      console.error("SUPABASE_SAVE_ERROR (Exception):", err?.message || err?.details || JSON.stringify(err));
+      setAutoSaveStatus("error");
+      return false;
+    }
+  };
+
   const handleWizardStepChange = async (step: 1 | 2 | 3) => {
     setWizardStep(step);
     if (step === 1) {
@@ -1005,55 +1140,23 @@ function DashboardContent() {
       setActiveTab("design");
     }
 
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+      document.body.scrollTo({ top: 0, behavior: "smooth" });
+      const scrollableContainers = document.querySelectorAll(".overflow-y-auto");
+      scrollableContainers.forEach((el) => {
+        el.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+
     const targetUsername = username.toLowerCase().trim();
     if (typeof window !== "undefined" && targetUsername) {
       localStorage.setItem(`feedmee_onboarding_step_${targetUsername}`, String(step));
     }
 
     // Progressive Database Sync on Step Advancement
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        const cleanThemeColor = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
-        const cleanButtonColor = sanitizeHexColor(appearance?.cardBgColor, "#16A34A");
-        const cleanTextColor = sanitizeHexColor(appearance?.headlineColor, "#09090B");
-        const cleanButtonTextColor = sanitizeHexColor(appearance?.cardTextColor, "#09090B");
-
-        const progressivePayload: any = {
-          id: user.id,
-          username: targetUsername || (user.email ? user.email.split("@")[0].toLowerCase() : "creator"),
-          email: user.email || userEmail,
-          name: name || user.user_metadata?.display_name || user.user_metadata?.full_name || "",
-          bio: bio || "",
-          avatar_url: avatarUrl || "",
-          custom_hex_color: cleanThemeColor,
-          theme_color: cleanThemeColor,
-          button_color: cleanButtonColor,
-          text_color: cleanTextColor,
-          button_text_color: cleanButtonTextColor,
-          social_links: socialLinks,
-          custom_links: customLinks,
-          reels: reels,
-          appearance: appearance,
-          onboarding_step: step,
-          updated_at: new Date().toISOString(),
-        };
-
-        const { error } = await supabase
-          .from("profiles")
-          .upsert(progressivePayload, { onConflict: "id" });
-
-        if (error) {
-          console.warn("[Onboarding Progressive Sync Note]:", error.message);
-        } else {
-          if (profileContext) {
-            profileContext.updateProfileCache(progressivePayload);
-          }
-        }
-      }
-    } catch (err) {
-      console.warn("Failed to persist onboarding progressive data to Supabase profiles:", err);
-    }
+    await performSaveToDB({ onboarding_step: step });
   };
 
   const markOnboardingCompletedInDB = async () => {
@@ -1101,14 +1204,6 @@ function DashboardContent() {
 
   const handleWizardNext = async () => {
     if (wizardStep === 1) {
-      // Step 1 Validation: Bio text and at least 1 active link required
-      const activeLinks = customLinks.filter((l: any) => l.title?.trim() && l.url?.trim());
-      if (!bio || !bio.trim() || activeLinks.length < 1) {
-        setSaveStatus("error");
-        setStatusMsg("Please enter a bio and add at least 1 valid link before proceeding.");
-        return;
-      }
-
       // Free plan bypasses Step 2 (Videos & Reels) and goes directly to Step 3
       if (planType === "free") {
         await handleWizardStepChange(3);
@@ -1116,15 +1211,6 @@ function DashboardContent() {
         await handleWizardStepChange(2);
       }
     } else if (wizardStep === 2) {
-      // Step 2 Validation: Reels count >= 1 for non-free plans
-      if (planType !== "free") {
-        const activeReels = reels.filter((r: any) => r.videoUrl || r.url);
-        if (activeReels.length < 1) {
-          setSaveStatus("error");
-          setStatusMsg("Please add at least 1 video reel before proceeding to Design & Themes.");
-          return;
-        }
-      }
       await handleWizardStepChange(3);
     }
   };
@@ -1146,12 +1232,7 @@ function DashboardContent() {
     await markOnboardingCompletedInDB();
     clearWizardDraftFromStorage();
 
-    const readiness = evaluateReadiness();
-    if (readiness.is100Percent) {
-      setShowPublishSuccessModal(true);
-    } else {
-      setShowDraftWarningModal(true);
-    }
+    setShowPublishSuccessModal(true);
   };
 
   // Serialize current state for dirty checking with strict normalization
@@ -1319,19 +1400,21 @@ function DashboardContent() {
             finalLeadForm = { ...finalLeadForm, target: user.email };
           }
 
-          let loadedAppearance = isWizardDraftActive && draftData.appearance && Object.keys(draftData.appearance).length > 0
-            ? draftData.appearance
-            : checkedProfile.appearance;
-          if ((!loadedAppearance || Object.keys(loadedAppearance).length === 0) && typeof window !== "undefined") {
+          let finalAppearance: AppearanceSettings = appearance;
+          if (isWizardDraftActive && draftData.appearance && Object.keys(draftData.appearance).length > 0) {
+            finalAppearance = draftData.appearance;
+          } else {
+            finalAppearance = buildAppearanceFromProfile(checkedProfile, appearance) as AppearanceSettings;
+          }
+          if ((!finalAppearance || Object.keys(finalAppearance).length === 0) && typeof window !== "undefined") {
             const localApp = localStorage.getItem(`feedmee_appearance_${(checkedProfile.username || userHandle).toLowerCase()}`);
             if (localApp) {
-              try { loadedAppearance = JSON.parse(localApp); } catch(e) {}
+              try { finalAppearance = JSON.parse(localApp); } catch(e) {}
             }
           }
-          const finalAppearance = (loadedAppearance && Object.keys(loadedAppearance).length > 0) ? loadedAppearance : appearance;
           const finalCustomHexColor = isWizardDraftActive && draftData.customHexColor
             ? draftData.customHexColor
-            : (finalAppearance?.bgColor || checkedProfile.custom_hex_color || "#bad1cb");
+            : (finalAppearance?.bgColor || checkedProfile.custom_hex_color || "#BAD1CB");
 
           setName(finalName);
           setBio(finalBio);
@@ -1473,6 +1556,47 @@ function DashboardContent() {
     }
   }, [isProfileLoading, isInitialLoadDone, name, bio, avatarUrl, customHexColor, planType, socialLinks, customLinks, reels, leadForm, appearance]);
 
+  // Real-Time Debounced (500ms) Auto-Save Engine to Supabase DB
+  useEffect(() => {
+    if (!isInitialLoadDone || isProfileLoading) return;
+
+    // Check if state has changed compared to saved snapshot
+    const currentState = getCurrentStateJSON();
+    if (savedSnapshot !== null && currentState === savedSnapshot) return;
+
+    setAutoSaveStatus("saving");
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      performSaveToDB();
+    }, 500);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [
+    isInitialLoadDone,
+    isProfileLoading,
+    currentUserId,
+    username,
+    userEmail,
+    name,
+    bio,
+    avatarUrl,
+    customHexColor,
+    socialLinks,
+    customLinks,
+    reels,
+    appearance,
+    leadForm,
+    wizardStep,
+  ]);
+
   // Dirty State calculation & Browser Navigation Protection
   const isDirty = isInitialLoadDone && !isProfileLoading && savedSnapshot !== null && savedSnapshot !== getCurrentStateJSON();
 
@@ -1535,30 +1659,6 @@ function DashboardContent() {
 
   // Save changes to Supabase
   const handleSave = async () => {
-    // Validation 1: Require at least 1 Custom Link
-    const validCustomLinks = customLinks.filter(l => l.title?.trim() && l.url?.trim());
-    if (validCustomLinks.length === 0) {
-      setSaveStatus("error");
-      setStatusMsg("Add at least 1 Custom Link to save your feed.");
-      return;
-    }
-
-    // Validation 2: Check for empty URLs in active social links
-    const hasEmptySocialLink = socialLinks.some(l => l.isActive !== false && (!l.url || !l.url.trim()));
-    if (hasEmptySocialLink) {
-      setSaveStatus("error");
-      setStatusMsg("Please enter a valid link for all social links or remove empty ones before saving.");
-      return;
-    }
-
-    // Validation 3: Check for target email in leadForm (ONLY when Lead Form is Enabled)
-    const isLeadFormEnabled = leadForm.is_leadform_enabled !== false && leadForm.is_enabled !== false;
-    if (isLeadFormEnabled && (!leadForm.target || !leadForm.target.trim() || !leadForm.target.includes("@"))) {
-      setSaveStatus("error");
-      setStatusMsg("Please enter a valid email address to receive lead notifications.");
-      return;
-    }
-
     setIsSaving(true);
     setSaveStatus("idle");
     setStatusMsg("");
@@ -1569,95 +1669,84 @@ function DashboardContent() {
         throw new Error("You must be logged in to save your profile.");
       }
 
-      const cleanThemeColor = sanitizeHexColor(appearance?.bgColor || customHexColor, "#BAD1CB");
-      const cleanButtonColor = sanitizeHexColor(appearance?.cardBgColor, "#16A34A");
-      const cleanTextColor = sanitizeHexColor(appearance?.headlineColor, "#09090B");
-      const cleanButtonTextColor = sanitizeHexColor(appearance?.cardTextColor, "#09090B");
+      const app = appearance || DEFAULT_APPEARANCE;
+      const cleanThemeColor = sanitizeHexColor(app.bgColor || customHexColor, "#BAD1CB");
+      const cleanButtonColor = sanitizeHexColor(app.cardBgColor, "#16A34A");
+      const cleanButtonTextColor = sanitizeHexColor(app.cardTextColor, "#FFFFFF");
+      const cleanTextColor = sanitizeHexColor(app.headlineColor, "#FFFFFF");
+      const cleanBioColor = sanitizeHexColor(app.bioColor || app.headlineColor, cleanTextColor);
+      const cleanButtonBorderColor = sanitizeHexColor(app.cardBorderColor, cleanButtonColor);
+      const cleanAvatarBorderColor = sanitizeHexColor(app.avatarBorderColor, cleanButtonColor);
+      const cleanSocialPillColor = sanitizeHexColor(app.socialIconBgColor, cleanButtonColor);
+      const cleanSocialFlatColor = sanitizeHexColor(app.socialFlatColor, cleanButtonTextColor);
 
-      const sanitizedAppearance: any = appearance
-        ? {
-            ...appearance,
-            bgColor: cleanThemeColor,
-            bgGradientStart: sanitizeHexColor(appearance.bgGradientStart, "#FBCFE8"),
-            bgGradientEnd: sanitizeHexColor(appearance.bgGradientEnd, "#E0F2FE"),
-            headlineColor: cleanTextColor,
-            bioColor: sanitizeHexColor(appearance.bioColor, "#27272A"),
-          }
-        : {};
+      const bgGrad = app.bgType === "gradient"
+        ? `linear-gradient(${app.bgGradientAngle || 135}deg, ${app.bgGradientStart || cleanThemeColor}, ${app.bgGradientEnd || cleanThemeColor})`
+        : `linear-gradient(${app.bgGradientAngle || 135}deg, ${cleanThemeColor}, ${cleanThemeColor})`;
 
-      let payload: any = {
+      const targetUsername = (username || user?.user_metadata?.username || user?.email?.split("@")[0] || "creator").toLowerCase().trim();
+
+      const payload: any = {
         id: user.id,
-        username: username.toLowerCase().trim(),
-        name,
-        bio,
-        avatar_url: avatarUrl,
-        appearance,
-        custom_hex_color: cleanThemeColor,
+        username: targetUsername,
+        name: name || "",
+        bio: bio || "",
+        avatar_url: avatarUrl || "",
+
+        // Theme, Colors, Background & Typography columns:
         theme_color: cleanThemeColor,
+        custom_hex_color: cleanThemeColor,
+        background_color: cleanThemeColor,
+        background_gradient: bgGrad,
+        background_gradient_angle: String(app.bgGradientAngle ?? 135),
+        background_image_url: app.bgType === "image" ? (app.bgImageUrl || null) : null,
         button_color: cleanButtonColor,
-        text_color: cleanTextColor,
         button_text_color: cleanButtonTextColor,
-        social_pill_color: sanitizeHexColor(appearance?.socialIconBgColor, cleanButtonColor),
-        social_icon_mode: appearance?.socialLogoMode || "brand",
-        avatar_border_color: sanitizeHexColor(appearance?.avatarBorderColor, cleanButtonColor),
-        avatar_border_enabled: appearance?.avatarBorderEnabled !== false,
-        avatar_border_width: appearance?.avatarBorderWidth ?? 4,
-        background_image_url: appearance?.bgImageUrl || "",
-        background_gradient_angle: appearance?.bgGradientAngle ?? 135,
-        font_family: appearance?.fontFamily || "Inter",
-        bio_color: sanitizeHexColor(appearance?.bioColor, "#27272A"),
-        button_shape: appearance?.buttonShape || "rounded",
-        button_border_color: sanitizeHexColor(appearance?.cardBorderColor, "#E4E4E7"),
-        social_flat_color: sanitizeHexColor(appearance?.socialFlatColor, "#18181B"),
-        social_links: socialLinks,
-        custom_links: customLinks,
-        reels: reels,
-        lead_form: leadForm,
-        verification_status: verificationStatus,
-        is_verified_badge_active: isVerifiedBadgeActive,
-        didit_session_id: diditSessionId,
+        button_border_color: cleanButtonBorderColor,
+        button_shape: app.buttonShape || "rounded",
+        text_color: cleanTextColor,
+        bio_color: cleanBioColor,
+        avatar_border_enabled: app.avatarBorderEnabled !== false,
+        avatar_border_color: cleanAvatarBorderColor,
+        avatar_border_width: String(app.avatarBorderWidth ?? 4),
+        font_family: app.fontFamily || "Inter",
+        social_pill_color: cleanSocialPillColor,
+        social_icon_mode: app.socialLogoMode || "brand",
+        social_flat_color: cleanSocialFlatColor,
+
+        social_links: socialLinks || [],
+        custom_links: customLinks || [],
+        reels: reels || [],
+        lead_form: leadForm || {},
         updated_at: new Date().toISOString(),
       };
 
-      let { error } = await supabase
-        .from("profiles")
-        .update(payload)
-        .eq("id", user.id);
+      // Ensure non-existent columns are strictly removed
+      delete payload.plan_type;
+      delete payload.appearance;
+      delete payload.verification_status;
+      delete payload.is_verified_badge_active;
+      delete payload.didit_session_id;
 
-      if (error && (error.message?.includes("column") || error.details?.includes("column"))) {
-        console.warn("One or more new design columns missing in profiles table, falling back to core payload...");
-        const safePayload = {
-          id: user.id,
-          username: username.toLowerCase().trim(),
-          name,
-          bio,
-          avatar_url: avatarUrl,
-          custom_hex_color: cleanThemeColor,
-          theme_color: cleanThemeColor,
-          button_color: cleanButtonColor,
-          text_color: cleanTextColor,
-          button_text_color: cleanButtonTextColor,
-          social_links: socialLinks,
-          custom_links: customLinks,
-          reels: reels,
-          lead_form: leadForm,
-          updated_at: new Date().toISOString(),
-        };
-        const fallbackRes = await supabase.from("profiles").update(safePayload).eq("id", user.id);
-        if (fallbackRes.error) {
-          throw fallbackRes.error;
-        }
-      } else if (error) {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(payload, { onConflict: "id" });
+
+      if (error) {
+        console.error("SUPABASE_SAVE_ERROR:", error.message || error.details || JSON.stringify(error));
         throw error;
       }
 
       // Always store appearance in localStorage as immediate fallback
       if (typeof window !== "undefined") {
-        localStorage.setItem(`feedmee_appearance_${username.toLowerCase().trim()}`, JSON.stringify(appearance));
+        localStorage.setItem(`feedmee_appearance_${targetUsername}`, JSON.stringify(appearance));
       }
 
       if (profileContext) {
-        profileContext.updateProfileCache(payload);
+        profileContext.updateProfileCache({
+          ...payload,
+          appearance,
+        });
       }
 
       setSaveStatus("success");
@@ -1665,7 +1754,7 @@ function DashboardContent() {
       setSavedSnapshot(getCurrentStateJSON());
       setTimeout(() => setSaveStatus("idle"), 4000);
     } catch (err: any) {
-      console.error("Supabase Save Error Details:", err?.message || err?.details || JSON.stringify(err));
+      console.error("SUPABASE_SAVE_ERROR:", err?.message || err?.details || JSON.stringify(err));
       setSaveStatus("error");
       setStatusMsg(err?.message || err?.details || "Failed to save profile to Supabase.");
     } finally {
@@ -1817,16 +1906,23 @@ function DashboardContent() {
             </div>
           )}
 
-          {!evaluateReadiness().is100Percent && (
-            <button
-              type="button"
-              onClick={() => setMobileReadinessSheetOpen(true)}
-              className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-950/80 border border-amber-700/80 text-amber-300 text-[10px] font-extrabold shrink-0 cursor-pointer"
-            >
+          <button
+            type="button"
+            onClick={() => setMobileReadinessSheetOpen(true)}
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-extrabold shrink-0 cursor-pointer border",
+              evaluateReadiness().is100Percent
+                ? "bg-emerald-950/80 border-emerald-700/80 text-emerald-300"
+                : "bg-amber-950/80 border-amber-700/80 text-amber-300"
+            )}
+          >
+            {evaluateReadiness().is100Percent ? (
+              <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+            ) : (
               <AlertCircle className="w-3 h-3 text-amber-400 shrink-0" />
-              <span>Draft: {evaluateReadiness().percent}%</span>
-            </button>
-          )}
+            )}
+            <span>{evaluateReadiness().is100Percent ? "Live" : "Draft"}: {evaluateReadiness().percent}%</span>
+          </button>
         </div>
       </header>
 
@@ -2469,18 +2565,46 @@ function DashboardContent() {
               )}
             </div>
 
-            {/* Desktop Sidebar Readiness Widget (Phase B - Auto-hidden when 100% complete) */}
-            {!evaluateReadiness().is100Percent && (
-              <SidebarReadinessWidget
-                readiness={evaluateReadiness()}
-                onNavigateToItem={handleNavigateToItem}
-              />
-            )}
+            {/* Desktop Sidebar Readiness Widget */}
+            <SidebarReadinessWidget
+              readiness={evaluateReadiness()}
+              onNavigateToItem={handleNavigateToItem}
+            />
           </div>
         </aside>
 
         {/* CENTER WORKSPACE */}
-        <div className={cn("min-w-0 flex flex-col w-full max-w-full overflow-x-hidden flex-1 h-full overflow-y-auto p-4 md:p-6", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
+        <div className={cn("min-w-0 flex flex-col w-full max-w-full overflow-x-hidden flex-1 h-full overflow-y-auto p-4 md:p-6 pb-28 md:pb-6 relative", activeTab === "settings" ? "p-0 m-0 border-0" : "gap-6")}>
+          {/* Realtime Auto-Save Status Indicator (Visible across Desktop & Mobile) */}
+          <div
+            className={cn(
+              "fixed top-4 right-4 z-[70] flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-lg backdrop-blur-md transition-all duration-300 pointer-events-none",
+              autoSaveStatus === "saving" && "bg-slate-900/95 text-amber-300 border border-slate-700/80 opacity-100 scale-100",
+              autoSaveStatus === "saved" && "bg-emerald-600/95 text-white border border-emerald-500/80 opacity-100 scale-100",
+              autoSaveStatus === "error" && "bg-rose-600/95 text-white border border-rose-500/80 opacity-100 scale-100",
+              autoSaveStatus === "idle" && "opacity-0 scale-95 pointer-events-none"
+            )}
+          >
+            {autoSaveStatus === "saving" && (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-300" />
+                <span>Saving...</span>
+              </>
+            )}
+            {autoSaveStatus === "saved" && (
+              <>
+                <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
+                <span>Saved ✓</span>
+              </>
+            )}
+            {autoSaveStatus === "error" && (
+              <>
+                <AlertCircle className="w-3.5 h-3.5 text-white" />
+                <span>Save Error ❌</span>
+              </>
+            )}
+          </div>
+
           {/* FTUE Onboarding Wizard Progress Banner (Local Experiment) */}
           {!onboardingCompleted && (
             <OnboardingWizardHeader
@@ -2732,6 +2856,101 @@ function DashboardContent() {
               />
             </div>
           )}
+
+          {/* RESPONSIVE BOTTOM STEP NAVIGATION BAR (Strictly Scoped to Center Editor Column) */}
+          {(activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
+            <div className="fixed bottom-0 left-0 right-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur border-t border-gray-200 dark:border-slate-800 px-4 py-3 shadow-lg md:static md:w-full md:max-w-3xl md:mx-auto md:mt-2 md:shadow-none md:rounded-2xl md:border md:border-zinc-200 md:dark:border-slate-800 md:bg-white md:dark:bg-slate-900 md:p-4">
+              <div className="flex items-center justify-between gap-2 w-full">
+                {/* Left section: Mobile Preview / Desktop Step Indicator */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Mobile Live Preview Trigger Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowMobilePreviewModal(true)}
+                    className="h-10 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-700 text-gray-800 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer md:hidden flex-shrink-0"
+                    aria-label="Preview Live Feed"
+                  >
+                    <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="hidden sm:inline">Preview</span>
+                  </button>
+
+                  {/* Desktop Step Indicator / Helper */}
+                  <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-slate-400">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+                      {activeTab === "bio" ? "1" : activeTab === "reels" ? "2" : "3"}
+                    </span>
+                    <span>
+                      {activeTab === "bio"
+                        ? "Step 1: Profile & Custom Links"
+                        : activeTab === "reels"
+                        ? "Step 2: Videos & Reels"
+                        : "Step 3: Design & Themes"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right section: Navigation Controls */}
+                <div className="flex items-center gap-2 justify-end flex-shrink-0">
+                  {/* Back Button */}
+                  {activeTab === "reels" && (
+                    <button
+                      type="button"
+                      onClick={() => handleWizardStepChange(1)}
+                      className="whitespace-nowrap px-4 py-2.5 rounded-xl font-medium text-sm flex-shrink-0 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    >
+                      ← Back
+                    </button>
+                  )}
+
+                  {activeTab === "design" && (
+                    <button
+                      type="button"
+                      onClick={() => handleWizardStepChange(planType === "free" ? 1 : 2)}
+                      className="whitespace-nowrap px-4 py-2.5 rounded-xl font-medium text-sm flex-shrink-0 border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                    >
+                      ← Back
+                    </button>
+                  )}
+
+                  {/* Step 1 CTA */}
+                  {activeTab === "bio" && (
+                    <button
+                      type="button"
+                      onClick={() => handleWizardStepChange(planType === "free" ? 3 : 2)}
+                      className="whitespace-nowrap px-4 py-2.5 rounded-xl font-medium text-sm flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-colors cursor-pointer"
+                    >
+                      <span className="sm:hidden">{planType === "free" ? "Design →" : "Next →"}</span>
+                      <span className="hidden sm:inline">{planType === "free" ? "Next: Customization & Design →" : "Next: Videos & Reels →"}</span>
+                    </button>
+                  )}
+
+                  {/* Step 2 CTA */}
+                  {activeTab === "reels" && (
+                    <button
+                      type="button"
+                      onClick={() => handleWizardStepChange(3)}
+                      className="whitespace-nowrap px-4 py-2.5 rounded-xl font-medium text-sm flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-colors cursor-pointer"
+                    >
+                      <span className="sm:hidden">Next →</span>
+                      <span className="hidden sm:inline">Next: Customization & Design →</span>
+                    </button>
+                  )}
+
+                  {/* Step 3 CTA */}
+                  {activeTab === "design" && (
+                    <button
+                      type="button"
+                      onClick={handleFinishAndPublish}
+                      className="whitespace-nowrap px-4 py-2.5 rounded-xl font-medium text-sm flex-shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md transition-colors cursor-pointer"
+                    >
+                      <span className="sm:hidden">Publish 🚀</span>
+                      <span className="hidden sm:inline">Finish & Publish Feed 🚀</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT PANEL: MOBILE PREVIEW (Desktop only, hidden on mobile) */}
@@ -2815,165 +3034,54 @@ function DashboardContent() {
         )}
       </main>
 
-      {/* DYNAMIC CONTEXTUAL BOTTOM TOOLBAR (Mobile Only) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-2 flex items-center justify-around shadow-2xl block md:hidden">
-        {activeTab === "bio" && (
-          <>
-            <button
-              type="button"
-              onClick={() => scrollToSection("profile-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <User className="w-4 h-4 text-emerald-400" />
-              <span>Profile</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("links-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Link2 className="w-4 h-4 text-emerald-400" />
-              <span>Links</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("socials-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Share2 className="w-4 h-4 text-emerald-400" />
-              <span>Socials</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowMobilePreviewModal(true)}
-              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Eye className="w-4 h-4 text-emerald-400" />
-              <span>Live Preview</span>
-            </button>
-          </>
-        )}
 
-        {activeTab === "reels" && (
-          <>
-            <button
-              type="button"
-              onClick={() => scrollToSection("reels-list-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Video className="w-4 h-4 text-emerald-400" />
-              <span>My Reels</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("add-reel-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4 text-emerald-400" />
-              <span>Add Reel</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("reel-settings-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Sliders className="w-4 h-4 text-emerald-400" />
-              <span>Settings</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowMobilePreviewModal(true)}
-              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Eye className="w-4 h-4 text-emerald-400" />
-              <span>Live Preview</span>
-            </button>
-          </>
-        )}
 
-        {activeTab === "design" && (
-          <>
-            <button
-              type="button"
-              onClick={() => scrollToSection("preset-themes-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <LayoutTemplate className="w-4 h-4 text-emerald-400" />
-              <span>Themes</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("color-picker-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Palette className="w-4 h-4 text-emerald-400" />
-              <span>Colors</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("button-style-section")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <MousePointerClick className="w-4 h-4 text-emerald-400" />
-              <span>Buttons</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowMobilePreviewModal(true)}
-              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Eye className="w-4 h-4 text-emerald-400" />
-              <span>Live Preview</span>
-            </button>
-          </>
-        )}
+      {/* DYNAMIC CONTEXTUAL BOTTOM TOOLBAR (Mobile Only, For non-builder tabs) */}
+      {(activeTab === "analytics" || activeTab === "leads" || activeTab === "pixels" || activeTab === "settings") && (
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 px-2 py-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] flex items-center justify-around shadow-2xl block md:hidden">
+          <button
+            type="button"
+            onClick={() => handleTabClick("bio")}
+            className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 min-h-[44px] justify-center transition-colors cursor-pointer"
+          >
+            <LayoutDashboard className="w-5 h-5 text-slate-300" />
+            <span>MY FEED</span>
+          </button>
 
-        {(activeTab === "analytics" || activeTab === "leads" || activeTab === "pixels" || activeTab === "settings") && (
-          <>
-            <button
-              type="button"
-              onClick={() => handleTabClick("bio")}
-              className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-300 hover:text-emerald-400 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <LayoutDashboard className="w-5 h-5 text-slate-300" />
-              <span>MY FEED</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => handleTabClick("analytics")}
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 min-h-[44px] justify-center transition-colors cursor-pointer",
+              activeTab === "analytics" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
+            )}
+          >
+            <BarChart3 className={cn("w-5 h-5", activeTab === "analytics" ? "text-emerald-400" : "text-slate-300")} />
+            <span>ANALYTICS</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => handleTabClick("analytics")}
-              className={cn(
-                "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 transition-colors cursor-pointer",
-                activeTab === "analytics" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
-              )}
-            >
-              <BarChart3 className={cn("w-5 h-5", activeTab === "analytics" ? "text-emerald-400" : "text-slate-300")} />
-              <span>ANALYTICS</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => handleTabClick("leads")}
+            className={cn(
+              "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 min-h-[44px] justify-center transition-colors cursor-pointer",
+              activeTab === "leads" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
+            )}
+          >
+            <Users className={cn("w-5 h-5", activeTab === "leads" ? "text-emerald-400" : "text-slate-300")} />
+            <span>CRM</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => handleTabClick("leads")}
-              className={cn(
-                "flex flex-col items-center gap-1 text-[10px] font-bold px-2 py-1 transition-colors cursor-pointer",
-                activeTab === "leads" ? "text-emerald-400 font-extrabold" : "text-slate-300 hover:text-emerald-400"
-              )}
-            >
-              <Users className={cn("w-5 h-5", activeTab === "leads" ? "text-emerald-400" : "text-slate-300")} />
-              <span>CRM</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowMobilePreviewModal(true)}
-              className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 transition-colors cursor-pointer"
-            >
-              <Eye className="w-5 h-5 text-emerald-400" />
-              <span>LIVE PREVIEW</span>
-            </button>
-          </>
-        )}
-      </nav>
+          <button
+            type="button"
+            onClick={() => setShowMobilePreviewModal(true)}
+            className="flex flex-col items-center gap-1 text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 px-2 py-1 min-h-[44px] justify-center transition-colors cursor-pointer"
+          >
+            <Eye className="w-5 h-5 text-emerald-400" />
+            <span>LIVE PREVIEW</span>
+          </button>
+        </nav>
+      )}
 
       {/* FULL-SCREEN MOBILE LIVE PREVIEW OVERLAY */}
       {showMobilePreviewModal && (
@@ -3005,76 +3113,6 @@ function DashboardContent() {
             <span>Back to Editor</span>
           </Button>
         </div>
-      )}
-
-      {/* Floating Unsaved Changes Reminder Toast Bar - STRICTLY SCOPED to Builder Tabs (Bio, Reels, Design) when Wizard is Completed */}
-      {onboardingCompleted && isDirty && (activeTab === "bio" || activeTab === "reels" || activeTab === "design") && (
-        <>
-          {/* Mobile Compact Single-Line Strip */}
-          <div className="fixed bottom-16 left-4 right-4 z-30 bg-slate-900/95 border border-slate-700 p-2.5 rounded-full flex items-center justify-between shadow-2xl backdrop-blur-md block md:hidden animate-in slide-in-from-bottom-4 duration-200">
-            <div className="flex items-center gap-1.5 pl-1.5 min-w-0">
-              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse shrink-0" />
-              <span className="text-xs font-extrabold text-white truncate">Unsaved changes</span>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                type="button"
-                onClick={handleDiscardChanges}
-                className="px-2.5 py-1 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-600/80 rounded-full transition-colors cursor-pointer"
-              >
-                Discard
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-3.5 py-1 text-[11px] font-extrabold text-white bg-emerald-600 hover:bg-emerald-500 rounded-full shadow-sm transition-colors cursor-pointer"
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop Floating Toast Bar (Shown when wizard is completed and user has unsaved changes) */}
-          {onboardingCompleted && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-in slide-in-from-bottom-5 duration-300 hidden md:block">
-              <div className="bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 text-xs font-medium">
-                <span>You have unsaved profile changes. Don't forget to save!</span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    type="button"
-                    onClick={handleDiscardChanges}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-600 h-8 px-3 text-xs font-semibold cursor-pointer"
-                  >
-                    Discard
-                  </Button>
-                  <Button
-                    size="sm"
-                    type="button"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold h-8 px-4 text-xs shadow-md cursor-pointer"
-                  >
-                    Save Now
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* FTUE Onboarding Wizard Bottom Navigation Stepper */}
-      {!onboardingCompleted && (
-        <OnboardingWizardFooterNav
-          currentStep={wizardStep}
-          isFreePlan={planType === "free"}
-          onNext={handleWizardNext}
-          onBack={handleWizardBack}
-          onFinish={handleFinishAndPublish}
-          onSkipStep={handleSkipStep}
-        />
       )}
 
       {/* FTUE Onboarding Wizard Publish Success Modal */}

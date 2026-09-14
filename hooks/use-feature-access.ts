@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   PlanTier,
@@ -16,21 +16,6 @@ import { useProfileContext } from "@/context/profile-context";
 export function useFeatureAccess(initialPlanTier?: string | null) {
   const profileContext = useProfileContext();
 
-  // If inside ProfileProvider, return the context's fast cached values
-  if (profileContext) {
-    return {
-      currentPlan: profileContext.currentPlan,
-      config: profileContext.config,
-      isSuperAdmin: profileContext.isSuperAdmin,
-      canAccess: profileContext.canAccess,
-      getPlanLimit: profileContext.getPlanLimit,
-      isFeatureLocked: profileContext.isFeatureLocked,
-      refetchProfile: profileContext.refetchProfile,
-      profile: profileContext.profile,
-      updateProfileCache: profileContext.updateProfileCache,
-    };
-  }
-
   // Fallback standalone implementation if called outside of ProfileProvider
   const [currentPlan, setCurrentPlan] = useState<PlanTier>(() => {
     if (typeof window !== "undefined") {
@@ -42,12 +27,13 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
   });
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  const fetchLatestProfile = async (force = false) => {
+  const fetchLatestProfile = useCallback(async () => {
+    if (profileContext) return null;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      let { data, error } = await supabase
+      let { data } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
@@ -88,11 +74,28 @@ export function useFeatureAccess(initialPlanTier?: string | null) {
       console.warn("[useFeatureAccess] Standalone fetch note:", err);
       return null;
     }
-  };
+  }, [profileContext]);
 
   useEffect(() => {
-    fetchLatestProfile();
-  }, [initialPlanTier]);
+    if (!profileContext) {
+      fetchLatestProfile();
+    }
+  }, [initialPlanTier, profileContext, fetchLatestProfile]);
+
+  // If inside ProfileProvider, return the context's fast cached values
+  if (profileContext) {
+    return {
+      currentPlan: profileContext.currentPlan,
+      config: profileContext.config,
+      isSuperAdmin: profileContext.isSuperAdmin,
+      canAccess: profileContext.canAccess,
+      getPlanLimit: profileContext.getPlanLimit,
+      isFeatureLocked: profileContext.isFeatureLocked,
+      refetchProfile: profileContext.refetchProfile,
+      profile: profileContext.profile,
+      updateProfileCache: profileContext.updateProfileCache,
+    };
+  }
 
   const config: PlanConfig = isSuperAdmin
     ? PLANS_CONFIG.pro

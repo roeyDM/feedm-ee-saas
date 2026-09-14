@@ -161,6 +161,19 @@ export function ProfileEditor({
       console.log("[AvatarUpload] Supabase upload success! Public URL:", publicUrl);
       setAvatarUrl(publicUrl);
       setAvatarError(null);
+
+      // Direct instant DB sync for avatar_url
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          await supabase.from("profiles").update({
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString(),
+          }).eq("id", user.id);
+        }
+      } catch (dbErr) {
+        console.warn("[AvatarUpload DB sync note]:", dbErr);
+      }
     } catch (err: any) {
       console.error("[AvatarUpload] Exception during upload:", err);
       // Fallback DataURL
@@ -171,6 +184,17 @@ export function ProfileEditor({
       });
       setAvatarUrl(base64Url);
       setAvatarError("Avatar applied locally.");
+
+      // Direct instant DB sync fallback
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) {
+          await supabase.from("profiles").update({
+            avatar_url: base64Url,
+            updated_at: new Date().toISOString(),
+          }).eq("id", user.id);
+        }
+      } catch (_) {}
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -502,7 +526,7 @@ export function ProfileEditor({
                   size="sm"
                   disabled={isUploadingAvatar}
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-xs font-bold h-8 px-3 rounded-lg"
+                  className="text-xs font-bold h-11 sm:h-8 min-h-[44px] sm:min-h-0 px-3.5 rounded-xl sm:rounded-lg cursor-pointer"
                 >
                   {isUploadingAvatar ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -665,7 +689,7 @@ export function ProfileEditor({
       </Card>
 
       {/* 3. Linktree Style Custom Links */}
-      <Card id="links-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
+      <Card id="custom-links-section" className="bg-white border-zinc-200/80 shadow-sm scroll-mt-28">
         <CardHeader>
           <CardTitle className="text-base font-bold flex items-center gap-2 text-zinc-900">
             <LinkIcon className="h-4.5 w-4.5 text-emerald-600" /> Custom Links
@@ -701,7 +725,7 @@ export function ProfileEditor({
                   className="pl-8 bg-white border-zinc-200 text-xs text-zinc-900"
                 />
               </div>
-              <Button type="submit" size="sm" className="bg-zinc-900 hover:bg-black text-white font-bold text-xs">
+              <Button type="submit" size="sm" className="bg-zinc-900 hover:bg-black text-white font-bold text-xs h-11 sm:h-9 min-h-[44px] sm:min-h-0 px-4 rounded-xl cursor-pointer">
                 <Plus className="h-3.5 w-3.5 mr-1" /> Add Link
               </Button>
             </div>

@@ -563,13 +563,13 @@ export function DesignEditor({
             type="color"
             value={hexVal}
             onChange={(e) => updateAppearance({ [onChangeKey]: e.target.value } as any)}
-            className="h-9 w-9 rounded-lg cursor-pointer border border-zinc-300 p-0.5 bg-white shrink-0 shadow-xs"
+            className="h-11 w-11 sm:h-9 sm:w-9 min-h-[44px] sm:min-h-0 rounded-xl sm:rounded-lg cursor-pointer border border-zinc-300 p-0.5 bg-white shrink-0 shadow-xs"
           />
           <Input
             value={hexVal}
             onChange={(e) => updateAppearance({ [onChangeKey]: e.target.value } as any)}
             placeholder={defaultHex}
-            className="font-mono text-xs uppercase bg-white border-zinc-200 text-zinc-900 h-9"
+            className="font-mono text-xs uppercase bg-white border-zinc-200 text-zinc-900 h-11 sm:h-9 min-h-[44px] sm:min-h-0 rounded-xl sm:rounded-md"
           />
         </div>
       </div>
