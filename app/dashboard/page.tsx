@@ -843,6 +843,8 @@ function DashboardContent() {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const originalUsernameRef = useRef<string>("");
+  const loadedProfileIdRef = useRef<string>("");
+  const loadedProfileEmailRef = useRef<string>("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [customHexColor, setCustomHexColor] = useState("#bad1cb");
@@ -1116,12 +1118,38 @@ function DashboardContent() {
       delete payload.is_verified_badge_active;
       delete payload.didit_session_id;
 
-      // Exclusively use .update(payload).eq("id", userId).select() (generates HTTP 200 OK with row representation)
-      const { data, error: updateError } = await supabase
+      const targetProfileId = loadedProfileIdRef.current || userId;
+      const targetUsername = originalUsername || cleanUsername;
+      const targetEmail = loadedProfileEmailRef.current || userEmail || user?.email;
+
+      // 1. Primary update targeting profile ID with returned row inspection
+      let { data, error: updateError } = await supabase
         .from("profiles")
         .update(payload)
-        .eq("id", userId)
+        .eq("id", targetProfileId)
         .select();
+
+      // 2. Robust fallback if primary key update returned 0 rows
+      if (!updateError && (!data || data.length === 0) && targetUsername) {
+        const fallbackUsername = await supabase
+          .from("profiles")
+          .update(payload)
+          .eq("username", targetUsername)
+          .select();
+        data = fallbackUsername.data;
+        updateError = fallbackUsername.error;
+      }
+
+      // 3. Fallback by email if still 0 rows
+      if (!updateError && (!data || data.length === 0) && targetEmail) {
+        const fallbackEmail = await supabase
+          .from("profiles")
+          .update(payload)
+          .ilike("email", targetEmail)
+          .select();
+        data = fallbackEmail.data;
+        updateError = fallbackEmail.error;
+      }
 
       if (updateError) {
         console.error("SUPABASE_SAVE_ERROR:", updateError.message || updateError.details || JSON.stringify(updateError));
@@ -1130,7 +1158,14 @@ function DashboardContent() {
       }
 
       if (!data || data.length === 0) {
-        console.error("No profile row was updated. Check ID column or RLS policies for user:", userId);
+        console.error("Save Failed: Profile row not found in Database for identifier:", { targetProfileId, targetUsername, targetEmail });
+        setAutoSaveStatus("error");
+        return false;
+      }
+
+      // Capture verified profile ID from returned row for subsequent updates
+      if (data[0]?.id) {
+        loadedProfileIdRef.current = data[0].id;
       }
 
       if (payload.username) {
@@ -1297,6 +1332,8 @@ function DashboardContent() {
 
         setCurrentUserId(user.id);
         if (user.email) setUserEmail(user.email);
+        loadedProfileIdRef.current = user.id;
+        if (user.email) loadedProfileEmailRef.current = user.email;
         const userHandle = (user.user_metadata?.username || user.user_metadata?.handle || user.email?.split("@")[0] || "").toLowerCase();
         const userName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || (userHandle ? userHandle.charAt(0).toUpperCase() + userHandle.slice(1) : "Creator");
 
@@ -1363,9 +1400,14 @@ function DashboardContent() {
         }
 
         if (profile && !error) {
-
           const checkedProfile = await checkAndApplyTrialDowngrade(profile);
 
+          if (checkedProfile.id) {
+            loadedProfileIdRef.current = checkedProfile.id;
+          }
+          if (checkedProfile.email) {
+            loadedProfileEmailRef.current = checkedProfile.email;
+          }
           if (checkedProfile.username) {
             setUsername(checkedProfile.username);
             originalUsernameRef.current = checkedProfile.username;
@@ -1781,12 +1823,38 @@ function DashboardContent() {
       delete payload.is_verified_badge_active;
       delete payload.didit_session_id;
 
-      // Exclusively use .update(payload).eq("id", user.id).select() (generates HTTP 200 OK with row representation)
-      const { data, error: updateError } = await supabase
+      const targetProfileId = loadedProfileIdRef.current || user.id || currentUserId;
+      const targetUsername = originalUsername || cleanUsername;
+      const targetEmail = loadedProfileEmailRef.current || userEmail || user?.email;
+
+      // 1. Primary update targeting profile ID with returned row inspection
+      let { data, error: updateError } = await supabase
         .from("profiles")
         .update(payload)
-        .eq("id", user.id)
+        .eq("id", targetProfileId)
         .select();
+
+      // 2. Robust fallback if primary key update returned 0 rows
+      if (!updateError && (!data || data.length === 0) && targetUsername) {
+        const fallbackUsername = await supabase
+          .from("profiles")
+          .update(payload)
+          .eq("username", targetUsername)
+          .select();
+        data = fallbackUsername.data;
+        updateError = fallbackUsername.error;
+      }
+
+      // 3. Fallback by email if still 0 rows
+      if (!updateError && (!data || data.length === 0) && targetEmail) {
+        const fallbackEmail = await supabase
+          .from("profiles")
+          .update(payload)
+          .ilike("email", targetEmail)
+          .select();
+        data = fallbackEmail.data;
+        updateError = fallbackEmail.error;
+      }
 
       if (updateError) {
         console.error("SUPABASE_SAVE_ERROR:", updateError.message || updateError.details || JSON.stringify(updateError));
@@ -1794,7 +1862,15 @@ function DashboardContent() {
       }
 
       if (!data || data.length === 0) {
-        console.error("No profile row was updated. Check ID column or RLS policies for user:", user.id);
+        console.error("Save Failed: Profile row not found in Database for identifier:", { targetProfileId, targetUsername, targetEmail });
+        setSaveStatus("error");
+        setStatusMsg("Save Failed: Profile row not found in Database.");
+        throw new Error("Save Failed: Profile row not found in Database.");
+      }
+
+      // Capture verified profile ID from returned row for subsequent updates
+      if (data[0]?.id) {
+        loadedProfileIdRef.current = data[0].id;
       }
 
       if (payload.username) {
