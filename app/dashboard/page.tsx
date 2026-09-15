@@ -1108,23 +1108,29 @@ function DashboardContent() {
         delete payload.username;
       }
 
-      // Ensure non-existent columns are strictly removed
+      // Ensure immutable primary key and non-existent columns are strictly removed
+      delete payload.id;
       delete payload.plan_type;
       delete payload.appearance;
       delete payload.verification_status;
       delete payload.is_verified_badge_active;
       delete payload.didit_session_id;
 
-      // Exclusively use .update(payload).eq("id", userId) (generates clean PATCH request)
-      const { error: updateError } = await supabase
+      // Exclusively use .update(payload).eq("id", userId).select() (generates HTTP 200 OK with row representation)
+      const { data, error: updateError } = await supabase
         .from("profiles")
         .update(payload)
-        .eq("id", userId);
+        .eq("id", userId)
+        .select();
 
       if (updateError) {
         console.error("SUPABASE_SAVE_ERROR:", updateError.message || updateError.details || JSON.stringify(updateError));
         setAutoSaveStatus("error");
         return false;
+      }
+
+      if (!data || data.length === 0) {
+        console.error("No profile row was updated. Check ID column or RLS policies for user:", userId);
       }
 
       if (payload.username) {
@@ -1767,22 +1773,28 @@ function DashboardContent() {
         delete payload.username;
       }
 
-      // Ensure non-existent columns are strictly removed
+      // Ensure immutable primary key and non-existent columns are strictly removed
+      delete payload.id;
       delete payload.plan_type;
       delete payload.appearance;
       delete payload.verification_status;
       delete payload.is_verified_badge_active;
       delete payload.didit_session_id;
 
-      // Exclusively use .update(payload).eq("id", user.id) (generates clean PATCH request)
-      const { error: updateError } = await supabase
+      // Exclusively use .update(payload).eq("id", user.id).select() (generates HTTP 200 OK with row representation)
+      const { data, error: updateError } = await supabase
         .from("profiles")
         .update(payload)
-        .eq("id", user.id);
+        .eq("id", user.id)
+        .select();
 
       if (updateError) {
         console.error("SUPABASE_SAVE_ERROR:", updateError.message || updateError.details || JSON.stringify(updateError));
         throw updateError;
+      }
+
+      if (!data || data.length === 0) {
+        console.error("No profile row was updated. Check ID column or RLS policies for user:", user.id);
       }
 
       if (payload.username) {
