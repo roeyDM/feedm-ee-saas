@@ -1115,29 +1115,16 @@ function DashboardContent() {
       delete payload.is_verified_badge_active;
       delete payload.didit_session_id;
 
-      // Try updating first (avoids NOT NULL evaluation and unique constraint triggers on username for existing rows)
-      const { data: updateData, error: updateError } = await supabase
+      // Exclusively use .update(payload).eq("id", userId) (generates clean PATCH request)
+      const { error: updateError } = await supabase
         .from("profiles")
         .update(payload)
-        .eq("id", userId)
-        .select("id");
+        .eq("id", userId);
 
-      if (updateError || !updateData || updateData.length === 0) {
-        // Fallback to upsert only if row doesn't exist yet
-        const fallbackUsername = (cleanUsername || originalUsername || user?.user_metadata?.username || user?.user_metadata?.handle || user?.email?.split("@")[0] || "user").toLowerCase().trim();
-        const upsertPayload = {
-          ...payload,
-          username: resolvedUsername || fallbackUsername,
-        };
-        const { error: upsertError } = await supabase
-          .from("profiles")
-          .upsert(upsertPayload, { onConflict: "id" });
-
-        if (upsertError) {
-          console.error("SUPABASE_SAVE_ERROR:", upsertError.message || upsertError.details || JSON.stringify(upsertError));
-          setAutoSaveStatus("error");
-          return false;
-        }
+      if (updateError) {
+        console.error("SUPABASE_SAVE_ERROR:", updateError.message || updateError.details || JSON.stringify(updateError));
+        setAutoSaveStatus("error");
+        return false;
       }
 
       if (payload.username) {
@@ -1787,28 +1774,15 @@ function DashboardContent() {
       delete payload.is_verified_badge_active;
       delete payload.didit_session_id;
 
-      // Try updating first (avoids NOT NULL evaluation and unique constraint triggers on username for existing rows)
-      const { data: updateData, error: updateError } = await supabase
+      // Exclusively use .update(payload).eq("id", user.id) (generates clean PATCH request)
+      const { error: updateError } = await supabase
         .from("profiles")
         .update(payload)
-        .eq("id", user.id)
-        .select("id");
+        .eq("id", user.id);
 
-      if (updateError || !updateData || updateData.length === 0) {
-        // Fallback to upsert if profile row did not exist yet
-        const fallbackUsername = (cleanUsername || originalUsername || user?.user_metadata?.username || user?.user_metadata?.handle || user?.email?.split("@")[0] || "user").toLowerCase().trim();
-        const upsertPayload = {
-          ...payload,
-          username: resolvedUsername || fallbackUsername,
-        };
-        const { error: upsertError } = await supabase
-          .from("profiles")
-          .upsert(upsertPayload, { onConflict: "id" });
-
-        if (upsertError) {
-          console.error("SUPABASE_SAVE_ERROR:", upsertError.message || upsertError.details || JSON.stringify(upsertError));
-          throw upsertError;
-        }
+      if (updateError) {
+        console.error("SUPABASE_SAVE_ERROR:", updateError.message || updateError.details || JSON.stringify(updateError));
+        throw updateError;
       }
 
       if (payload.username) {

@@ -349,20 +349,20 @@ export function AccountSettingsEditor({
         console.error("Supabase Auth user_metadata update error:", updateErr.message);
       }
 
-      // 2. Perform DB Upsert on profiles table matching user.id
+      // 2. Perform DB Update on profiles table matching user.id
       const user = updateRes?.user || (await supabase.auth.getUser()).data.user;
       if (user?.id) {
-        const { error: upsertErr } = await supabase
+        const { error: updateErr } = await supabase
           .from("profiles")
-          .upsert({
-            id: user.id,
+          .update({
             full_name: name,
             company_name: companyName,
             updated_at: new Date().toISOString(),
-          }, { onConflict: "id" });
+          })
+          .eq("id", user.id);
 
-        if (upsertErr) {
-          console.warn("Profiles upsert note:", upsertErr.message);
+        if (updateErr) {
+          console.warn("Profiles update note:", updateErr.message);
         }
       }
 
