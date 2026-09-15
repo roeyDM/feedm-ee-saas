@@ -842,6 +842,7 @@ function DashboardContent() {
   // Creator Profile State (default empty until session loads)
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
+  const originalUsernameRef = useRef<string>("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [customHexColor, setCustomHexColor] = useState("#bad1cb");
@@ -1051,12 +1052,23 @@ function DashboardContent() {
         ? `linear-gradient(${app.bgGradientAngle || 135}deg, ${app.bgGradientStart || cleanThemeColor}, ${app.bgGradientEnd || cleanThemeColor})`
         : `linear-gradient(${app.bgGradientAngle || 135}deg, ${cleanThemeColor}, ${cleanThemeColor})`;
 
-      const targetUsername = (username || user?.user_metadata?.username || user?.email?.split("@")[0] || "creator").toLowerCase().trim();
+      // Clean and safe username resolution:
+      const cleanUsername = (username || "").toLowerCase().trim().replace(/^@+/, "");
+      const originalUsername = (originalUsernameRef.current || "").toLowerCase().trim();
+
+      // Only include username in payload if explicitly passed, or if valid and changed from original, or initial set
+      let resolvedUsername: string | undefined = undefined;
+      if (customPayloadOverrides.username) {
+        resolvedUsername = customPayloadOverrides.username.toLowerCase().trim().replace(/^@+/, "");
+      } else if (cleanUsername && cleanUsername.length >= 3 && cleanUsername !== originalUsername) {
+        resolvedUsername = cleanUsername;
+      } else if (!originalUsername && cleanUsername && cleanUsername.length >= 3) {
+        resolvedUsername = cleanUsername;
+      }
 
       // Dedicated database columns strictly matching profiles schema
       const payload: any = {
         id: userId,
-        username: targetUsername,
         name: name || "",
         bio: bio || "",
         avatar_url: avatarUrl || "",
@@ -1090,6 +1102,12 @@ function DashboardContent() {
         ...customPayloadOverrides,
       };
 
+      if (resolvedUsername && resolvedUsername.length >= 3) {
+        payload.username = resolvedUsername;
+      } else {
+        delete payload.username;
+      }
+
       // Ensure non-existent columns are strictly removed
       delete payload.plan_type;
       delete payload.appearance;
@@ -1107,13 +1125,17 @@ function DashboardContent() {
         return false;
       }
 
-      console.log("[Supabase Save] Successfully saved profile to DB for user:", userId);
+      if (payload.username) {
+        originalUsernameRef.current = payload.username;
+      }
+
       setAutoSaveStatus("saved");
       setSavedSnapshot(getCurrentStateJSON());
 
       if (profileContext) {
         profileContext.updateProfileCache({
           ...payload,
+          username: cleanUsername || originalUsername || "",
           appearance,
         });
       }
@@ -1270,7 +1292,12 @@ function DashboardContent() {
         const userHandle = (user.user_metadata?.username || user.user_metadata?.handle || user.email?.split("@")[0] || "").toLowerCase();
         const userName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || (userHandle ? userHandle.charAt(0).toUpperCase() + userHandle.slice(1) : "Creator");
 
-        if (userHandle) setUsername(userHandle);
+        if (userHandle) {
+          setUsername(userHandle);
+          if (!originalUsernameRef.current) {
+            originalUsernameRef.current = userHandle;
+          }
+        }
 
         // Check for saved local draft (retains state across app switching / mobile refresh)
         let draftData: any = null;
@@ -1331,7 +1358,10 @@ function DashboardContent() {
 
           const checkedProfile = await checkAndApplyTrialDowngrade(profile);
 
-          if (checkedProfile.username) setUsername(checkedProfile.username);
+          if (checkedProfile.username) {
+            setUsername(checkedProfile.username);
+            originalUsernameRef.current = checkedProfile.username;
+          }
 
           const createdAt = new Date(checkedProfile.created_at || user?.created_at || Date.now());
           const isWithin7Days = (Date.now() - createdAt.getTime()) < 7 * 24 * 60 * 60 * 1000;
@@ -1684,11 +1714,19 @@ function DashboardContent() {
         ? `linear-gradient(${app.bgGradientAngle || 135}deg, ${app.bgGradientStart || cleanThemeColor}, ${app.bgGradientEnd || cleanThemeColor})`
         : `linear-gradient(${app.bgGradientAngle || 135}deg, ${cleanThemeColor}, ${cleanThemeColor})`;
 
-      const targetUsername = (username || user?.user_metadata?.username || user?.email?.split("@")[0] || "creator").toLowerCase().trim();
+      // Clean and safe username resolution:
+      const cleanUsername = (username || "").toLowerCase().trim().replace(/^@+/, "");
+      const originalUsername = (originalUsernameRef.current || "").toLowerCase().trim();
+
+      let resolvedUsername: string | undefined = undefined;
+      if (cleanUsername && cleanUsername.length >= 3 && cleanUsername !== originalUsername) {
+        resolvedUsername = cleanUsername;
+      } else if (!originalUsername && cleanUsername && cleanUsername.length >= 3) {
+        resolvedUsername = cleanUsername;
+      }
 
       const payload: any = {
         id: user.id,
-        username: targetUsername,
         name: name || "",
         bio: bio || "",
         avatar_url: avatarUrl || "",
@@ -1721,6 +1759,12 @@ function DashboardContent() {
         updated_at: new Date().toISOString(),
       };
 
+      if (resolvedUsername && resolvedUsername.length >= 3) {
+        payload.username = resolvedUsername;
+      } else {
+        delete payload.username;
+      }
+
       // Ensure non-existent columns are strictly removed
       delete payload.plan_type;
       delete payload.appearance;
@@ -1737,14 +1781,20 @@ function DashboardContent() {
         throw error;
       }
 
+      if (payload.username) {
+        originalUsernameRef.current = payload.username;
+      }
+
+      const activeHandle = cleanUsername || originalUsername;
       // Always store appearance in localStorage as immediate fallback
-      if (typeof window !== "undefined") {
-        localStorage.setItem(`feedmee_appearance_${targetUsername}`, JSON.stringify(appearance));
+      if (typeof window !== "undefined" && activeHandle) {
+        localStorage.setItem(`feedmee_appearance_${activeHandle}`, JSON.stringify(appearance));
       }
 
       if (profileContext) {
         profileContext.updateProfileCache({
           ...payload,
+          username: activeHandle,
           appearance,
         });
       }
